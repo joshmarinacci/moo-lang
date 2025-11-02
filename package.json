@@ -1,0 +1,18 @@
+{
+  "name": "moo-test1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "node src/index.ts",
+    "test-ast": "node src/ast.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.5.3",
+    "@types/node": "^24.9.2"
+  },
+  "private": true
+}
