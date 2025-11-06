@@ -41,13 +41,11 @@ function parse(str: string):ExpNode {
 }
 
 function parseGroup(toks:string[]):GroupNode {
-    p("-- parsing group")
     let stack:ExpNode[] = []
     while(true) {
         let tok = toks.shift()
         if (tok == undefined) break;
         if (tok == ")") {
-            p("ending group")
             break;
         } else {
             stack.push(parseOneToken(tok))
@@ -56,18 +54,15 @@ function parseGroup(toks:string[]):GroupNode {
     return Group(...stack)
 }
 function parseBlock(toks:string[]):BlockNode {
-    p("-- parsing block")
     let stack:ExpNode[] = []
     while(true) {
         let tok = toks.shift()
         if (tok == undefined) break;
         if (tok == ".") {
             collapseStatement(stack)
-            p("now the stack is ",stack);
             continue
         }
         if (tok == "]") {
-            p("ending block")
             break;
         } else {
             stack.push(parseOneToken(tok))
@@ -76,7 +71,6 @@ function parseBlock(toks:string[]):BlockNode {
     return Block(...stack)
 }
 function parseOneToken(tok:string):ExpNode {
-    p(`parse one token ${tok}`)
     if (tok.match(/^[0-9]+$/)) {
         return Num(parseInt(tok))
     }
@@ -92,48 +86,29 @@ function parseOneToken(tok:string):ExpNode {
 }
 
 function collapseStatement(stack: ExpNode[]) {
-    p("collapsing statement");
     let temp:ExpNode[] = []
     while(true) {
-        let node = stack.pop()
+        let node = stack.shift()
         if (!node) {
             break;
         }
-        // if (node.type == 'block') {
-        //     p("found a block start")
-        //     stack.push(node)
-        //     break;
-        // } else {
-            temp.push(node)
-        // }
+        temp.push(node)
     }
-    temp.reverse()
     stack.push(Stmt(...temp))
-    p("done with statement assembly")
-    p(stack[stack.length-1])
 }
 
 function parseToken(toks:string[]):ExpNode[] {
-    p('tokens',toks)
     let stack:ExpNode[] = []
     while(true) {
         let tok = toks.shift()
         if (tok == undefined) {
-            p("out of tokens")
             break
         }
-        tok = tok.trim()
-        if (tok == "") {
-            p("empty token")
-        }
-
-        p(`== token A: '${tok}'`)
         if (tok.match(/^[0-9]+$/)) {
             stack.push(parseOneToken(tok))
         }
         if (tok.match(/^[a-zA-Z]+$/)) {
             stack.push(parseOneToken(tok))
-            p(`added symbol ${tok}`)
         }
         if (tok == "<") {
             stack.push(parseOneToken(tok))
@@ -148,10 +123,8 @@ function parseToken(toks:string[]):ExpNode[] {
             stack.push(parseBlock(toks))
         }
         if (tok == ".") {
-            p("doing statement")
             collapseStatement(stack)
         }
-        p("stack",stack)
     }
     return stack;
 }
