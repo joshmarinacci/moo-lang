@@ -15,7 +15,10 @@ type CallNode = {
     name: SymbolNode,
     args: ExpNode[],
 }
-type ExpNode = SymbolNode | LitNumNode | CallNode;
+type ParseErrorNode = {
+    type:'parse-error',
+}
+type ExpNode = SymbolNode | LitNumNode | CallNode | ParseErrorNode;
 
 function Num(value:number):LitNumNode {
     return {
@@ -70,6 +73,51 @@ function eval_ast(exp:ExpNode):any {
         return new NumberObject(lit.value)
     }
 }
+
+// exp = receiver message expr
+// exp = literal
+function handleToken(first:string):ExpNode {
+    if (!first) {
+        return {
+            type:'parse-error'
+        } as ParseErrorNode
+    }
+    if (first.match(/\d/)) {
+        console.log("its a number")
+        return Num(parseInt(first))
+    }
+    if(first.match(/\w/)) {
+        console.log("token is word");
+        return Sym(first)
+    }
+
+    console.log("shouldn't be here");
+    return {
+        type:'parse-error'
+    }
+}
+
+function parse(s: string):ExpNode {
+    console.log("parsing ",s)
+    let tokens = s.split(' ');
+    console.log("tokens are ",tokens)
+
+    let node = Call(
+        handleToken(tokens[0]),
+        handleToken(tokens[1]) as SymbolNode,
+        [
+            handleToken(tokens[2])
+        ]
+    )
+    console.log("node is", node);
+    return node;
+}
+
+test('parse exp',() => {
+    let exp:ExpNode = parse('4 add 5')
+    let comp:CallNode = Call(Num(4),Sym('add'),[Num(5)])
+    assert.deepStrictEqual(exp,comp)
+})
 test('simple eval code',() => {
     /*
         4 add 5
@@ -101,5 +149,10 @@ test('simple eval code',() => {
     console.log("exp evaluated to",result);
     assert.deepStrictEqual(result,new NumberObject(9))
 });
+
+/*
+
+
+ */
 
 

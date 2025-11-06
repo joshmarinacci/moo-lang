@@ -81,7 +81,6 @@ function testAdding() {
 
 
 function testDog() {
-// let Object = global.getSlot("Object")
     let Obj = global.getSlot("Object") as BaseObject;
     console.log("object is ", Obj)
     global.setSlot("Dog", Obj.call("clone", []))
