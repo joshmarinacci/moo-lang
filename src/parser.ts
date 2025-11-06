@@ -97,7 +97,7 @@ function pSym() {
                 okay:false
             }
         }
-        if (str.match(/^\w/)) {
+        if (str.match(/^[a-zA-Z]/)) {
             p.p(`pSym returning symbol ${str}`)
             return {
                 okay:true,
@@ -160,7 +160,7 @@ function pCall() {
     return (tokens:string[]):ParseResult => {
         p.p("pCall " + tokens);
         p.indent()
-        let receiver = pSym()(tokens)
+        let receiver = Or(pSym(),pNumLit())(tokens)
         p.p("first is", receiver)
         if (!receiver.okay) {
             p.outdent()
@@ -315,6 +315,76 @@ test('parse dog speak (42)',() => {
                 value: {
                     type:'number-literal',
                     value:42,
+                }
+            }
+        }
+    })
+})
+
+test('parse 4 add 5',() => {
+    assert.deepStrictEqual(parse('4 add ( 5 )'),{
+        okay:true,
+        consumed: 5,
+        node: {
+            type: 'call',
+            receiver: {
+                type: 'number-literal',
+                value: 4,
+            },
+            message: {
+                type: 'symbol',
+                value: 'add',
+            },
+            args: {
+                type: 'group',
+                value: {
+                    type:'number-literal',
+                    value:5,
+                }
+            }
+        }
+    })
+})
+
+test('parse 4 add 5 mul 6',() => {
+    assert.deepStrictEqual(parse('4 add ( 5 mul ( 6 ) )'),{
+        okay:true,
+        consumed: 8,
+        node: {
+            type: 'call',
+            receiver: {
+                type: 'number-literal',
+                value:4,
+            },
+            //     type: 'group',
+            //     value: {
+            //         type: 'call',
+            //         receiver: {
+            //             type: 'number-literal',
+            //             value: 4,
+            //         },
+            //         message: {
+            //             type: 'symbol',
+            //             value: 'add',
+            //         },
+            //         args: {
+            //             type: 'group',
+            //             value: {
+            //                 type:'number-literal',
+            //                 value:5,
+            //             }
+            //         }
+            //     }
+            // },
+            message: {
+                type: 'symbol',
+                value: 'mul',
+            },
+            args: {
+                type: 'group',
+                value: {
+                    type:'number-literal',
+                    value:6,
                 }
             }
         }
