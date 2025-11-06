@@ -28,90 +28,132 @@ type BlockNode = {
 type ExpNode = GroupNode | BlockNode | StmtNode | NumNode | StrNode | SymNode
 
 function p(...args: any[]) {
-    console.log(':',...args)
+    console.log(...args)
+}
+function parse(str: string):ExpNode {
+    p("")
+    p(`======= parsing ${str}`)
+    let tokens = str.split(' ') // split by space
+        .filter(str => str.trim().length != 0) // strip empty string tokens
+    let exps = parseToken(tokens)
+    console.log("returned expressions", exps)
+    return exps[0]
 }
 
-function parse(str: string):ExpNode {
-    p(`======= parsing ${str}`)
-    let toks = str.split(' ')
-    p('tokens',toks)
+function parseGroup(toks:string[]):GroupNode {
+    p("-- parsing group")
     let stack:ExpNode[] = []
-    for (let tok of toks) {
-        p("== token: ", tok)
-        if (tok.match(/^[0-9]+$/)) {
-            stack.push(Num(parseInt(tok)))
-        }
-        if (tok.match(/^[a-z]+$/)) {
-            stack.push(Sym(tok))
-        }
-        if (tok == "<") {
-            stack.push(Sym(tok))
-        }
-        if (tok == "(") {
-            stack.push(Group())
-        }
-        if (tok == "[") {
-            stack.push(Block())
-        }
+    while(true) {
+        let tok = toks.shift()
+        if (tok == undefined) break;
         if (tok == ")") {
-            let temp:ExpNode[] = []
-            while(true) {
-                let node = stack.pop()
-                if (!node) {
-                    break;
-                }
-                if (node.type == 'group') {
-                    p("found the group start")
-                    temp.reverse()
-                    node.value = temp;
-                    stack.push(node)
-                    break;
-                } else {
-                    temp.push(node)
-                }
-            }
+            p("ending group")
+            break;
+        } else {
+            stack.push(parseOneToken(tok))
+        }
+    }
+    return Group(...stack)
+}
+function parseBlock(toks:string[]):BlockNode {
+    p("-- parsing block")
+    let stack:ExpNode[] = []
+    while(true) {
+        let tok = toks.shift()
+        if (tok == undefined) break;
+        if (tok == ".") {
+            collapseStatement(stack)
+            p("now the stack is ",stack);
+            continue
         }
         if (tok == "]") {
-            let temp:ExpNode[] = []
-            while(true) {
-                let node = stack.pop()
-                if (!node) {
-                    break;
-                }
-                if (node.type == 'block') {
-                    p("found the block start")
-                    temp.reverse()
-                    node.value = temp;
-                    stack.push(node)
-                    break;
-                } else {
-                    temp.push(node)
-                }
-            }
+            p("ending block")
+            break;
+        } else {
+            stack.push(parseOneToken(tok))
+        }
+    }
+    return Block(...stack)
+}
+function parseOneToken(tok:string):ExpNode {
+    p(`parse one token ${tok}`)
+    if (tok.match(/^[0-9]+$/)) {
+        return Num(parseInt(tok))
+    }
+    if (tok.match(/^[a-zA-Z]+$/)) {
+        return Sym(tok)
+    }
+    if (tok == "<") {
+        return Sym(tok)
+    }
+    if (tok == ":=") {
+        return Sym(tok)
+    }
+}
+
+function collapseStatement(stack: ExpNode[]) {
+    p("collapsing statement");
+    let temp:ExpNode[] = []
+    while(true) {
+        let node = stack.pop()
+        if (!node) {
+            break;
+        }
+        // if (node.type == 'block') {
+        //     p("found a block start")
+        //     stack.push(node)
+        //     break;
+        // } else {
+            temp.push(node)
+        // }
+    }
+    temp.reverse()
+    stack.push(Stmt(...temp))
+    p("done with statement assembly")
+    p(stack[stack.length-1])
+}
+
+function parseToken(toks:string[]):ExpNode[] {
+    p('tokens',toks)
+    let stack:ExpNode[] = []
+    while(true) {
+        let tok = toks.shift()
+        if (tok == undefined) {
+            p("out of tokens")
+            break
+        }
+        tok = tok.trim()
+        if (tok == "") {
+            p("empty token")
+        }
+
+        p(`== token A: '${tok}'`)
+        if (tok.match(/^[0-9]+$/)) {
+            stack.push(parseOneToken(tok))
+        }
+        if (tok.match(/^[a-zA-Z]+$/)) {
+            stack.push(parseOneToken(tok))
+            p(`added symbol ${tok}`)
+        }
+        if (tok == "<") {
+            stack.push(parseOneToken(tok))
+        }
+        if (tok == ":=") {
+            stack.push(parseOneToken(tok))
+        }
+        if (tok == "(") {
+            stack.push(parseGroup(toks))
+        }
+        if (tok == "[") {
+            stack.push(parseBlock(toks))
         }
         if (tok == ".") {
-            let temp:ExpNode[] = []
-            while(true) {
-                let node = stack.pop()
-                if (!node) {
-                    break;
-                }
-                if (node.type == 'block') {
-                    p("found a start")
-                    stack.push(node)
-                    break;
-                } else {
-                    temp.push(node)
-                }
-            }
-            temp.reverse()
-            stack.push(Stmt(...temp))
-            p("done with statement assembly")
-            p(stack[stack.length-1])
+            p("doing statement")
+            collapseStatement(stack)
         }
         p("stack",stack)
     }
-    return stack.pop() as ExpNode
+    return stack;
 }
 
 function Num(value:number):NumNode {
@@ -166,17 +208,17 @@ test("parse expressions", () => {
         Block(Stmt(Num(99))),
     )
     assert.deepStrictEqual(
-        parse(` ( 4 < 5 ) ifTrue [ 99 . ] `),
+        parse(` ( 4 < 5 ) ifTrue [ 99 . ] .`),
         Stmt(
             Group(Num(4),Sym('<'),Num(5)),
             Sym('ifTrue'),
             Block(Stmt(Num(99)))
         )
     );
-    // assert.deepStrictEqual(
-    //     parse(' dog := Object clone .`'),
-    //     Stat(Sym('dog'),Sym(':='),Sym('Object'),Sym('clone'))
-    // )
+    assert.deepStrictEqual(
+        parse(' dog := Object clone .'),
+        Stmt(Sym('dog'),Sym(':='),Sym('Object'),Sym('clone'))
+    )
 })
 
 // test('eval expressions', () => {
