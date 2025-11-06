@@ -38,12 +38,9 @@ function p(...args: any[]) {
     console.log(...args)
 }
 function parse(str: string):ExpAst {
-    p("")
-    p(`======= parsing ${str}`)
     let tokens = str.split(' ') // split by space
         .filter(str => str.trim().length != 0) // strip empty string tokens
     let exps = parseToken(tokens)
-    console.log("returned expressions", exps)
     return exps[0]
 }
 function parseGroup(toks:string[]):GroupAST {
@@ -154,21 +151,92 @@ test("parse expressions", () => {
     )
 })
 
-// test('eval expressions', () => {
-//     assert.deepStrictEqual(
-//         eval(Stat(Num(4),Sym('<'),Num(5))),
-//         Num(9),
-//     )
-//     assert.deepStrictEqual(
-//         eval(Stat(Group(Num(4),Sym('<'),Num(5)))),
-//         Num(9),
-//     )
-//     assert.deepStrictEqual(
-//         eval(Stat(
-//             Group(Num(4),Sym('<'),Num(5)),
-//             Sym('ifTrue'),
-//             Block(Stat(Num(99)))
-//             )),
-//         Num(99),
-//     )
-// })
+class LangObject {
+    proto: LangObject | null
+    slots: Map<string,any>
+    private name: string;
+    constructor(name:string,proto:LangObject|null){
+        this.name = name;
+        this.proto = proto
+        this.slots = new Map()
+    }
+
+    lookup_method(message: string):unknown {
+        if(this.slots.has(message)) {
+            return this.slots.get(message)
+        } else {
+            if (this.proto == null) {
+                throw new Error(`method not found`)
+            } else {
+                return this.proto.lookup_method(message)
+            }
+        }
+    }
+}
+
+let ObjectProto = new LangObject("Object",null);
+let NumberProto = new LangObject("Number",ObjectProto);
+NumberProto.slots.set('add',function(receiver:LangObject,message:LangObject,argument:LangObject) {
+    let a = receiver.slots.get('value') as number
+    let b = argument.slots.get('value') as number
+    return NumObj(a+b)
+})
+NumberProto.slots.set('<',function(receiver:LangObject,message:LangObject,argument:LangObject) {
+    let a = receiver.slots.get('value') as number
+    let b = argument.slots.get('value') as number
+    return BoolObj(a<b)
+})
+let BooleanProto = new LangObject("Boolean",ObjectProto);
+
+function NumObj(value:number):LangObject {
+    let obj = new LangObject("NumberLiteral",NumberProto)
+    obj.slots.set('value',value)
+    return obj
+}
+
+function BoolObj(value:boolean):LangObject {
+    let obj = new LangObject("BooleanLiteral",BooleanProto)
+    obj.slots.set('value',value)
+    return obj
+}
+
+function evalAst(ast: ExpAst):LangObject {
+    if (ast.type == 'num') {
+        return NumObj(ast.value);
+    }
+    if (ast.type == 'sym') {
+        return ast.value
+    }
+    if (ast.type == 'group') {
+        let receiver = evalAst(ast.value[0])
+        let message = evalAst(ast.value[1])
+        let argument = evalAst(ast.value[2])
+        let method = receiver.lookup_method(message)
+        return method(receiver, message, argument)
+    }
+    if (ast.type == 'stmt') {
+        let receiver = evalAst(ast.value[0])
+        if (ast.value.length <= 1) {
+            return receiver
+        }
+        let message = evalAst(ast.value[1])
+        let argument = evalAst(ast.value[2])
+        let method = receiver.lookup_method(message)
+        return method(receiver, message, argument)
+    }
+}
+
+test('eval expressions', () => {
+    assert.deepStrictEqual(evalAst(Num(4)),NumObj(4));
+    assert.deepStrictEqual(evalAst(Stmt(Num(4),Sym("add"),Num(5))),NumObj(9));
+    assert.deepStrictEqual(evalAst(Stmt(Num(4),Sym('<'),Num(5))),BoolObj(true));
+    assert.deepStrictEqual(evalAst(Stmt(Group(Num(4),Sym('add'),Num(5)))), NumObj(9))
+    // assert.deepStrictEqual(
+    //     eval(Stat(
+    //         Group(Num(4),Sym('<'),Num(5)),
+    //         Sym('ifTrue'),
+    //         Block(Stat(Num(99)))
+    //         )),
+    //     Num(99),
+    // )
+})
