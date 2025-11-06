@@ -1,36 +1,43 @@
 import test from "node:test";
 import {strict as assert} from "assert";
 
-type GroupNode = {
+type GroupAST = {
     type:'group',
-    value: ExpNode[]
+    value: ExpAst[]
 }
-type StmtNode = {
+type StmtAST = {
     type: 'stmt',
-    value: ExpNode[],
+    value: ExpAst[],
 }
-type SymNode = {
+type SymAst = {
     type:'sym',
     value:string,
 }
-type NumNode = {
+type NumAst = {
     type: 'num',
     value: number,
 }
-type StrNode = {
+type StrAst = {
     type:'str',
     value: string,
 }
-type BlockNode = {
+type BlockAst = {
     type:'block',
-    value: ExpNode[],
+    value: ExpAst[],
 }
-type ExpNode = GroupNode | BlockNode | StmtNode | NumNode | StrNode | SymNode
+type ExpAst = GroupAST | BlockAst | StmtAST | NumAst | StrAst | SymAst
+
+
+const Num = (value:number):NumAst => ({type:'num', value})
+const Sym = (value:string):SymAst => ({type:'sym', value})
+const Stmt = (...args:ExpAst[]):StmtAST => ({type: 'stmt', value: Array.from(args)})
+const Group = (...args:ExpAst[]):GroupAST => ({type: 'group', value: Array.from(args)})
+const Block = (...args:ExpAst[]):BlockAst => ({type: 'block', value: Array.from(args)})
 
 function p(...args: any[]) {
     console.log(...args)
 }
-function parse(str: string):ExpNode {
+function parse(str: string):ExpAst {
     p("")
     p(`======= parsing ${str}`)
     let tokens = str.split(' ') // split by space
@@ -39,9 +46,8 @@ function parse(str: string):ExpNode {
     console.log("returned expressions", exps)
     return exps[0]
 }
-
-function parseGroup(toks:string[]):GroupNode {
-    let stack:ExpNode[] = []
+function parseGroup(toks:string[]):GroupAST {
+    let stack:ExpAst[] = []
     while(true) {
         let tok = toks.shift()
         if (tok == undefined) break;
@@ -53,8 +59,8 @@ function parseGroup(toks:string[]):GroupNode {
     }
     return Group(...stack)
 }
-function parseBlock(toks:string[]):BlockNode {
-    let stack:ExpNode[] = []
+function parseBlock(toks:string[]):BlockAst {
+    let stack:ExpAst[] = []
     while(true) {
         let tok = toks.shift()
         if (tok == undefined) break;
@@ -70,7 +76,7 @@ function parseBlock(toks:string[]):BlockNode {
     }
     return Block(...stack)
 }
-function parseOneToken(tok:string):ExpNode {
+function parseOneToken(tok:string):ExpAst {
     if (tok.match(/^[0-9]+$/)) {
         return Num(parseInt(tok))
     }
@@ -83,10 +89,10 @@ function parseOneToken(tok:string):ExpNode {
     if (tok == ":=") {
         return Sym(tok)
     }
+    console.warn(`unhandled token: ${tok}`)
 }
-
-function collapseStatement(stack: ExpNode[]) {
-    let temp:ExpNode[] = []
+function collapseStatement(stack: ExpAst[]) {
+    let temp:ExpAst[] = []
     while(true) {
         let node = stack.shift()
         if (!node) {
@@ -96,69 +102,23 @@ function collapseStatement(stack: ExpNode[]) {
     }
     stack.push(Stmt(...temp))
 }
-
-function parseToken(toks:string[]):ExpNode[] {
-    let stack:ExpNode[] = []
+function parseToken(toks:string[]):ExpAst[] {
+    let stack:ExpAst[] = []
     while(true) {
         let tok = toks.shift()
         if (tok == undefined) {
             break
         }
-        if (tok.match(/^[0-9]+$/)) {
-            stack.push(parseOneToken(tok))
-        }
-        if (tok.match(/^[a-zA-Z]+$/)) {
-            stack.push(parseOneToken(tok))
-        }
-        if (tok == "<") {
-            stack.push(parseOneToken(tok))
-        }
-        if (tok == ":=") {
-            stack.push(parseOneToken(tok))
-        }
-        if (tok == "(") {
-            stack.push(parseGroup(toks))
-        }
-        if (tok == "[") {
-            stack.push(parseBlock(toks))
-        }
-        if (tok == ".") {
-            collapseStatement(stack)
+        switch (tok) {
+            case "(": stack.push(parseGroup(toks)); break;
+            case "[": stack.push(parseBlock(toks)); break;
+            case ".": collapseStatement(stack); break;
+            default: stack.push(parseOneToken(tok));
         }
     }
     return stack;
 }
 
-function Num(value:number):NumNode {
-    return {
-        type:'num',
-        value,
-    }
-}
-function Sym(value:string):SymNode {
-    return {
-        type:'sym',
-        value,
-    }
-}
-function Stmt(...args:ExpNode[]):StmtNode {
-    return {
-        type:'stmt',
-        value:Array.from(args),
-    }
-}
-function Group(...args:ExpNode[]):GroupNode {
-    return {
-        type:'group',
-        value:Array.from(args),
-    }
-}
-function Block(...args:ExpNode[]):BlockNode {
-    return {
-        type:'block',
-        value:Array.from(args),
-    }
-}
 
 test("parse expressions", () => {
     assert.deepStrictEqual(parse(" 4  "), Num(4));
