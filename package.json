@@ -8,7 +8,7 @@
     "build": "tsc",
     "dev": "node src/index.ts",
     "test-ast": "node src/ast2.ts",
-    "test-parser": "node src/parser.ts"
+    "test-parser": "node src/parser2.ts"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
