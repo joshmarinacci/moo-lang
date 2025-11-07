@@ -84,7 +84,7 @@ function parseOneToken(tok:string,toks:string[]):ExpAst {
     if (tok.match(/^[a-zA-Z]+$/)) {
         return Sym(tok)
     }
-    if (tok == "<") {
+    if (tok == "<" || tok == ">") {
         return Sym(tok)
     }
     if (tok == ":=") {
@@ -227,11 +227,27 @@ NumberProto.slots.set('<',function(receiver:LangObject,message:LangObject,argume
     let b = argument.slots.get('value') as number
     return BoolObj(a<b)
 })
+NumberProto.slots.set('>',function(receiver:LangObject,message:LangObject,argument:LangObject) {
+    let a = receiver.slots.get('value') as number
+    let b = argument.slots.get('value') as number
+    return BoolObj(a>b)
+})
 let StringProto = new LangObject("String",ObjectProto);
 StringProto.slots.set('print', function(rec,msg) {
     console.log(`OUTPUT: ${rec.slots.get('value')}`)
 })
 let BooleanProto = new LangObject("Boolean",ObjectProto);
+BooleanProto.slots.set('cond', function(rec,msg, arg1, arg2) {
+    let val = rec.slots.get('value')
+    if (val === true) {
+        let invoke = arg1.slots.get('invoke')
+        return invoke(arg1, invoke,null)
+    }
+    if (val === false) {
+        let invoke = arg2.slots.get('invoke')
+        return invoke(arg2, invoke,null)
+    }
+})
 
 function NumObj(value:number):LangObject {
     let obj = new LangObject("NumberLiteral",NumberProto)
@@ -366,4 +382,6 @@ test('eval with scope', () => {
     comp(parseAndEvalWithScope('88 .',scope),NumObj(88))
     comp(parseAndEvalWithScope('[ 88 . ] invoke .',scope),NumObj(88))
 
+    comp(parseAndEvalWithScope('( 4 < 5 ) cond [ 44 ] [ 88 ] .',scope),NumObj(44))
+    comp(parseAndEvalWithScope('( 4 > 5 ) cond [ 44 ] [ 88 ] .',scope),NumObj(88))
 })
