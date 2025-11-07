@@ -350,12 +350,12 @@ test('eval with scope', () => {
     scope.slots.set('Number',NumberProto);
     assert.deepStrictEqual(parseAndEvalWithScope('4 add 5 .',scope),NumObj(9))
     assert.deepStrictEqual(parseAndEvalWithScope('self setSlot "dog" 4 .',scope),NumObj(4))
-    // parseAndEvalWithScope('self print .',scope)
     parseAndEvalWithScope('Object clone .',scope)
-    parseAndEvalWithScope('self setSlot "Dog" ( Object clone ) .', scope);
-    parseAndEvalWithScope('self setSlot "bark" [ "woof" print . ] .', scope);
-    // parseAndEvalWithScope('Dog print .', scope);
     parseAndEvalWithScope('self setSlot "foo" 5 .',scope)
     assert.deepStrictEqual(parseAndEvalWithScope(`foo print .`,scope),StrObj("5"))
+
+    parseAndEvalWithScope('self setSlot "Dog" ( Object clone ) .', scope);
+    parseAndEvalWithScope('Dog setSlot "bark" [ "woof" print . ] .', scope);
+    parseAndEvalWithScope('Dog bark .', scope);
 
 })
