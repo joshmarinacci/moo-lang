@@ -206,7 +206,7 @@ ObjectProto.slots.set('setSlot', function(receiver:LangObject, message:LangObjec
 })
 let NumberProto = new LangObject("Number",ObjectProto);
 NumberProto.slots.set('print', function(receiver:LangObject, message:LangObject, argument:LangObject) {
-    console.log(`OUTPUT Number(${receiver.slots.get('value')})`)
+    console.log(`OUTPUT ${receiver.slots.get('value')}`)
 })
 NumberProto.slots.set('add',function(receiver:LangObject,message:LangObject,argument:LangObject) {
     let a = receiver.slots.get('value') as number
@@ -218,6 +218,10 @@ NumberProto.slots.set('<',function(receiver:LangObject,message:LangObject,argume
     let b = argument.slots.get('value') as number
     return BoolObj(a<b)
 })
+let StringProto = new LangObject("String",ObjectProto);
+StringProto.slots.set('print', function(rec,msg) {
+    console.log(`OUTPUT: ${rec.slots.get('value')}`)
+})
 let BooleanProto = new LangObject("Boolean",ObjectProto);
 
 function NumObj(value:number):LangObject {
@@ -227,7 +231,7 @@ function NumObj(value:number):LangObject {
 }
 
 function StrObj(value:string):LangObject {
-    let obj = new LangObject("StringLiteral",ObjectProto)
+    let obj = new LangObject("StringLiteral",StringProto)
     obj.slots.set('value',value)
     return obj
 }
@@ -241,6 +245,20 @@ function SymRef(value:string):LangObject {
 function BoolObj(value:boolean):LangObject {
     let obj = new LangObject("BooleanLiteral",BooleanProto)
     obj.slots.set('value',value)
+    return obj
+}
+
+function BlockObj(value:ExpAst[]):LangObject {
+    let obj = new LangObject("BlockLiteral",ObjectProto)
+    obj.slots.set('value',value)
+    obj.slots.set('invoke',function(rec:LangObject,msg,arg1, arg2) {
+        // console.log("invokable block function")
+        // console.log("receiver is", rec)
+        // console.log("message is", msg)
+        // console.log("args are",arg1,arg2)
+        // console.log("original ast is",value)
+        evalAst(value[0],rec)
+    })
     return obj
 }
 
@@ -280,6 +298,13 @@ function evalAst(ast: ExpAst, scope:LangObject):LangObject {
         }
         let message = evalAst(ast.value[1], scope)
         let method = receiver.lookup_method(message)
+        // console.log("method is", method)
+        if(method instanceof LangObject) {
+            if (method.name === 'BlockLiteral') {
+                // console.log("Method is a block literal")
+                method = method.slots.get('invoke')
+            }
+        }
         if (ast.value.length <= 2) {
             return method(receiver,method,null)
         }
@@ -289,6 +314,9 @@ function evalAst(ast: ExpAst, scope:LangObject):LangObject {
         }
         let argument2 = evalAst(ast.value[3], scope)
         return method(receiver, message, argument, argument2)
+    }
+    if (ast.type == 'block') {
+        return BlockObj(ast.value)
     }
     throw new Error(`unknown ast type ${ast.type}`)
 }
@@ -327,4 +355,7 @@ test('eval with scope', () => {
     // parseAndEvalWithScope('self print .',scope)
     parseAndEvalWithScope('( self Object ) clone .',scope)
     parseAndEvalWithScope('self setSlot "Dog" ( ( self Object ) clone ) .', scope);
+    parseAndEvalWithScope('self setSlot "bark" [ "woof" print . ] .', scope);
+    parseAndEvalWithScope('self bark .', scope);
+
 })
