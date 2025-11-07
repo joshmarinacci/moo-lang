@@ -29,6 +29,7 @@ type ExpAst = GroupAST | BlockAst | StmtAST | NumAst | StrAst | SymAst
 
 
 const Num = (value:number):NumAst => ({type:'num', value})
+const Str = (value:string):StrAst => ({type:'str', value})
 const Sym = (value:string):SymAst => ({type:'sym', value})
 const Stmt = (...args:ExpAst[]):StmtAST => ({type: 'stmt', value: Array.from(args)})
 const Group = (...args:ExpAst[]):GroupAST => ({type: 'group', value: Array.from(args)})
@@ -51,7 +52,7 @@ function parseGroup(toks:string[]):GroupAST {
         if (tok == ")") {
             break;
         } else {
-            stack.push(parseOneToken(tok))
+            stack.push(parseOneToken(tok, toks))
         }
     }
     return Group(...stack)
@@ -73,9 +74,12 @@ function parseBlock(toks:string[]):BlockAst {
     }
     return Block(...stack)
 }
-function parseOneToken(tok:string):ExpAst {
+function parseOneToken(tok:string,toks:string[]):ExpAst {
     if (tok.match(/^[0-9]+$/)) {
         return Num(parseInt(tok))
+    }
+    if (tok.match(/^".+"$/)) {
+        return Str(tok.slice(1,tok.length-1))
     }
     if (tok.match(/^[a-zA-Z]+$/)) {
         return Sym(tok)
@@ -86,7 +90,11 @@ function parseOneToken(tok:string):ExpAst {
     if (tok == ":=") {
         return Sym(tok)
     }
+    if (tok == '(') {
+        return parseGroup(toks)
+    }
     console.warn(`unhandled token: ${tok}`)
+    throw new Error(`unhandled token ${tok}`)
 }
 function collapseStatement(stack: ExpAst[]) {
     let temp:ExpAst[] = []
@@ -110,7 +118,7 @@ function parseToken(toks:string[]):ExpAst[] {
             case "(": stack.push(parseGroup(toks)); break;
             case "[": stack.push(parseBlock(toks)); break;
             case ".": collapseStatement(stack); break;
-            default: stack.push(parseOneToken(tok));
+            default: stack.push(parseOneToken(tok,toks));
         }
     }
     return stack;
@@ -121,6 +129,7 @@ test("parse expressions", () => {
     assert.deepStrictEqual(parse(" 4  "), Num(4));
     assert.deepStrictEqual(parse(" foo  "), Sym("foo"));
     assert.deepStrictEqual(parse(" <  "), Sym("<"));
+    assert.deepStrictEqual(parse(` "dog"  `), Str("dog"));
     assert.deepStrictEqual(
         parse(" 4 < 5 . "),
         Stmt(Num(4),Sym('<'),Num(5))
@@ -149,21 +158,24 @@ test("parse expressions", () => {
         parse(' dog := Object clone .'),
         Stmt(Sym('dog'),Sym(':='),Sym('Object'),Sym('clone'))
     )
+    assert.deepStrictEqual(parse('( ( 4 < 5 ) < 6 )'),Group(Group(Num(4),Sym('<'),Num(5)),Sym('<'),Num(6)))
 })
 
 class LangObject {
     proto: LangObject | null
     slots: Map<string,any>
-    private name: string;
+    name: string;
     constructor(name:string,proto:LangObject|null){
         this.name = name;
         this.proto = proto
         this.slots = new Map()
     }
 
-    lookup_method(message: string):unknown {
-        if(this.slots.has(message)) {
-            return this.slots.get(message)
+    lookup_method(message: LangObject):unknown {
+        let name = message.slots.get('value')
+        // p(`looking up message ${name} in ${this.name}`)
+        if(this.slots.has(name)) {
+            return this.slots.get(name)
         } else {
             if (this.proto == null) {
                 throw new Error(`method not found`)
@@ -175,7 +187,27 @@ class LangObject {
 }
 
 let ObjectProto = new LangObject("Object",null);
+ObjectProto.slots.set('print', function(receiver:LangObject, message:LangObject, argument:LangObject) {
+    console.log("OUTPUT ", receiver.name, 'is',receiver)
+})
+ObjectProto.slots.set('clone', function(receiver:LangObject, message:LangObject, argument:LangObject) {
+    return new LangObject("clone of " + receiver.name, receiver)
+})
+ObjectProto.slots.set('setSlot', function(receiver:LangObject, message:LangObject, argument:LangObject, argument2:LangObject) {
+    // console.log("setSlot impl ", receiver.name, 'is',receiver)
+    // console.log('message is', message)
+    // console.log("arguments are",argument,argument2)
+    let name = argument.slots.get('value')
+    // console.log("name is",name)
+    let value = argument2.slots.get('value')
+    // console.log("arg2 is",value)
+    receiver.slots.set(name,argument2)
+    return argument2
+})
 let NumberProto = new LangObject("Number",ObjectProto);
+NumberProto.slots.set('print', function(receiver:LangObject, message:LangObject, argument:LangObject) {
+    console.log(`OUTPUT Number(${receiver.slots.get('value')})`)
+})
 NumberProto.slots.set('add',function(receiver:LangObject,message:LangObject,argument:LangObject) {
     let a = receiver.slots.get('value') as number
     let b = argument.slots.get('value') as number
@@ -194,43 +226,81 @@ function NumObj(value:number):LangObject {
     return obj
 }
 
+function StrObj(value:string):LangObject {
+    let obj = new LangObject("StringLiteral",ObjectProto)
+    obj.slots.set('value',value)
+    return obj
+}
+
+function SymRef(value:string):LangObject {
+    let obj = new LangObject("SymbolReference",ObjectProto)
+    obj.slots.set('value',value)
+    return obj
+}
+
 function BoolObj(value:boolean):LangObject {
     let obj = new LangObject("BooleanLiteral",BooleanProto)
     obj.slots.set('value',value)
     return obj
 }
 
-function evalAst(ast: ExpAst):LangObject {
+function evalAst(ast: ExpAst, scope:LangObject):LangObject {
     if (ast.type == 'num') {
         return NumObj(ast.value);
     }
+    if (ast.type == 'str') {
+        return StrObj(ast.value);
+    }
     if (ast.type == 'sym') {
-        return ast.value
+        return SymRef(ast.value)
     }
     if (ast.type == 'group') {
-        let receiver = evalAst(ast.value[0])
-        let message = evalAst(ast.value[1])
-        let argument = evalAst(ast.value[2])
+        let receiver = evalAst(ast.value[0], scope)
+        if (receiver.slots.get('value') == 'self') {
+            receiver = scope
+        }
+        let message = evalAst(ast.value[1], scope)
         let method = receiver.lookup_method(message)
+        if (ast.value.length <= 2) {
+            if (method instanceof LangObject) {
+                return method
+            }
+            return method(receiver,method,null)
+        }
+        let argument = evalAst(ast.value[2], scope)
         return method(receiver, message, argument)
     }
     if (ast.type == 'stmt') {
-        let receiver = evalAst(ast.value[0])
+        let receiver = evalAst(ast.value[0], scope)
+        if (receiver.slots.get('value') == 'self') {
+            receiver = scope
+        }
         if (ast.value.length <= 1) {
             return receiver
         }
-        let message = evalAst(ast.value[1])
-        let argument = evalAst(ast.value[2])
+        let message = evalAst(ast.value[1], scope)
         let method = receiver.lookup_method(message)
-        return method(receiver, message, argument)
+        if (ast.value.length <= 2) {
+            return method(receiver,method,null)
+        }
+        let argument = evalAst(ast.value[2], scope)
+        if (ast.value.length <= 3) {
+            return method(receiver, message, argument)
+        }
+        let argument2 = evalAst(ast.value[3], scope)
+        return method(receiver, message, argument, argument2)
     }
+    throw new Error(`unknown ast type ${ast.type}`)
 }
 
 test('eval expressions', () => {
     assert.deepStrictEqual(evalAst(Num(4)),NumObj(4));
+    assert.deepStrictEqual(evalAst(Str("dog")),StrObj("dog"));
     assert.deepStrictEqual(evalAst(Stmt(Num(4),Sym("add"),Num(5))),NumObj(9));
     assert.deepStrictEqual(evalAst(Stmt(Num(4),Sym('<'),Num(5))),BoolObj(true));
     assert.deepStrictEqual(evalAst(Stmt(Group(Num(4),Sym('add'),Num(5)))), NumObj(9))
+    // evalAst(Stmt(Num(4),Sym('print')));
+    // evalAst(Stmt(Str("foo"),Sym('print')));
     // assert.deepStrictEqual(
     //     eval(Stat(
     //         Group(Num(4),Sym('<'),Num(5)),
@@ -239,4 +309,22 @@ test('eval expressions', () => {
     //         )),
     //     Num(99),
     // )
+})
+
+function parseAndEvalWithScope(code: string, scope: LangObject):LangObject {
+    // p(`eval with scope '${code}'`)
+    let ast = parse(code)
+    // p(`ast is `,ast)
+    return evalAst(ast, scope)
+}
+
+test('eval with scope', () => {
+    let scope = new LangObject("Global",ObjectProto)
+    scope.slots.set('Object',ObjectProto);
+    scope.slots.set('Number',NumberProto);
+    assert.deepStrictEqual(parseAndEvalWithScope('4 add 5 .',scope),NumObj(9))
+    assert.deepStrictEqual(parseAndEvalWithScope('self setSlot "dog" 4 .',scope),NumObj(4))
+    // parseAndEvalWithScope('self print .',scope)
+    parseAndEvalWithScope('( self Object ) clone .',scope)
+    parseAndEvalWithScope('self setSlot "Dog" ( ( self Object ) clone ) .', scope);
 })
