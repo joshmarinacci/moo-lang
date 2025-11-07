@@ -194,13 +194,7 @@ ObjectProto.slots.set('clone', function(receiver:LangObject, message:LangObject,
     return new LangObject("clone of " + receiver.name, receiver)
 })
 ObjectProto.slots.set('setSlot', function(receiver:LangObject, message:LangObject, argument:LangObject, argument2:LangObject) {
-    // console.log("setSlot impl ", receiver.name, 'is',receiver)
-    // console.log('message is', message)
-    // console.log("arguments are",argument,argument2)
     let name = argument.slots.get('value')
-    // console.log("name is",name)
-    let value = argument2.slots.get('value')
-    // console.log("arg2 is",value)
     receiver.slots.set(name,argument2)
     return argument2
 })
@@ -217,6 +211,16 @@ NumberProto.slots.set('add',function(receiver:LangObject,message:LangObject,argu
     let a = receiver.slots.get('value') as number
     let b = argument.slots.get('value') as number
     return NumObj(a+b)
+})
+NumberProto.slots.set('+',function(receiver:LangObject,message:LangObject,argument:LangObject) {
+    let a = receiver.slots.get('value') as number
+    let b = argument.slots.get('value') as number
+    return NumObj(a+b)
+})
+NumberProto.slots.set('-',function(receiver:LangObject,message:LangObject,argument:LangObject) {
+    let a = receiver.slots.get('value') as number
+    let b = argument.slots.get('value') as number
+    return NumObj(a-b)
 })
 NumberProto.slots.set('<',function(receiver:LangObject,message:LangObject,argument:LangObject) {
     let a = receiver.slots.get('value') as number
@@ -257,12 +261,7 @@ function BlockObj(value:ExpAst[]):LangObject {
     let obj = new LangObject("BlockLiteral",ObjectProto)
     obj.slots.set('value',value)
     obj.slots.set('invoke',function(rec:LangObject,msg,arg1, arg2) {
-        // console.log("invokable block function")
-        // console.log("receiver is", rec)
-        // console.log("message is", msg)
-        // console.log("args are",arg1,arg2)
-        // console.log("original ast is",value)
-        evalAst(value[0],rec)
+        return evalAst(value[0],rec)
     })
     return obj
 }
@@ -326,13 +325,18 @@ function evalAst(ast: ExpAst, scope:LangObject):LangObject {
     throw new Error(`unknown ast type ${ast.type}`)
 }
 
+type DeepStrictEqual<T> = (actual: unknown, expected:T, message?: string | Error) => void;
+let comp:DeepStrictEqual<unknown> = assert.deepStrictEqual;
+
 test('eval expressions', () => {
     let scope = new LangObject("Global",ObjectProto)
-    assert.deepStrictEqual(evalAst(Num(4),scope),NumObj(4));
-    assert.deepStrictEqual(evalAst(Str("dog"),scope),StrObj("dog"));
-    assert.deepStrictEqual(evalAst(Stmt(Num(4),Sym("add"),Num(5)),scope),NumObj(9));
-    assert.deepStrictEqual(evalAst(Stmt(Num(4),Sym('<'),Num(5)),scope),BoolObj(true));
-    assert.deepStrictEqual(evalAst(Stmt(Group(Num(4),Sym('add'),Num(5))),scope), NumObj(9))
+    comp(evalAst(Num(4),scope),NumObj(4));
+    comp(evalAst(Str("dog"),scope),StrObj("dog"));
+    comp(evalAst(Stmt(Num(4),Sym("add"),Num(5)),scope),NumObj(9));
+    comp(evalAst(Stmt(Num(4),Sym('<'),Num(5)),scope),BoolObj(true));
+    comp(evalAst(Stmt(Num(4),Sym('+'),Num(5)),scope),NumObj(9));
+    comp(evalAst(Stmt(Num(4),Sym('-'),Num(5)),scope),NumObj(-1));
+    comp(evalAst(Stmt(Group(Num(4),Sym('add'),Num(5))),scope), NumObj(9))
 })
 
 function parseAndEvalWithScope(code: string, scope: LangObject):LangObject {
@@ -357,5 +361,9 @@ test('eval with scope', () => {
     parseAndEvalWithScope('self setSlot "Dog" ( Object clone ) .', scope);
     parseAndEvalWithScope('Dog setSlot "bark" [ "woof" print . ] .', scope);
     parseAndEvalWithScope('Dog bark .', scope);
+
+    comp(parseAndEvalWithScope('88',scope),NumObj(88))
+    comp(parseAndEvalWithScope('88 .',scope),NumObj(88))
+    comp(parseAndEvalWithScope('[ 88 . ] invoke .',scope),NumObj(88))
 
 })
