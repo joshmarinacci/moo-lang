@@ -178,7 +178,7 @@ class LangObject {
             return this.slots.get(name)
         } else {
             if (this.proto == null) {
-                throw new Error(`method not found`)
+                throw new Error(`method '${name}' not found`)
             } else {
                 return this.proto.lookup_method(message)
             }
@@ -204,9 +204,14 @@ ObjectProto.slots.set('setSlot', function(receiver:LangObject, message:LangObjec
     receiver.slots.set(name,argument2)
     return argument2
 })
+ObjectProto.slots.set('getSlot', function(receiver:LangObject, message:LangObject, argument:LangObject) {
+    let name = argument.slots.get('value')
+    return receiver.slots.get(name)
+})
 let NumberProto = new LangObject("Number",ObjectProto);
 NumberProto.slots.set('print', function(receiver:LangObject, message:LangObject, argument:LangObject) {
     console.log(`OUTPUT ${receiver.slots.get('value')}`)
+    return StrObj(receiver.slots.get('value')+"")
 })
 NumberProto.slots.set('add',function(receiver:LangObject,message:LangObject,argument:LangObject) {
     let a = receiver.slots.get('value') as number
@@ -270,13 +275,16 @@ function evalAst(ast: ExpAst, scope:LangObject):LangObject {
         return StrObj(ast.value);
     }
     if (ast.type == 'sym') {
+        if (ast.value === 'self') {
+            return scope
+        }
+        if (scope.slots.has(ast.value)) {
+            return scope.slots.get(ast.value)
+        }
         return SymRef(ast.value)
     }
     if (ast.type == 'group') {
         let receiver = evalAst(ast.value[0], scope)
-        if (receiver.slots.get('value') == 'self') {
-            receiver = scope
-        }
         let message = evalAst(ast.value[1], scope)
         let method = receiver.lookup_method(message)
         if (ast.value.length <= 2) {
@@ -290,9 +298,6 @@ function evalAst(ast: ExpAst, scope:LangObject):LangObject {
     }
     if (ast.type == 'stmt') {
         let receiver = evalAst(ast.value[0], scope)
-        if (receiver.slots.get('value') == 'self') {
-            receiver = scope
-        }
         if (ast.value.length <= 1) {
             return receiver
         }
@@ -322,28 +327,21 @@ function evalAst(ast: ExpAst, scope:LangObject):LangObject {
 }
 
 test('eval expressions', () => {
-    assert.deepStrictEqual(evalAst(Num(4)),NumObj(4));
-    assert.deepStrictEqual(evalAst(Str("dog")),StrObj("dog"));
-    assert.deepStrictEqual(evalAst(Stmt(Num(4),Sym("add"),Num(5))),NumObj(9));
-    assert.deepStrictEqual(evalAst(Stmt(Num(4),Sym('<'),Num(5))),BoolObj(true));
-    assert.deepStrictEqual(evalAst(Stmt(Group(Num(4),Sym('add'),Num(5)))), NumObj(9))
-    // evalAst(Stmt(Num(4),Sym('print')));
-    // evalAst(Stmt(Str("foo"),Sym('print')));
-    // assert.deepStrictEqual(
-    //     eval(Stat(
-    //         Group(Num(4),Sym('<'),Num(5)),
-    //         Sym('ifTrue'),
-    //         Block(Stat(Num(99)))
-    //         )),
-    //     Num(99),
-    // )
+    let scope = new LangObject("Global",ObjectProto)
+    assert.deepStrictEqual(evalAst(Num(4),scope),NumObj(4));
+    assert.deepStrictEqual(evalAst(Str("dog"),scope),StrObj("dog"));
+    assert.deepStrictEqual(evalAst(Stmt(Num(4),Sym("add"),Num(5)),scope),NumObj(9));
+    assert.deepStrictEqual(evalAst(Stmt(Num(4),Sym('<'),Num(5)),scope),BoolObj(true));
+    assert.deepStrictEqual(evalAst(Stmt(Group(Num(4),Sym('add'),Num(5))),scope), NumObj(9))
 })
 
 function parseAndEvalWithScope(code: string, scope: LangObject):LangObject {
     // p(`eval with scope '${code}'`)
     let ast = parse(code)
     // p(`ast is `,ast)
-    return evalAst(ast, scope)
+    let res = evalAst(ast, scope)
+    // p("returning",res)
+    return res
 }
 
 test('eval with scope', () => {
@@ -353,9 +351,11 @@ test('eval with scope', () => {
     assert.deepStrictEqual(parseAndEvalWithScope('4 add 5 .',scope),NumObj(9))
     assert.deepStrictEqual(parseAndEvalWithScope('self setSlot "dog" 4 .',scope),NumObj(4))
     // parseAndEvalWithScope('self print .',scope)
-    parseAndEvalWithScope('( self Object ) clone .',scope)
-    parseAndEvalWithScope('self setSlot "Dog" ( ( self Object ) clone ) .', scope);
+    parseAndEvalWithScope('Object clone .',scope)
+    parseAndEvalWithScope('self setSlot "Dog" ( Object clone ) .', scope);
     parseAndEvalWithScope('self setSlot "bark" [ "woof" print . ] .', scope);
-    parseAndEvalWithScope('self bark .', scope);
+    // parseAndEvalWithScope('Dog print .', scope);
+    parseAndEvalWithScope('self setSlot "foo" 5 .',scope)
+    assert.deepStrictEqual(parseAndEvalWithScope(`foo print .`,scope),StrObj("5"))
 
 })
