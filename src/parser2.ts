@@ -48,7 +48,7 @@ class ParseResult {
 }
 
 function Lit(value:string) {
-    return function (input:InputStream) {
+    return function lit(input:InputStream) {
         for(let i=0; i<value.length; i++) {
             let tok = input.advance(i).currentToken()
             let char = value[i]
@@ -106,21 +106,21 @@ function Optional(rule:Rule):Rule {
         }
     }
 }
-function Or(rule1:Rule, rule2:Rule) {
+function Or(...rules:Rule[]) {
     return function(input:InputStream) {
-        let pass = rule1(input)
-        if (pass.succeeded()) {
-            return pass
-        }
-        let pass2 = rule2(input)
-        if(pass2.succeeded()) {
-            return pass2
+        let count = 0
+        for (const i in rules) {
+            let rule = rules[i]
+            let pass = rule(input)
+            if(pass.succeeded()) {
+                return pass
+            }
         }
         return input.fail()
     }
 }
 function Seq(...rules:Rule[]):Rule {
-    return function (input:InputStream) {
+    return function seq(input:InputStream) {
         let count = 0
         for(const i in rules) {
             let rule = rules[i];
@@ -137,9 +137,12 @@ let Letter = Range("a","z");
 let Integer = OneOrMore(Digit)
 let Identifier = OneOrMore(Letter)
 let Whitespace = Optional(OneOrMore(Lit(" ")))
-let Exp = Or(Integer,Identifier)
-let Group = Seq(Lit("("),Whitespace,Exp,Whitespace,Lit(")"),Whitespace)
 let StringLiteral = Seq(Lit('"'),ZeroOrMore(Letter),Lit('"'))
+let Group = Lit("dummy")
+let Exp = Or(Integer,Identifier,StringLiteral,(input) => Group(input))
+Group = Seq(Lit("("),Whitespace,Exp,Whitespace,Lit(")"),Whitespace)
+let Statement = Seq(ZeroOrMore(Seq(Whitespace,Exp)),Whitespace,Lit("."))
+let Block = Seq(ZeroOrMore(Statement))
 
 function match(source:string, rule:Rule) {
     // console.log("=======")
@@ -203,4 +206,19 @@ test("parse group",() => {
     assert.ok(match("(4)",Group))
     assert.ok(match("(id)",Group))
     assert.ok(match("( id )",Group))
+    assert.ok(match("( ( id ) )",Group))
+    assert.ok(!match("( ( id ) ",Group))
+})
+test("parse statement",() => {
+    assert.ok(match(".",Statement))
+    assert.ok(match("foo.",Statement))
+    assert.ok(match("foo .",Statement))
+    assert.ok(match("foo bar .",Statement))
+    assert.ok(match("4 add 5 .",Statement))
+    assert.ok(match("foo bar .",Statement))
+})
+test("block",() => {
+    assert.ok(match("[]",Block))
+    assert.ok(match("[foo]",Block))
+    assert.ok(match("[foo .]",Block))
 })
