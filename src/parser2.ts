@@ -202,7 +202,7 @@ let Statement = withProduction(
         return Stmt(...vals)
     })
 let Block = withProduction(
-    Seq(Lit("["),ZeroOrMore(Statement),Lit("]"),Whitespace)
+    Seq(Lit("["),ZeroOrMore(Statement),Optional(Exp),Lit("]"),Whitespace)
     ,(res) =>{
         // console.log("block producting",res.production[1])
         return Blk(... res.production[1])
@@ -361,7 +361,7 @@ test("parse statement",() => {
 })
 test("block",() => {
     assert.ok(match("[]",Block))
-    // assert.ok(match("[foo]",Block))
+    assert.ok(match("[foo]",Block))
     assert.ok(match("[foo.]",Block))
     assert.deepStrictEqual(produces("[foo.]",Block),Blk(Stmt(Id("foo"))))
     assert.deepStrictEqual(produces("[foo. bar.]",Block),Blk(Stmt(Id("foo")),Stmt(Id("bar"))))
