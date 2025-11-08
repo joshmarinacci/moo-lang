@@ -57,11 +57,13 @@ function Lit(value:string) {
                 return input.fail()
             }
         }
-        return input.okay(value.length)
+        let res = input.okay(value.length)
+        res.production = value
+        return res
     }
 }
 function Range(start: string, end: string):Rule {
-    return (input:InputStream) => {
+    return function range(input:InputStream) {
         let value = input.currentToken()
         // console.log(`rule is ${value} within ${start} ${end}`)
         if(value >= start && value <= end) {
@@ -72,12 +74,20 @@ function Range(start: string, end: string):Rule {
     };
 }
 function ZeroOrMore(rule:Rule):Rule {
-    return function(input:InputStream) {
-        let i = 0;
+    return function zero_or_more(input:InputStream) {
+        let count = 0;
+        let prods = []
         while(true) {
-            let pass = rule(input.advance(i))
-            if (!pass.succeeded()) return input.okay(i)
-            i+=1
+            let pass = rule(input.advance(count))
+            if (pass.succeeded()) {
+                count += pass.used
+                prods.push(pass.production)
+            }
+            if (!pass.succeeded()) {
+                let res =  input.okay(count)
+                res.production = prods
+                return res
+            }
         }
     }
 }
@@ -87,41 +97,39 @@ function OneOrMore(rule:Rule):Rule {
         if (!pass.succeeded()) {
             return input.fail()
         }
-        let i = 0;
+        let count = 0;
         let prods = []
         while(true) {
-            i+=1
-            let pass = rule(input.advance(i))
+            let pass = rule(input.advance(count))
+            if (pass.succeeded()) {
+                count += pass.used
+                prods.push(pass.production)
+            }
             if (!pass.succeeded()) {
-                let res = input.okay(i)
+                let res = input.okay(count)
                 res.production = prods
                 return res
-            } else {
-                if (pass.production) {
-                    prods.push(pass.production)
-                }
             }
         }
     }
 }
 function Optional(rule:Rule):Rule {
-    return function(input:InputStream) {
-        let pass = rule(input);
-        if(pass.succeeded()) {
-            return pass
+    return function opt(input:InputStream) {
+        let res = rule(input);
+        if(res.succeeded()) {
+            return res
         } else {
             return input.okay(0)
         }
     }
 }
 function Or(...rules:Rule[]) {
-    return function(input:InputStream) {
-        let count = 0
+    return function or(input:InputStream) {
         for (const i in rules) {
             let rule = rules[i]
-            let pass = rule(input)
-            if(pass.succeeded()) {
-                return pass
+            let res = rule(input)
+            if(res.succeeded()) {
+                return res
             }
         }
         return input.fail()
@@ -136,9 +144,7 @@ function Seq(...rules:Rule[]):Rule {
             let pass = rule(input.advance(count))
             if (pass.failed()) return pass
             count += pass.used
-            if(pass.production) {
-                prods.push(pass.production)
-            }
+            prods.push(pass.production)
         }
         let pass = input.okay(count)
         pass.production = prods
@@ -150,10 +156,7 @@ function withProduction(rule:Rule, cb:(pass:ParseResult)=>unknown) {
     return function (input:InputStream) {
         let pass = rule(input)
         if (pass.succeeded()) {
-            let prod = cb(pass)
-            if(prod) {
-                pass.production = prod
-            }
+            pass.production = cb(pass)
         }
         return pass
     }
@@ -166,24 +169,37 @@ let Underscore = Lit("_")
 let Integer = withProduction(OneOrMore(Or(Digit,Underscore)),(res) => {
     return ({type:'num',value:parseInt(res.slice)})
 })
-let Identifier = withProduction(Seq(Letter,ZeroOrMore(Or(Letter,Digit,Underscore))),(res)=>{
-    return res.slice
-})
-let StringLiteral = withProduction(Seq(QQ,ZeroOrMore(Letter),QQ),(res) => {
-    return ({type:'str', value:res.slice.substring(1,res.slice.length-1)})
-})
-let Operator = withProduction(Or(Lit("+"),Lit("-"),Lit("*"),Lit("/")),(res)=>{
-    return res.slice
-})
+let Identifier = withProduction(
+    Seq(Letter,ZeroOrMore(Or(Letter,Digit,Underscore)))
+    ,(res)=> {
+        return Id(res.slice)
+    })
+let StringLiteral = withProduction(
+    Seq(QQ,ZeroOrMore(Letter),QQ)
+    ,(res) => Str(res.slice.substring(1, res.slice.length - 1)))
+let Operator = withProduction(
+    Or(Lit("+"),Lit("-"),Lit("*"),Lit("/"))
+    ,(res)=> res.slice)
 let RealExp = Lit("dummy")
 let Exp = (input:InputStream) => RealExp(input)
-let Group = withProduction(Seq(Lit("("),Whitespace,Exp,Whitespace,Lit(")"),Whitespace),(res)=>{
-    return ({type:'group',value:res.production})
-})
-let Statement = Seq(ZeroOrMore(Seq(Whitespace,Exp)),Whitespace,Lit("."))
+let Group = withProduction(
+    Seq(Lit("("),Whitespace,Exp,Whitespace,Lit(")"),Whitespace)
+    ,(res)=>{
+        let value = res.production as Array<ASTNode>
+        return Grp(value[2])
+    })
+let Statement = withProduction(
+    Seq(ZeroOrMore(Seq(Whitespace,Exp)),Whitespace,Lit("."))
+    ,(res)=>{
+        return {type:'stmt',value:res.production}
+    })
 let Block = Seq(ZeroOrMore(Statement))
 // fix the recursion
-RealExp = Seq(Or(Integer,Identifier,Operator,StringLiteral,Group))
+RealExp = withProduction(
+    Or(Integer,Identifier,Operator,StringLiteral,Group)
+    ,(res)=>{
+    return res.production
+})
 
 function match(source:string, rule:Rule) {
     // console.log("=======")
@@ -207,9 +223,24 @@ type LitStrNode = {
     type:'str',
     value:string
 }
-type ASTNode = LitNumNode | LitStrNode
-const ASTLitNum = (value:number) => ({type:'num', value})
-const ASTStrNum = (value:string) => ({type:'str',value})
+type StatementNode = {
+    type:'stmt',
+    value:ASTNode[]
+}
+type IdentifierNode = {
+    type:'id',
+    value:string
+}
+type GroupNode = {
+    type:'group',
+    value:ASTNode[]
+}
+type ASTNode = LitNumNode | LitStrNode | StatementNode | IdentifierNode | GroupNode
+const Num = (value:number) => ({type:'num', value} as LitNumNode)
+const Str = (value:string) => ({type:'str',value})
+const Stmt = (...args:ASTNode[]) => ({type:'stmt', value:Array.from(args)})
+const Id =(value:string) => ({type:'id',value:value} as IdentifierNode)
+const Grp = (...args:ASTNode[]) => ({type:'group',value: Array.from(args)}as GroupNode)
 
 test ("test parser itself", () => {
     assert.ok(match("a",Lit("a")))
@@ -240,7 +271,7 @@ test("parse integer",() => {
     assert.equal(matchOutput("44",Integer),"44")
     assert.equal(matchOutput("44845a",Integer),"44845")
     assert.ok(!match("a44845",Integer))
-    assert.deepStrictEqual(produces("44",Integer),ASTLitNum(44))
+    assert.deepStrictEqual(produces("44",Integer),Num(44))
 })
 test("parse identifier",() => {
     assert.ok(match("abc",Identifier))
@@ -248,12 +279,13 @@ test("parse identifier",() => {
     assert.ok(match("a_bc",Identifier))
     assert.ok(!match("1abc",Identifier))
     assert.ok(!match("_abc",Identifier))
+    assert.deepStrictEqual(produces("abc",Identifier),Id("abc"))
 })
 test("parse string literal",() => {
     assert.ok(match(`"abc"`,StringLiteral))
     assert.ok(match(`""`,StringLiteral))
-    assert.deepStrictEqual(produces(`"abc"`,StringLiteral),ASTStrNum("abc"))
-    assert.deepStrictEqual(produces(`""`,StringLiteral),ASTStrNum(""))
+    assert.deepStrictEqual(produces(`"abc"`,StringLiteral),Str("abc"))
+    assert.deepStrictEqual(produces(`""`,StringLiteral),Str(""))
 })
 test("parse operators",() => {
     assert.ok(match("+",Operator))
@@ -278,18 +310,37 @@ test("handle whitespace",() => {
 })
 test("parse group",() => {
     assert.ok(match("(4)",Group))
+    assert.deepStrictEqual(produces("(4)",Group),{
+        type:'group',
+        value:[Num(4)]
+    })
     assert.ok(match("(id)",Group))
     assert.ok(match("( id )",Group))
     assert.ok(match("( ( id ) )",Group))
+    assert.deepStrictEqual(produces("( ( 4 ) )",Group),{
+        type:'group',
+        value:[{
+            type: 'group',
+            value: [Num(4)]
+        }]
+    })
     assert.ok(!match("( ( id ) ",Group))
     assert.ok(!match("( ( 4 add 5 ) ",Group))
 })
+
 test("parse statement",() => {
     assert.ok(match(".",Statement))
+    // assert.deepStrictEqual(produces(".",Statement),Stmt())
     assert.ok(match("foo.",Statement))
+    assert.deepStrictEqual(produces("foo",RealExp),Id("foo"))
+    // assert.deepStrictEqual(produces("abcdef",Statement),Stmt(Id("abcdef")))
     assert.ok(match("foo .",Statement))
     assert.ok(match("foo bar .",Statement))
     assert.ok(match("4 add 5 .",Statement))
+    // assert.deepStrictEqual(produces("4 .",Statement),Stmt(Num(4)))
+    // assert.deepStrictEqual(produces("4 add 5 .",Statement),Stmt({
+    //     type:'stmt',value:[ASTLitNum(4),"add",ASTLitNum(5)]
+    // })
     assert.ok(match("foo bar .",Statement))
 })
 test("block",() => {
