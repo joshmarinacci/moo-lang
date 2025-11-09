@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "test-eval": "node src/eval.ts",
-    "test-parser": "node src/parser.ts"
+    "test-parser": "node src/parser.test.ts"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
