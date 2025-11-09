@@ -2,7 +2,7 @@ import test from "node:test";
 import {strict as assert} from "assert";
 import { Grp, Id, Num, Stmt, Str, Blk} from "./ast.ts"
 
-import type {Ast, BlockAst, GroupAst} from "./ast.ts"
+import type {Ast} from "./ast.ts"
 
 import {parseAst} from "./parser.ts"
 
@@ -166,7 +166,11 @@ function BlockObj(value:Ast[]):Obj {
     let obj = new Obj("BlockLiteral",ObjectProto)
     obj.slots.set('value',value)
     obj.slots.set('invoke',function(rec:Obj) {
-        return evalAst(value[0],rec)
+        let last = null
+        for (let ast of value) {
+            last = evalAst(ast,rec)
+        }
+        return last
     })
     return obj
 }
@@ -247,12 +251,15 @@ test('eval expressions', () => {
     comp(evalAst(Stmt(Grp(Num(4),Id('add'),Num(5))),scope), NumObj(9))
 })
 
+const p = (...args:any[]) => {
+    // console.log(...args)
+}
 function parseAndEvalWithScope(code: string, scope: Obj):Obj {
-    // p(`eval with scope '${code}'`)
+    p(`==========\neval with scope '${code}'`)
     let ast = parseAst(code)
-    // p(`ast is `,ast)
+    p(`ast is `,ast)
     let res = evalAst(ast, scope)
-    // p("returning",res)
+    p("returning",res)
     return res
 }
 
@@ -281,11 +288,12 @@ test('eval with scope', () => {
     comp(parseAndEvalWithScope('[ 88 . ] invoke .',scope),NumObj(88))
 
     comp(parseAndEvalWithScope('( 4 < 5 ) cond [ 44. ] [ 88. ] .',scope),NumObj(44))
-    comp(parseAndEvalWithScope(`( 4 > 5 ) 
+    comp(parseAndEvalWithScope(`( 4 > 5 )
     cond [ 44. ]
      [ 88. ] .`,scope),NumObj(88))
     comp(parseAndEvalWithScope('true .',scope),BoolObj(true))
     comp(parseAndEvalWithScope('false .',scope),BoolObj(false))
     comp(parseAndEvalWithScope('nil .',scope),NilObj())
 
+    comp(parseAndEvalWithScope(`[ self setSlot "a" 6. a add 4.] invoke .`,scope),NumObj(10))
 })
