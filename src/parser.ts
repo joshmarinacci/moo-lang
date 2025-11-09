@@ -163,7 +163,7 @@ function withProduction(rule:Rule, cb:(pass:ParseResult)=>unknown) {
         return pass
     }
 }
-let Whitespace = withProduction(
+let WS = withProduction(
     Optional(OneOrMore(Lit(" ")))
     ,(res) => undefined) // remove all whitespace from the tree
 let Digit = Range("0","9");
@@ -185,26 +185,27 @@ let Operator = withProduction(
 let RealExp = Lit("dummy")
 let Exp = (input:InputStream) => RealExp(input)
 let Group = withProduction(
-    Seq(Lit("("),Whitespace,Exp,Whitespace,Lit(")"),Whitespace)
+    Seq(Lit('('),WS,ZeroOrMore(Seq(WS,Exp)),WS,Lit(')'),WS)
     ,(res)=>{
         let value = res.production as Array<Ast>
-        return Grp(value[2])
+        value = value.flat(2)
+        value = value.filter(v => v!== undefined)
+        value = value.slice(1, value.length -1)
+        return Grp(...value)
     })
 let Statement = withProduction(
-    Seq(ZeroOrMore(Seq(Whitespace,Exp)),Whitespace,Lit("."))
+    Seq(ZeroOrMore(Seq(WS,Exp)),WS,Lit("."))
     ,(res)=>{
         // flatten and filter out the undefineds
-        let vals = res.production as Ast[]
-        // console.log("statement before",vals)
+        let vals = res.production as Array<Ast>
         vals = vals.flat(10)
         vals = vals.filter(v => v !== undefined)
         // remove the period
         vals.pop()
-        // console.log("statement after",vals)
         return Stmt(...vals)
     })
 let Block = withProduction(
-    Seq(Lit("["),ZeroOrMore(Statement),Optional(Exp),Lit("]"),Whitespace)
+    Seq(Lit("["),ZeroOrMore(Statement),Optional(Exp),Lit("]"),WS)
     ,(res) =>{
         // console.log("block producting",res.production[1])
         return Blk(... res.production[1])
@@ -296,29 +297,21 @@ test("handle whitespace",() => {
     assert.ok(match("4 ",Integer))
     assert.ok(match(" ", Lit(" ")))
     assert.ok(match("     ", OneOrMore(Lit(" "))))
-    assert.ok(match("     ", Whitespace))
-    assert.ok(match(" 4",Seq(Whitespace,Integer)))
-    assert.ok(match(" 4 ",Seq(Whitespace,Integer)))
-    assert.ok(match(" 4 5",Seq(Whitespace,Integer,Whitespace,Integer,Whitespace)))
+    assert.ok(match("     ", WS))
+    assert.ok(match(" 4",Seq(WS,Integer)))
+    assert.ok(match(" 4 ",Seq(WS,Integer)))
+    assert.ok(match(" 4 5",Seq(WS,Integer,WS,Integer,WS)))
 })
 test("parse group",() => {
     assert.ok(match("(4)",Group))
-    assert.deepStrictEqual(produces("(4)",Group),{
-        type:'group',
-        value:[Num(4)]
-    })
+    assert.deepStrictEqual(produces("(4)",Group),Grp(Num(4)))
     assert.ok(match("(id)",Group))
     assert.ok(match("( id )",Group))
     assert.ok(match("( ( id ) )",Group))
-    assert.deepStrictEqual(produces("( ( 4 ) )",Group),{
-        type:'group',
-        value:[{
-            type: 'group',
-            value: [Num(4)]
-        }]
-    })
+    assert.deepStrictEqual(produces("( ( 4 ) )",Group),Grp(Grp(Num(4))))
     assert.ok(!match("( ( id ) ",Group))
     assert.ok(!match("( ( 4 add 5 ) ",Group))
+    assert.deepStrictEqual(produces("( 4 add )",Group),Grp(Num(4),Id('add')))
 })
 
 test("parse statement",() => {
@@ -343,5 +336,8 @@ test("block",() => {
 })
 test('parse expression',() => {
     assert.deepStrictEqual(parseAst("4"),Num(4))
+    assert.deepStrictEqual(parseAst("(4)"),Grp(Num(4)))
+    assert.deepStrictEqual(parseAst("(add)"),Grp(Id("add")))
+    assert.deepStrictEqual(parseAst("(4 + 5)"),Grp(Num(4),Id("+"),Num(5)))
 })
 

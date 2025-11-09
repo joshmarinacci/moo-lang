@@ -106,7 +106,7 @@ test("parse expressions", () => {
         Stmt(Num(4),Id('<'),Num(5))
     );
     assert.deepStrictEqual(
-        parse(" ( 4 < 5 ) "),
+        parseAst(" ( 4 < 5 ) "),
         Grp(Num(4),Id('<'),Num(5))
     );
     assert.deepStrictEqual(
@@ -129,7 +129,7 @@ test("parse expressions", () => {
         parse(' dog := Object clone .'),
         Stmt(Id('dog'),Id(':='),Id('Object'),Id('clone'))
     )
-    assert.deepStrictEqual(parse('( ( 4 < 5 ) < 6 )'),Grp(Grp(Num(4),Id('<'),Num(5)),Id('<'),Num(6)))
+    assert.deepStrictEqual(parseAst('( ( 4 < 5 ) < 6 )'),Grp(Grp(Num(4),Id('<'),Num(5)),Id('<'),Num(6)))
 })
 
 class LangObject {
