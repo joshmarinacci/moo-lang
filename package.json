@@ -6,9 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "node src/index.ts",
-    "test-ast": "node src/ast2.ts",
-    "test-parser": "node src/parser2.ts"
+    "test-eval": "node src/eval.ts",
+    "test-parser": "node src/parser.ts"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",

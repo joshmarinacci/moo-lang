@@ -1,51 +1,20 @@
 import test from "node:test";
 import {strict as assert} from "assert";
+import { Grp, Id, Num, Stmt, Str, Blk} from "./ast.ts"
 
-type GroupAST = {
-    type:'group',
-    value: ExpAst[]
-}
-type StmtAST = {
-    type: 'stmt',
-    value: ExpAst[],
-}
-type SymAst = {
-    type:'sym',
-    value:string,
-}
-type NumAst = {
-    type: 'num',
-    value: number,
-}
-type StrAst = {
-    type:'str',
-    value: string,
-}
-type BlockAst = {
-    type:'block',
-    value: ExpAst[],
-}
-type ExpAst = GroupAST | BlockAst | StmtAST | NumAst | StrAst | SymAst
-
-
-const Num = (value:number):NumAst => ({type:'num', value})
-const Str = (value:string):StrAst => ({type:'str', value})
-const Sym = (value:string):SymAst => ({type:'sym', value})
-const Stmt = (...args:ExpAst[]):StmtAST => ({type: 'stmt', value: Array.from(args)})
-const Group = (...args:ExpAst[]):GroupAST => ({type: 'group', value: Array.from(args)})
-const Block = (...args:ExpAst[]):BlockAst => ({type: 'block', value: Array.from(args)})
+import type {Ast, BlockAst, GroupAst} from "./ast.ts"
 
 function p(...args: any[]) {
     console.log(...args)
 }
-function parse(str: string):ExpAst {
+function parse(str: string):Ast {
     let tokens = str.split(' ') // split by space
         .filter(str => str.trim().length != 0) // strip empty string tokens
     let exps = parseToken(tokens)
     return exps[0]
 }
-function parseGroup(toks:string[]):GroupAST {
-    let stack:ExpAst[] = []
+function parseGroup(toks:string[]):GroupAst {
+    let stack:Ast[] = []
     while(true) {
         let tok = toks.shift()
         if (tok == undefined) break;
@@ -55,10 +24,10 @@ function parseGroup(toks:string[]):GroupAST {
             stack.push(parseOneToken(tok, toks))
         }
     }
-    return Group(...stack)
+    return Grp(...stack)
 }
 function parseBlock(toks:string[]):BlockAst {
-    let stack:ExpAst[] = []
+    let stack:Ast[] = []
     while(true) {
         let tok = toks.shift()
         if (tok == undefined) break;
@@ -72,9 +41,9 @@ function parseBlock(toks:string[]):BlockAst {
             stack.push(parseOneToken(tok))
         }
     }
-    return Block(...stack)
+    return Blk(...stack)
 }
-function parseOneToken(tok:string,toks:string[]):ExpAst {
+function parseOneToken(tok:string,toks:string[]):Ast {
     if (tok.match(/^[0-9]+$/)) {
         return Num(parseInt(tok))
     }
@@ -82,13 +51,13 @@ function parseOneToken(tok:string,toks:string[]):ExpAst {
         return Str(tok.slice(1,tok.length-1))
     }
     if (tok.match(/^[a-zA-Z]+$/)) {
-        return Sym(tok)
+        return Id(tok)
     }
     if (tok == "<" || tok == ">") {
-        return Sym(tok)
+        return Id(tok)
     }
     if (tok == ":=") {
-        return Sym(tok)
+        return Id(tok)
     }
     if (tok == '(') {
         return parseGroup(toks)
@@ -96,8 +65,8 @@ function parseOneToken(tok:string,toks:string[]):ExpAst {
     console.warn(`unhandled token: ${tok}`)
     throw new Error(`unhandled token ${tok}`)
 }
-function collapseStatement(stack: ExpAst[]) {
-    let temp:ExpAst[] = []
+function collapseStatement(stack: Ast[]) {
+    let temp:Ast[] = []
     while(true) {
         let node = stack.shift()
         if (!node) {
@@ -107,8 +76,8 @@ function collapseStatement(stack: ExpAst[]) {
     }
     stack.push(Stmt(...temp))
 }
-function parseToken(toks:string[]):ExpAst[] {
-    let stack:ExpAst[] = []
+function parseToken(toks:string[]):Ast[] {
+    let stack:Ast[] = []
     while(true) {
         let tok = toks.shift()
         if (tok == undefined) {
@@ -127,38 +96,38 @@ function parseToken(toks:string[]):ExpAst[] {
 
 test("parse expressions", () => {
     assert.deepStrictEqual(parse(" 4  "), Num(4));
-    assert.deepStrictEqual(parse(" foo  "), Sym("foo"));
-    assert.deepStrictEqual(parse(" <  "), Sym("<"));
+    assert.deepStrictEqual(parse(" foo  "), Id("foo"));
+    assert.deepStrictEqual(parse(" <  "), Id("<"));
     assert.deepStrictEqual(parse(` "dog"  `), Str("dog"));
     assert.deepStrictEqual(
         parse(" 4 < 5 . "),
-        Stmt(Num(4),Sym('<'),Num(5))
+        Stmt(Num(4),Id('<'),Num(5))
     );
     assert.deepStrictEqual(
         parse(" ( 4 < 5 ) "),
-        Group(Num(4),Sym('<'),Num(5))
+        Grp(Num(4),Id('<'),Num(5))
     );
     assert.deepStrictEqual(
         parse(" ( 4 < 5 ) . "),
-        Stmt(Group(Num(4),Sym('<'),Num(5)))
+        Stmt(Grp(Num(4),Id('<'),Num(5)))
     );
     assert.deepStrictEqual(
         parse("[ 99 . ] "),
-        Block(Stmt(Num(99))),
+        Blk(Stmt(Num(99))),
     )
     assert.deepStrictEqual(
         parse(` ( 4 < 5 ) ifTrue [ 99 . ] .`),
         Stmt(
-            Group(Num(4),Sym('<'),Num(5)),
-            Sym('ifTrue'),
-            Block(Stmt(Num(99)))
+            Grp(Num(4),Id('<'),Num(5)),
+            Id('ifTrue'),
+            Blk(Stmt(Num(99)))
         )
     );
     assert.deepStrictEqual(
         parse(' dog := Object clone .'),
-        Stmt(Sym('dog'),Sym(':='),Sym('Object'),Sym('clone'))
+        Stmt(Id('dog'),Id(':='),Id('Object'),Id('clone'))
     )
-    assert.deepStrictEqual(parse('( ( 4 < 5 ) < 6 )'),Group(Group(Num(4),Sym('<'),Num(5)),Sym('<'),Num(6)))
+    assert.deepStrictEqual(parse('( ( 4 < 5 ) < 6 )'),Grp(Grp(Num(4),Id('<'),Num(5)),Id('<'),Num(6)))
 })
 
 class LangObject {
@@ -280,7 +249,7 @@ function NilObj():LangObject {
     return obj
 }
 
-function BlockObj(value:ExpAst[]):LangObject {
+function BlockObj(value:Ast[]):LangObject {
     let obj = new LangObject("BlockLiteral",ObjectProto)
     obj.slots.set('value',value)
     obj.slots.set('invoke',function(rec:LangObject,msg,arg1, arg2) {
@@ -289,14 +258,14 @@ function BlockObj(value:ExpAst[]):LangObject {
     return obj
 }
 
-function evalAst(ast: ExpAst, scope:LangObject):LangObject {
+function evalAst(ast: Ast, scope:LangObject):LangObject {
     if (ast.type == 'num') {
         return NumObj(ast.value);
     }
     if (ast.type == 'str') {
         return StrObj(ast.value);
     }
-    if (ast.type == 'sym') {
+    if (ast.type == 'id') {
         if (ast.value === 'self') {
             return scope
         }
@@ -358,11 +327,11 @@ test('eval expressions', () => {
     let scope = new LangObject("Global",ObjectProto)
     comp(evalAst(Num(4),scope),NumObj(4));
     comp(evalAst(Str("dog"),scope),StrObj("dog"));
-    comp(evalAst(Stmt(Num(4),Sym("add"),Num(5)),scope),NumObj(9));
-    comp(evalAst(Stmt(Num(4),Sym('<'),Num(5)),scope),BoolObj(true));
-    comp(evalAst(Stmt(Num(4),Sym('+'),Num(5)),scope),NumObj(9));
-    comp(evalAst(Stmt(Num(4),Sym('-'),Num(5)),scope),NumObj(-1));
-    comp(evalAst(Stmt(Group(Num(4),Sym('add'),Num(5))),scope), NumObj(9))
+    comp(evalAst(Stmt(Num(4),Id("add"),Num(5)),scope),NumObj(9));
+    comp(evalAst(Stmt(Num(4),Id('<'),Num(5)),scope),BoolObj(true));
+    comp(evalAst(Stmt(Num(4),Id('+'),Num(5)),scope),NumObj(9));
+    comp(evalAst(Stmt(Num(4),Id('-'),Num(5)),scope),NumObj(-1));
+    comp(evalAst(Stmt(Grp(Num(4),Id('add'),Num(5))),scope), NumObj(9))
 })
 
 function parseAndEvalWithScope(code: string, scope: LangObject):LangObject {
