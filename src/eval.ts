@@ -97,25 +97,25 @@ function parseToken(toks:string[]):Ast[] {
 
 
 test("parse expressions", () => {
-    assert.deepStrictEqual(parseAst(" 4 "), Num(4));
-    assert.deepStrictEqual(parseAst(" foo  "), Id("foo"));
-    assert.deepStrictEqual(parseAst(" <  "), Id("<"));
-    assert.deepStrictEqual(parseAst(` "dog"  `), Str("dog"));
+    assert.deepStrictEqual(parseAst(" 4 ."), Stmt(Num(4)))
+    assert.deepStrictEqual(parseAst(" foo  ."), Stmt(Id("foo")))
+    assert.deepStrictEqual(parseAst(" <  ."), Stmt(Id("<")));
+    assert.deepStrictEqual(parseAst(` "dog"  .`), Stmt(Str("dog")));
     assert.deepStrictEqual(
-        parse(" 4 < 5 . "),
+        parseAst(" 4 < 5 . "),
         Stmt(Num(4),Id('<'),Num(5))
     );
     assert.deepStrictEqual(
-        parseAst(" ( 4 < 5 ) "),
-        Grp(Num(4),Id('<'),Num(5))
-    );
-    assert.deepStrictEqual(
-        parse(" ( 4 < 5 ) . "),
+        parseAst(" ( 4 < 5 ) ."),
         Stmt(Grp(Num(4),Id('<'),Num(5)))
     );
     assert.deepStrictEqual(
-        parseAst("[ 99 . ] "),
-        Blk(Stmt(Num(99))),
+        parseAst(" ( 4 < 5 ) . "),
+        Stmt(Grp(Num(4),Id('<'),Num(5)))
+    );
+    assert.deepStrictEqual(
+        parseAst("[ 99 . ] ."),
+        Stmt(Blk(Stmt(Num(99)))),
     )
     assert.deepStrictEqual(
         parse(` ( 4 < 5 ) ifTrue [ 99 . ] .`),
@@ -126,10 +126,11 @@ test("parse expressions", () => {
         )
     );
     assert.deepStrictEqual(
-        parse(' dog := Object clone .'),
+        parseAst(' dog := Object clone .'),
         Stmt(Id('dog'),Id(':='),Id('Object'),Id('clone'))
     )
-    assert.deepStrictEqual(parseAst('( ( 4 < 5 ) < 6 )'),Grp(Grp(Num(4),Id('<'),Num(5)),Id('<'),Num(6)))
+    assert.deepStrictEqual(parseAst('( ( 4 < 5 ) < 6 ).'),
+        Stmt(Grp(Grp(Num(4),Id('<'),Num(5)),Id('<'),Num(6))))
 })
 
 class LangObject {

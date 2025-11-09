@@ -167,7 +167,7 @@ let WS = withProduction(
     Optional(OneOrMore(Lit(" ")))
     ,(res) => undefined) // remove all whitespace from the tree
 let Digit = Range("0","9");
-let Letter = Range("a","z");
+let Letter = Or(Range("a","z"),Range("A","Z"));
 let QQ = Lit('"')
 let Underscore = Lit("_")
 let Integer = withProduction(OneOrMore(Or(Digit,Underscore)),(res) => {
@@ -180,7 +180,7 @@ let StringLiteral = withProduction(
     Seq(QQ,ZeroOrMore(Letter),QQ)
     ,(res) => Str(res.slice.substring(1, res.slice.length - 1)))
 let Operator = withProduction(
-    Or(Lit("+"),Lit("-"),Lit("*"),Lit("/"),Lit("<"))
+    Or(Lit("+"),Lit("-"),Lit("*"),Lit("/"),Lit("<"),Lit(":="))
     ,(res)=> Id(res.slice)) // operators are identifiers too
 let RealExp = Lit("dummy")
 let Exp = (input:InputStream) => RealExp(input)
@@ -194,7 +194,7 @@ let Group = withProduction(
         return Grp(...value)
     })
 let Statement = withProduction(
-    Seq(ZeroOrMore(Seq(WS,Exp)),WS,Lit("."))
+    Seq(OneOrMore(Seq(WS,Exp,WS)),Lit("."))
     ,(res)=>{
         // flatten and filter out the undefineds
         let vals = res.production as Array<Ast>
@@ -233,7 +233,7 @@ function produces(source:string, rule:Rule) {
 
 export function parseAst(source:string):Ast {
     let input = new InputStream(source.trim(),0);
-    return RealExp(input).production
+    return Statement(input).production
 }
 
 test ("test parser itself", () => {
@@ -269,6 +269,7 @@ test("parse integer",() => {
 })
 test("parse identifier",() => {
     assert.ok(match("abc",Identifier))
+    assert.ok(match("ABC",Identifier))
     assert.ok(match("a2bc",Identifier))
     assert.ok(match("a_bc",Identifier))
     assert.ok(!match("1abc",Identifier))
@@ -290,6 +291,7 @@ test("parse operators",() => {
     assert.ok(!match("[",Operator))
     assert.ok(!match(".",Operator))
     assert.deepStrictEqual(produces("+",Operator),Id("+"))
+    assert.deepStrictEqual(produces(":=",Operator),Id(":="))
 })
 
 test("handle whitespace",() => {
@@ -315,8 +317,8 @@ test("parse group",() => {
 })
 
 test("parse statement",() => {
-    assert.ok(match(".",Statement))
-    assert.deepStrictEqual(produces(".",Statement),Stmt())
+    // assert.ok(match(".",Statement))
+    // assert.deepStrictEqual(produces(".",Statement),Stmt())
     assert.ok(match("foo.",Statement))
     assert.deepStrictEqual(produces("foo",RealExp),Id("foo"))
     assert.deepStrictEqual(produces("abcdef.",Statement),Stmt(Id("abcdef")))
@@ -336,10 +338,10 @@ test("block",() => {
     assert.deepStrictEqual(produces("[foo. bar.]",Block),Blk(Stmt(Id("foo")),Stmt(Id("bar"))))
 })
 test('parse expression',() => {
-    assert.deepStrictEqual(parseAst("4"),Num(4))
-    assert.deepStrictEqual(parseAst("(4)"),Grp(Num(4)))
-    assert.deepStrictEqual(parseAst("(add)"),Grp(Id("add")))
-    assert.deepStrictEqual(parseAst("(4 + 5)"),Grp(Num(4),Id("+"),Num(5)))
-    assert.deepStrictEqual(parseAst("[foo.]"),Blk(Stmt(Id("foo"))))
+    assert.deepStrictEqual(parseAst("4 ."),Stmt(Num(4)))
+    assert.deepStrictEqual(parseAst("(4)."),Stmt(Grp(Num(4))))
+    assert.deepStrictEqual(parseAst("(add)."),Stmt(Grp(Id("add"))))
+    assert.deepStrictEqual(parseAst("(4 + 5)."),Stmt(Grp(Num(4),Id("+"),Num(5))))
+    assert.deepStrictEqual(parseAst("[foo.]."),Stmt(Blk(Stmt(Id("foo")))))
 })
 
