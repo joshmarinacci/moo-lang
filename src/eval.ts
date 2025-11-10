@@ -124,7 +124,17 @@ ObjectProto.slots.set('setSlot', mkJsFunc('setSlot', (rec:Obj, arg:Obj, arg2:Obj
 }))
 ObjectProto.slots.set('getSlot', mkJsFunc('getSlot', (rec, arg) => {
     let name = arg._get_js_slot('value') as string
-    return rec.slots.get(name) as Obj
+    // console.log(`get slot "${name}" of '${rec.name}' is '${rec.slots.get(name)}'`)
+    // console.log("parent is", rec.proto)
+    if (rec.slots.has(name)) {
+        return rec.slots.get(name) as Obj
+    } else {
+        if (rec.proto && rec.proto.slots.has(name)) {
+            return rec.proto.slots.get(name) as Obj
+        } else {
+            return NilObj()
+        }
+    }
 }))
 
 
@@ -358,7 +368,8 @@ test('eval with scope', () => {
         Cat setSlot "stripes" 4.
         Cat setSlot "speak" [
            "I am a cat with stripes count" print.
-           self setSlot "b" 6. 
+           self setSlot "b" 6.
+           (self getSlot "stripes") print.
         ].
         self setSlot "cat" (Cat clone).
         cat speak.
