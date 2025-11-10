@@ -1,10 +1,8 @@
 import test from "node:test";
 import {strict as assert} from "assert";
-import {Ast, BlockAst, GroupAst, IdAst, NumAst, StmtAst, StrAst} from "./ast.ts"
-import {Blk, Grp, Id, Num, Stmt, Str} from "./ast.ts"
+import {Ast, Blk, BlockAst, GroupAst, Grp, Id, IdAst, Num, NumAst, Stmt, StmtAst, Str, StrAst} from "./ast.ts"
 
 import {parseAst} from "./parser.ts"
-import * as util from "node:util";
 
 test("parse expressions", () => {
     assert.deepStrictEqual(parseAst(" 4 ."), Stmt(Num(4)))
@@ -54,9 +52,9 @@ class Obj {
     }
 
     lookup_method(message: Obj):unknown {
-        l.p("looking up message",message.slotsToString())
+        // l.p("looking up message",message.slotsToString())
         if (message instanceof Function) {
-            l.p("message is a function")
+            // l.p("message is a function")
             return message
         }
         let name = message.slots.get('value')
@@ -87,6 +85,7 @@ class Obj {
     }
 
     lookup_symbol(value: string):Obj {
+        if (value === 'self') return this
         if (this.slots.has(value)) {
             return this.slots.get(value)
         }
@@ -209,22 +208,15 @@ function BlockObj(value:Ast[]):Obj {
     let obj = new Obj("BlockLiteral",ObjectProto)
     obj.slots.set('value',value)
     obj.slots.set('invoke',function invoke(rec:Obj) {
-        l.p("block receiver is",rec)
-        l.p("block scope is", rec.slots.get('scope'))
         let scope = new Obj("blockscope",rec.slots.get('scope'))
         scope.slots.set("_name",StrObj('block-scope'))
-        l.p("Block invoke. using scope:", scope.slotsToString())
-        l.p("scope parent is", scope.proto?.slotsToString())
         l.indent()
         let last = null
         for (let ast of value) {
-            l.p("current scope:", scope.slotsToString())
             last = evalAst(ast,scope)
             if (!last) last = NilObj()
-            l.p("block statement returned:",last.slotsToString())
         }
         l.outdent()
-        l.p("ending block scope is",scope)
         return last
     })
     return obj
@@ -252,13 +244,8 @@ function eval_statement(ast: StmtAst, scope: Obj) {
     if (ast.value.length <= 1) {
         return receiver
     }
-    l.p("statement scope = ", scope.slotsToString())
-    // let message = evalAst(ast.value[1], scope)
     let message = SymRef(ast.value[1].value);
-    l.p("statement receiver",receiver.slotsToString())
-    l.p("message",message.slotsToString())
     let method = receiver.lookup_method(message)
-    l.p("method is", method)
     if(method instanceof Obj) {
         if (method.name === 'BlockLiteral') {
             console.log("Method is a block literal")
@@ -266,7 +253,6 @@ function eval_statement(ast: StmtAst, scope: Obj) {
         }
     }
     if (ast.value.length <= 2) {
-        l.p("doing two arg version")
         return method(receiver,method,null)
     }
     let argument = evalAst(ast.value[2], scope)
@@ -279,40 +265,12 @@ function eval_statement(ast: StmtAst, scope: Obj) {
 }
 
 function evalAst(ast: Ast, scope:Obj):Obj {
-    if (ast.type == 'num') {
-        return NumObj((ast as NumAst).value);
-    }
-    if (ast.type == 'str') {
-        return StrObj((ast as StrAst).value);
-    }
-    if (ast.type == 'id') {
-        let id = ast as IdAst
-        if (id.value === 'self') {
-            return scope
-        }
-        return scope.lookup_symbol(id.value)
-    }
-    if (ast.type == 'group') {
-        l.p("evaluating group",ast)
-        l.indent()
-        let ret = eval_group(ast as GroupAst,scope)
-        l.outdent()
-        l.p("group returned:",ret)
-        return ret
-    }
-    if (ast.type == 'stmt') {
-        l.p("evaluating statement:",ast.toString())
-        l.indent()
-        let ret = eval_statement(ast as StmtAst,scope)
-        l.outdent()
-        // if(!ret) ret = NilObj()
-        if(ret) {
-            l.p("statement returned:", ret.slotsToString())
-        }
-        return ret
-    }
+    if (ast.type == 'num') return NumObj((ast as NumAst).value);
+    if (ast.type == 'str') return StrObj((ast as StrAst).value);
+    if (ast.type == 'id')  return scope.lookup_symbol((ast as IdAst).value)
+    if (ast.type == 'group') return eval_group(ast as GroupAst, scope)
+    if (ast.type == 'stmt')  return eval_statement(ast as StmtAst, scope)
     if (ast.type == 'block') {
-        l.p("making the block object")
         let blk = BlockObj((ast as BlockAst).value)
         blk.slots.set('scope',scope)
         return blk
@@ -356,7 +314,7 @@ function parseAndEvalWithScope(code: string, scope: Obj):Obj {
     let ast = parseAst(code)
     // l.p(`ast is `,util.inspect(ast,false,10))
     let res = evalAst(ast, scope)
-    l.p("returning",res)
+    // l.p("returning",res)
     return res
 }
 ObjectProto.slots.set("name",StrObj("Global"))
