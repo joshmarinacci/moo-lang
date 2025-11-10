@@ -54,6 +54,7 @@ class Obj {
     }
 
     lookup_method(message: Obj):unknown {
+        l.p("looking up message",message.slotsToString())
         if (message instanceof Function) {
             l.p("message is a function")
             return message
@@ -72,9 +73,14 @@ class Obj {
     }
 
     slotsToString() {
-        return Array.from(this.slots.entries())
-            .map((k,v) => `${k}:${v}`)
-            .join("   ,   ")
+        return 'Obj: '+Array.from(this.slots.entries())
+            .map(([k,v],i) => {
+                if (v instanceof Function) {
+                    return `${k}:JSFunction(${v.name})`
+                }
+              return `${k}:${v}`
+            })
+            .join(", ")// + ": proto "+ (this.proto?this.proto.slotsToString():"none")
     }
     toString():string {
         return `Obj{${this.name} ${this.slots.get('value')}}`
@@ -86,7 +92,7 @@ class Obj {
         }
         if(this.proto == null) {
             // throw new Error(`symbol ${value} not found`)
-            // console.log(`not found in scope ${value}`)
+            console.log(`not found in scope ${value}`)
             // console.trace("here")
             return SymRef(value)
         } else {
@@ -203,15 +209,18 @@ function BlockObj(value:Ast[]):Obj {
     let obj = new Obj("BlockLiteral",ObjectProto)
     obj.slots.set('value',value)
     obj.slots.set('invoke',function invoke(rec:Obj) {
-        let scope = new Obj("blockscope",rec)
+        l.p("block receiver is",rec)
+        l.p("block scope is", rec.slots.get('scope'))
+        let scope = new Obj("blockscope",rec.slots.get('scope'))
         scope.slots.set("_name",StrObj('block-scope'))
         l.p("Block invoke. using scope:", scope.slotsToString())
+        l.p("scope parent is", scope.proto?.slotsToString())
         l.indent()
         let last = null
         for (let ast of value) {
             l.p("current scope:", scope.slotsToString())
             last = evalAst(ast,scope)
-            // l.p("returned",last)
+            if (!last) last = NilObj()
             l.p("block statement returned:",last.slotsToString())
         }
         l.outdent()
@@ -223,7 +232,7 @@ function BlockObj(value:Ast[]):Obj {
 
 function eval_group(ast:GroupAst, scope:Obj):Obj {
     let receiver = evalAst(ast.value[0], scope)
-    let message = evalAst(ast.value[1], scope)
+    let message = SymRef(ast.value[1].value)
     let method = receiver.lookup_method(message)
     if (ast.value.length <= 2) {
         if (method instanceof Obj) {
@@ -243,9 +252,11 @@ function eval_statement(ast: StmtAst, scope: Obj) {
     if (ast.value.length <= 1) {
         return receiver
     }
-    let message = evalAst(ast.value[1], scope)
-    l.p("statement. receiver",receiver)
-    l.p("message",message)
+    l.p("statement scope = ", scope.slotsToString())
+    // let message = evalAst(ast.value[1], scope)
+    let message = SymRef(ast.value[1].value);
+    l.p("statement receiver",receiver.slotsToString())
+    l.p("message",message.slotsToString())
     let method = receiver.lookup_method(message)
     l.p("method is", method)
     if(method instanceof Obj) {
@@ -295,11 +306,16 @@ function evalAst(ast: Ast, scope:Obj):Obj {
         let ret = eval_statement(ast as StmtAst,scope)
         l.outdent()
         // if(!ret) ret = NilObj()
-        l.p("statement returned:",ret)
+        if(ret) {
+            l.p("statement returned:", ret.slotsToString())
+        }
         return ret
     }
     if (ast.type == 'block') {
-        return BlockObj((ast as BlockAst).value)
+        l.p("making the block object")
+        let blk = BlockObj((ast as BlockAst).value)
+        blk.slots.set('scope',scope)
+        return blk
     }
     throw new Error(`unknown ast type ${ast.type}`)
 }
@@ -370,7 +386,7 @@ test('eval with scope', () => {
     assert.deepStrictEqual(parseAndEvalWithScope('self setSlot "dog" 4 .',scope),NumObj(4))
     parseAndEvalWithScope('Object clone .',scope)
     parseAndEvalWithScope('self setSlot "foo" 5 .',scope)
-    assert.deepStrictEqual(parseAndEvalWithScope(`foo print .`,scope),NilObj())
+    assert.deepStrictEqual(parseAndEvalWithScope(`foo print .`,scope),StrObj("5"))
 
     parseAndEvalWithScope('self setSlot "Dog" ( Object clone ) .', scope);
     parseAndEvalWithScope('Dog setSlot "bark" [ "woof" print . ] .', scope);
@@ -392,37 +408,36 @@ test('eval with scope', () => {
         `[ self setSlot "a" 6. a add 4.] invoke .`,scope)
         ,NumObj(10))
 
+    parseAndEvalWithScope(`[
+      ("global is " append (self name)) print.
+    ] invoke.`,scope);
 
-    // parseAndEvalWithScope(`[
-    //   ("global is " append (self name)) print.
-    // ] invoke.`,scope);
-
-    //     comp(parseAndEvalWithScope(` [
-//     self setSlot "Cat" (Object clone).
-//     Cat setSlot "stripes" 4.
-//     Cat setSlot "speak" [
-//        "I am a cat with stripes count" print.
-//        (self getSlot "stripes") print.
-//     ].
-//     self setSlot "cat" (Cat clone).
-//     cat speak.
-// ] invoke.
-//
-//     `,scope), NumObj(88))
+    // comp(parseAndEvalWithScope(` [
+    //     self setSlot "Cat" (Object clone).
+    //     Cat setSlot "stripes" 4.
+    //     Cat setSlot "speak" [
+    //        "I am a cat with stripes count" print.
+    //        (self getSlot "stripes") print.
+    //     ].
+    //     self setSlot "cat" (Cat clone).
+    //     cat speak.
+    // ] invoke.
+    //
+    // `,scope), NumObj(88))
 })
 
-// test('eval nested blocks',() => {
-//     let scope = new Obj("Global",ObjectProto)
-//     scope.slots.set('Object',ObjectProto);
-//     scope.slots.set('Number',NumberProto);
-//     scope.slots.set('Boolean',BooleanProto);
-//     scope.slots.set('true',BoolObj(true));
-//     scope.slots.set('false',BoolObj(false));
-//     scope.slots.set('String',StringProto);
-//     scope.slots.set('Nil',NilProto);
-//     scope.slots.set('nil',NilObj());
-//     comp(parseAndEvalWithScope(
-//         `[ self setSlot "a" 5. [ a add 5.] invoke. ] invoke . `,scope)
-//         ,NumObj(10))
-//
-// })
+test('eval nested blocks',() => {
+    let scope = new Obj("Global",ObjectProto)
+    scope.slots.set('Object',ObjectProto);
+    scope.slots.set('Number',NumberProto);
+    scope.slots.set('Boolean',BooleanProto);
+    scope.slots.set('true',BoolObj(true));
+    scope.slots.set('false',BoolObj(false));
+    scope.slots.set('String',StringProto);
+    scope.slots.set('Nil',NilProto);
+    scope.slots.set('nil',NilObj());
+    comp(parseAndEvalWithScope(
+        `[ self setSlot "a" 5. [ a add 5.] invoke. ] invoke . `,scope)
+        ,NumObj(10))
+
+})
