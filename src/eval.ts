@@ -214,8 +214,6 @@ function resolve_js_method(meth: unknown):JSFun {
     return meth as JSFun
 }
 
-
-
 function eval_group(ast:GroupAst, scope:Obj):Obj {
     let receiver = evalAst(ast.value[0], scope)
     let message = SymRef(ast.value[1].value)
@@ -230,6 +228,15 @@ function eval_group(ast:GroupAst, scope:Obj):Obj {
     return method(receiver, argument)
 }
 
+function invoke_method(receiver:Obj, message:Obj, args:Obj[]):Obj {
+    let meth = receiver.lookup_method(message)
+    let method = resolve_js_method(meth)
+    if (meth instanceof Obj && meth.name === 'BlockLiteral') {
+        receiver = meth
+    }
+    // console.log(`invoking  '${message._get_js_slot('value')}' on ${receiver.name} `)
+    return method(receiver, ...args)
+}
 function eval_statement(ast: StmtAst, scope: Obj) {
     let receiver = evalAst(ast.value[0], scope)
     if (receiver.name == "SymbolReference") {
@@ -237,18 +244,11 @@ function eval_statement(ast: StmtAst, scope: Obj) {
     }
     if (ast.value.length <= 1) return receiver
     let message = SymRef(ast.value[1].value);
-    let method:JSFun = resolve_js_method(receiver.lookup_method(message))
-    let meth = receiver.lookup_method(message)
-    if (meth instanceof Obj && meth.name === 'BlockLiteral') {
-        console.log("need to do the switcheroo")
-        receiver = meth
+    let args:Obj[] = []
+    for (let i=2; i<ast.value.length; i++) {
+        args.push(evalAst(ast.value[i],scope))
     }
-    // console.log(`invoking  '${message._get_js_slot('value')}' on ${receiver.name} `)
-    if (ast.value.length <= 2) return method(receiver)
-    let argument = evalAst(ast.value[2], scope)
-    if (ast.value.length <= 3) return method(receiver,argument)
-    let argument2 = evalAst(ast.value[3], scope)
-    return method(receiver, argument, argument2)
+    return invoke_method(receiver,message,args)
 }
 
 function evalAst(ast: Ast, scope:Obj):Obj {
