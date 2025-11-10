@@ -110,10 +110,15 @@ ObjectProto.slots.set('clone', mkJsFunc('clone',(rec) => {
 }))
 ObjectProto.slots.set('setSlot', mkJsFunc('setSlot', (rec:Obj, arg:Obj, arg2:Obj) => {
     let name = arg._get_js_slot('value') as string
+    // console.log(`set slot "${name}" of '${rec.name}' to be '${arg2.name}'`)
     if (name) {
         rec.slots.set(name, arg2)
     } else {
         console.warn("no value!")
+    }
+    if (arg2.name === "BlockLiteral") {
+        arg2.slots.set('scope',rec)
+        // console.log(`set scope of '${arg2.name}' to be '${rec.name}'`)
     }
     return arg2
 }))
@@ -183,6 +188,8 @@ function BlockObj(value:Ast[], slots:Record<string,Obj>):Obj {
     // obj.slots.set('value',value)
     obj.slots.set('invoke',(rec:Obj):Obj => {
         let scope = new Obj("block-scope",rec.slots.get('scope') as Obj)
+        // console.log("invoking block with scope",rec.slots.get('scope'))
+        // console.log("receiver is",rec)
         scope.slots.set("_name",StrObj('block-scope'))
         l.indent()
         let last = NilObj()
@@ -199,7 +206,6 @@ function BlockObj(value:Ast[], slots:Record<string,Obj>):Obj {
 function resolve_js_method(meth: unknown):JSFun {
     if(meth instanceof Obj) {
         if (meth.name === 'BlockLiteral') {
-            console.log("Method is a block literal")
             return meth._get_js_slot('invoke') as JSFun
         } else if (meth.name == "JSFun") {
             return meth._get_js_slot('js') as JSFun
@@ -207,6 +213,8 @@ function resolve_js_method(meth: unknown):JSFun {
     }
     return meth as JSFun
 }
+
+
 
 function eval_group(ast:GroupAst, scope:Obj):Obj {
     let receiver = evalAst(ast.value[0], scope)
@@ -230,6 +238,12 @@ function eval_statement(ast: StmtAst, scope: Obj) {
     if (ast.value.length <= 1) return receiver
     let message = SymRef(ast.value[1].value);
     let method:JSFun = resolve_js_method(receiver.lookup_method(message))
+    let meth = receiver.lookup_method(message)
+    if (meth instanceof Obj && meth.name === 'BlockLiteral') {
+        console.log("need to do the switcheroo")
+        receiver = meth
+    }
+    // console.log(`invoking  '${message._get_js_slot('value')}' on ${receiver.name} `)
     if (ast.value.length <= 2) return method(receiver)
     let argument = evalAst(ast.value[2], scope)
     if (ast.value.length <= 3) return method(receiver,argument)
@@ -339,18 +353,17 @@ test('eval with scope', () => {
       ("global is " append (self name)) print.
     ] invoke.`,scope);
 
-    // comp(parseAndEvalWithScope(` [
-    //     self setSlot "Cat" (Object clone).
-    //     Cat setSlot "stripes" 4.
-    //     Cat setSlot "speak" [
-    //        "I am a cat with stripes count" print.
-    //        (self getSlot "stripes") print.
-    //     ].
-    //     self setSlot "cat" (Cat clone).
-    //     cat speak.
-    // ] invoke.
-    //
-    // `,scope), NumObj(88))
+    parseAndEvalWithScope(` [
+        self setSlot "Cat" (Object clone).
+        Cat setSlot "stripes" 4.
+        Cat setSlot "speak" [
+           "I am a cat with stripes count" print.
+           self setSlot "b" 6. 
+        ].
+        self setSlot "cat" (Cat clone).
+        cat speak.
+    ] invoke.`,scope)
+//           (self getSlot "stripes") print.
 })
 
 test('eval nested blocks',() => {
