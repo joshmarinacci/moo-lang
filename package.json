@@ -14,5 +14,8 @@
     "@types/node": "^24.10.0",
     "typescript": "^5.5.3"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "pureimage": "^0.4.18"
+  }
 }

@@ -1,3 +1,6 @@
+import {Bitmap, encodePNGToStream, make} from "pureimage"
+import * as fs from "node:fs";
+
 type Vec = {
     x: number,
     y: number,
@@ -59,9 +62,9 @@ const scene:Scene = {
                 z: -3,
             },
             color: {
-                x: 100,
-                y: 100,
-                z: 100,
+                x: 155,
+                y: 200,
+                z: 155,
             },
             specular: 0.2,
             lambert: 0.7,
@@ -103,6 +106,8 @@ const scene:Scene = {
 
 let width = 640* 0.5;
 let height = 480 * 0.5;
+
+let data:Bitmap = make(width,height);
 
 const UP:Vec = { x: 0, y: 1, z: 0 };
 const ZERO:Vec =  { x: 0, y: 0, z: 0 };
@@ -193,15 +198,16 @@ function render(scene:Scene) {
     }
 
     for (let y = 0; y < height; y++) {
-        let row:Array<Vec> = []
         for (let x = 0; x < width; x++) {
             let xcomp = Vector.scale(vpRight, x * pixelWidth - halfWidth);
             let ycomp = Vector.scale(vpUp, y * pixelHeight - halfHeight);
             ray.vector = Vector.unitVector(Vector.add3(eyeVector, xcomp, ycomp));
             let color = trace(ray, scene, 0)
-            row.push(color)
+
+            let ctx = data.getContext('2d')
+            ctx.fillStyle = `rgb(${color.x},${color.y},${color.z})`;
+            ctx.fillRect(x,y,1,1)
         }
-        console.log(row.map(color_to_char).join(' '))
     }
 }
 
@@ -212,8 +218,8 @@ function trace(ray:Ray, scene:Scene, depth: number):Vec {
     if (distObject[0] === Infinity) {
         return WHITE;
     }
-    let dist = distObject[0]
-    const object = distObject[1];
+    let dist:number = distObject[0]
+    const object:Sphere = distObject[1];
     let pointAtTime = Vector.add(ray.point, Vector.scale(ray.vector, dist));
     return surface(
         ray,
@@ -225,10 +231,10 @@ function trace(ray:Ray, scene:Scene, depth: number):Vec {
     )
 }
 
-function intersectScene(ray:Ray, scene:Scene) {
-    let closest = [Infinity, null];
+function intersectScene(ray:Ray, scene:Scene):[number,Sphere|null] {
+    let closest:[number, Sphere|null] = [Infinity, null];
     for (let i = 0; i < scene.objects.length; i++) {
-        let object = scene.objects[i];
+        let object:Sphere = scene.objects[i];
         let dist = sphereIntersection(object, ray)
         if (dist !== undefined && dist < closest[0]) {
             closest = [dist, object]
@@ -253,7 +259,7 @@ function sphereNormal(sphere:Sphere, pos:Vec) {
     return Vector.unitVector(Vector.subtract(pos, sphere.point))
 }
 
-function surface(ray:Ray, scene:Scene, object:Sphere, pointAtTime, normal: Vec, depth: number) {
+function surface(ray:Ray, scene:Scene, object:Sphere, pointAtTime:Vec, normal: Vec, depth: number) {
     let b = object.color;
     let c = ZERO;
     let lambertAmount = 0;
@@ -262,7 +268,7 @@ function surface(ray:Ray, scene:Scene, object:Sphere, pointAtTime, normal: Vec, 
             let lightPoint = scene.lights[i];
             if (!isLightVisible(pointAtTime, scene, lightPoint)) continue;
             let contribution = Vector.dotProduct(
-                Vector.unitVector(Vector.subtract(lightPoint, lightPoint)),
+                Vector.unitVector(Vector.subtract(lightPoint, pointAtTime)),
                 normal
             );
             if (contribution > 0) lambertAmount += contribution;
@@ -299,3 +305,5 @@ function isLightVisible(pt:Vec, scene:Scene, light:Vec) {
 
 
 render(scene);
+
+encodePNGToStream(data,fs.createWriteStream('out.png')).then(() => console.log("done writing"))
