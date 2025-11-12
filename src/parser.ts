@@ -213,9 +213,13 @@ export let Statement = withProduction(
         return Stmt(...vals)
     })
 export let Block = withProduction(
-    Seq(Lit('['),ZeroOrMore(Statement),WS,Optional(Exp),Lit("]"),WS)
+    Seq(Lit('['), Optional(Seq(ZeroOrMore(Seq(WS,Identifier,WS)),WS,Lit("|"))), ZeroOrMore(Statement),WS,Optional(Exp),Lit("]"),WS)
     ,(res) =>{
-        // console.log("block producting",res.production[1])
+        // console.log("block production 1",res.production[1])
+        // console.log("block production 2",res.production[2])
+        if (!res.production[1] && res.production[2]) {
+            return Blk(... res.production[2])
+        }
         return Blk(... res.production[1])
     })
 // fix the recursion
