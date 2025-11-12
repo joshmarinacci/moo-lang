@@ -69,7 +69,7 @@ class Obj {
         if (value === 'self') return this
         if (this.slots.has(value)) return this.slots.get(value) as Obj
         if (this.proto) return this.proto.lookup_symbol(value)
-        console.log(`not found in scope ${value}`)
+        // console.log(`not found in scope ${value}`)
         return SymRef(value)
     }
 
@@ -238,7 +238,15 @@ function eval_group(ast:GroupAst, scope:Obj):Obj {
     return method(receiver, argument)
 }
 
-function invoke_method(receiver:Obj, message:Obj, args:Obj[]):Obj {
+function invoke_method(receiver:Obj, message:Obj, args:Obj[], scope:Obj):Obj {
+    // move stuff around for the assignment operator
+    // instead of sending a message to the receiver,
+    // call setSlot on the scope with the receiver as the first argument
+    if (message._get_js_slot('value') === ":=") {
+        message = StrObj("setSlot")
+        args = [receiver, ... args]
+        receiver = scope;
+    }
     let meth = receiver.lookup_method(message)
     let method = resolve_js_method(meth)
     if (meth instanceof Obj && meth.name === 'BlockLiteral') {
@@ -248,14 +256,13 @@ function invoke_method(receiver:Obj, message:Obj, args:Obj[]):Obj {
     if (method instanceof Function) {
         return method(receiver, ...args)
     } else {
-        console.log("not a function")
         return method
     }
 }
 function eval_statement(ast: StmtAst, scope: Obj) {
     let receiver = evalAst(ast.value[0], scope)
     if (receiver.name == "SymbolReference") {
-        console.log("receiver is a symbol reference, not a symbol.")
+        // console.log("receiver is a symbol reference, not a symbol.")
     }
     if (ast.value.length <= 1) return receiver
     let message = SymRef(ast.value[1].value);
@@ -263,7 +270,7 @@ function eval_statement(ast: StmtAst, scope: Obj) {
     for (let i=2; i<ast.value.length; i++) {
         args.push(evalAst(ast.value[i],scope))
     }
-    return invoke_method(receiver,message,args)
+    return invoke_method(receiver,message,args,scope)
 }
 
 function evalAst(ast: Ast, scope:Obj):Obj {
@@ -328,7 +335,7 @@ test('eval expressions', () => {
     comp(evalAst(Stmt(Grp(Num(4),Id('add'),Num(5))),scope), NumObj(9))
 })
 
-test('eval with scope', () => {
+function init_std_scope() {
     let scope = new Obj("Global",ObjectProto)
     scope.slots.set('Object',ObjectProto);
     scope.slots.set('Number',NumberProto);
@@ -338,13 +345,18 @@ test('eval with scope', () => {
     scope.slots.set('String',StringProto);
     scope.slots.set('Nil',NilProto);
     scope.slots.set('nil',NilObj());
+    return scope;
+}
+
+test('eval with scope', () => {
+    let scope = init_std_scope()
     assert.deepStrictEqual(parseAndEvalWithScope('4 add 5 .',scope),NumObj(9))
-    assert.deepStrictEqual(parseAndEvalWithScope('self setSlot "dog" 4 .',scope),NumObj(4))
+    assert.deepStrictEqual(parseAndEvalWithScope('dog := 4.',scope),NumObj(4))
     parseAndEvalWithScope('Object clone .',scope)
-    parseAndEvalWithScope('self setSlot "foo" 5 .',scope)
+    parseAndEvalWithScope('foo := 5 .',scope)
     assert.deepStrictEqual(parseAndEvalWithScope(`foo print .`,scope),StrObj("5"))
 
-    parseAndEvalWithScope('self setSlot "Dog" ( Object clone ) .', scope);
+    parseAndEvalWithScope('Dog := ( Object clone ) .', scope);
     parseAndEvalWithScope('Dog setSlot "bark" [ "woof" print . ] .', scope);
     parseAndEvalWithScope('Dog bark .', scope);
 
@@ -369,46 +381,29 @@ test('eval with scope', () => {
     ] invoke.`,scope);
 
     parseAndEvalWithScope(` [
-        self setSlot "Cat" (Object clone).
+        Cat := (Object clone).
         Cat setSlot "stripes" 4.
         Cat setSlot "speak" [
            "I am a cat with stripes count" print.
            self setSlot "b" 6.
            (self getSlot "stripes") print.
         ].
-        self setSlot "cat" (Cat clone).
+        cat := (Cat clone).
         cat speak.
     ] invoke.`,scope)
-//           (self getSlot "stripes") print.
 })
 
 test('eval nested blocks',() => {
-    let scope = new Obj("Global",ObjectProto)
-    scope.slots.set('Object',ObjectProto);
-    scope.slots.set('Number',NumberProto);
-    scope.slots.set('Boolean',BooleanProto);
-    scope.slots.set('true',BoolObj(true));
-    scope.slots.set('false',BoolObj(false));
-    scope.slots.set('String',StringProto);
-    scope.slots.set('Nil',NilProto);
-    scope.slots.set('nil',NilObj());
+    let scope = init_std_scope()
     comp(parseAndEvalWithScope(
-        `[ self setSlot "a" 5. [ a add 5.] invoke. ] invoke . `,scope)
+        `[ a := 5. [ a add 5.] invoke. ] invoke . `,scope)
         ,NumObj(10))
 
 })
 
 test('eval vector class',() => {
-    let scope = new Obj("Global",ObjectProto)
-    scope.slots.set('Object',ObjectProto);
-    scope.slots.set('Number',NumberProto);
-    scope.slots.set('Boolean',BooleanProto);
-    scope.slots.set('true',BoolObj(true));
-    scope.slots.set('false',BoolObj(false));
-    scope.slots.set('String',StringProto);
-    scope.slots.set('Nil',NilProto);
-    scope.slots.set('nil',NilObj());
-    parseAndEvalWithScope('self setSlot "Vector" (Object clone).',scope);
+    let scope = init_std_scope()
+    parseAndEvalWithScope('Vector := (Object clone).',scope);
     parseAndEvalWithScope(`[
     Vector setSlot "x" 0.
     Vector setSlot "y" 0.
@@ -420,21 +415,21 @@ test('eval vector class',() => {
        "inside vector " print.
        self x.
     ].
-    self setSlot "v" (Vector clone).
+    v := (Vector clone).
     v g.
     ] invoke.
     `,scope)
 
     comp(parseAndEvalWithScope(`[
-    self setSlot "a" ( Vector clone ).
+    a :=  ( Vector clone ).
     "here now" print.
     a setSlot "x" 10.
     (a x ) print.
-    self setSlot "b" ( Vector clone ).
+    b := ( Vector clone ).
     b setSlot "x" 20.
     (b x) print.
 
-    self setSlot "c" (a add b).
+    c := (a add b).
     55.
 
     ] invoke.`,scope),NumObj(55))
@@ -442,3 +437,20 @@ test('eval vector class',() => {
 
 // support := syntax.
 // support arguments to blocks
+
+test('eval assignment operator', () => {
+    let scope = init_std_scope()
+    comp(parseAndEvalWithScope(`v := 5.`,scope),NumObj(5))
+    comp(parseAndEvalWithScope('v.',scope),NumObj(5))
+})
+
+// test('eval blocks with args',() => {
+//     let scope = init_std_scope()
+//     comp(parseAndEvalWithScope(`[
+//         self setSlot "foo" [ x |
+//             "inside the block " print.
+//             nil.
+//         ].
+//         foo print.
+//     ] invoke.`,scope),NilObj())
+// })
