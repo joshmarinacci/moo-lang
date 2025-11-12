@@ -30,15 +30,17 @@ export class GroupAst extends Ast {
     }
 }
 export class BlockAst extends Ast {
-    value: Ast[]
+    args: Ast[]
+    body: Ast[]
     type: 'block'
-    constructor(value:Ast[]) {
+    constructor(args: Ast[], body: Ast[]) {
         super()
         this.type = 'block'
-        this.value = value
+        this.args = args
+        this.body = body
     }
     toString() {
-        return "[ " + this.value.map(s => s.toString()).join(" ") + " ]"
+        return "[ " + this.args.map(s => s.toString()).join(" ") + " | " + this.body.map(s => s.toString()).join(" ") + " ]"
     }
 }
 export class NumAst extends Ast {
@@ -84,4 +86,4 @@ export const Str = (value: string) => new StrAst(value)
 export const Id = (value: string) => new IdAst(value)
 export const Stmt = (...args: Ast[]) => new StmtAst(args)
 export const Grp = (...args: Ast[]) => new GroupAst(args)
-export const Blk = (...args: Ast[]) => new BlockAst(args)
+export const Blk = (args:Ast[], body: Ast[]) => new BlockAst(args,body)

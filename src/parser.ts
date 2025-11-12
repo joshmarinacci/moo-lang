@@ -218,9 +218,9 @@ export let Block = withProduction(
         // console.log("block production 1",res.production[1])
         // console.log("block production 2",res.production[2])
         if (!res.production[1] && res.production[2]) {
-            return Blk(... res.production[2])
+            return Blk([],res.production[2])
         }
-        return Blk(... res.production[1])
+        return Blk(res.production[1], res.production[1])
     })
 // fix the recursion
 RealExp = withProduction(

@@ -133,8 +133,8 @@ test("block",() => {
     assert.ok(match("[foo]",Block))
     assert.ok(match("[foo.]",Block))
     assert.ok(match("[ foo . ]",Block))
-    assert.deepStrictEqual(produces("[foo.]",Block),Blk(Stmt(Id("foo"))))
-    assert.deepStrictEqual(produces("[foo. bar.]",Block),Blk(Stmt(Id("foo")),Stmt(Id("bar"))))
+    assert.deepStrictEqual(produces("[foo.]",Block),Blk([],[Stmt(Id("foo"))]))
+    assert.deepStrictEqual(produces("[foo. bar.]",Block),Blk([],[Stmt(Id("foo")),Stmt(Id("bar"))]))
 
     assert.ok(match("[x| ]", Block))
     assert.ok(match("[ x| ]", Block))
@@ -147,6 +147,6 @@ test('parse expression',() => {
     assert.deepStrictEqual(parseAst("(4)."),Stmt(Grp(Num(4))))
     assert.deepStrictEqual(parseAst("(add)."),Stmt(Grp(Id("add"))))
     assert.deepStrictEqual(parseAst("(4 + 5)."),Stmt(Grp(Num(4),Id("+"),Num(5))))
-    assert.deepStrictEqual(parseAst("[foo.]."),Stmt(Blk(Stmt(Id("foo")))))
+    assert.deepStrictEqual(parseAst("[foo.]."),Stmt(Blk([],[Stmt(Id("foo"))])))
 })
 

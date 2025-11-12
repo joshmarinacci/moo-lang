@@ -23,14 +23,14 @@ test("parse expressions", () => {
     );
     assert.deepStrictEqual(
         parseAst("[ 99 . ] ."),
-        Stmt(Blk(Stmt(Num(99)))),
+        Stmt(Blk([],[Stmt(Num(99))])),
     )
     assert.deepStrictEqual(
         parseAst(` ( 4 < 5 ) ifTrue [ 99 . ] .`),
         Stmt(
             Grp(Num(4),Id('<'),Num(5)),
             Id('ifTrue'),
-            Blk(Stmt(Num(99)))
+            Blk([],[Stmt(Num(99))])
         )
     );
     assert.deepStrictEqual(
@@ -193,7 +193,7 @@ const SymRef = (value:string) => new Obj("SymbolReference", ObjectProto, {'value
 const BoolObj = (value:boolean) => new Obj("BooleanLiteral", BooleanProto, {'value': value})
 const NilObj= () => new Obj("NilLiteral", NilProto, {'value': NilProto})
 
-function BlockObj(value:Ast[], slots:Record<string,Obj>):Obj {
+function BlockObj(args:Ast[],body:Ast[], slots:Record<string,Obj>):Obj {
     let obj = new Obj("BlockLiteral",ObjectProto, slots)
     // obj.slots.set('value',value)
     obj.slots.set('invoke',(rec:Obj):Obj => {
@@ -203,7 +203,7 @@ function BlockObj(value:Ast[], slots:Record<string,Obj>):Obj {
         scope.slots.set("_name",StrObj('block-scope'))
         l.indent()
         let last = NilObj()
-        for (let ast of value) {
+        for (let ast of body) {
             last = evalAst(ast,scope)
             if (!last) last = NilObj()
         }
@@ -272,7 +272,7 @@ function evalAst(ast: Ast, scope:Obj):Obj {
     if (ast.type == 'id')  return scope.lookup_symbol((ast as IdAst).value)
     if (ast.type == 'group') return eval_group(ast as GroupAst, scope)
     if (ast.type == 'stmt')  return eval_statement(ast as StmtAst, scope)
-    if (ast.type == 'block') return BlockObj((ast as BlockAst).value, {scope})
+    if (ast.type == 'block') return BlockObj((ast as BlockAst).args, (ast as BlockAst).body, {scope})
     throw new Error(`unknown ast type ${ast.type}`)
 }
 
@@ -433,10 +433,10 @@ test('eval vector class',() => {
     self setSlot "b" ( Vector clone ).
     b setSlot "x" 20.
     (b x) print.
-    
-    self setSlot "c" (a add b). 
+
+    self setSlot "c" (a add b).
     55.
-    
+
     ] invoke.`,scope),NumObj(55))
 })
 
