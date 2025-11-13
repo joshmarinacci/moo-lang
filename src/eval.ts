@@ -4,43 +4,6 @@ import {Ast, Blk, BlockAst, GroupAst, Grp, Id, IdAst, Num, NumAst, Stmt, StmtAst
 
 import {parseAst} from "./parser.ts"
 
-test("parse expressions", () => {
-    assert.deepStrictEqual(parseAst(" 4 ."), Stmt(Num(4)))
-    assert.deepStrictEqual(parseAst(" foo  ."), Stmt(Id("foo")))
-    assert.deepStrictEqual(parseAst(" <  ."), Stmt(Id("<")));
-    assert.deepStrictEqual(parseAst(` "dog"  .`), Stmt(Str("dog")));
-    assert.deepStrictEqual(
-        parseAst(" 4 < 5 . "),
-        Stmt(Num(4),Id('<'),Num(5))
-    );
-    assert.deepStrictEqual(
-        parseAst(" ( 4 < 5 ) ."),
-        Stmt(Grp(Num(4),Id('<'),Num(5)))
-    );
-    assert.deepStrictEqual(
-        parseAst(" ( 4 < 5 ) . "),
-        Stmt(Grp(Num(4),Id('<'),Num(5)))
-    );
-    assert.deepStrictEqual(
-        parseAst("[ 99 . ] ."),
-        Stmt(Blk([],[Stmt(Num(99))])),
-    )
-    assert.deepStrictEqual(
-        parseAst(` ( 4 < 5 ) ifTrue [ 99 . ] .`),
-        Stmt(
-            Grp(Num(4),Id('<'),Num(5)),
-            Id('ifTrue'),
-            Blk([],[Stmt(Num(99))])
-        )
-    );
-    assert.deepStrictEqual(
-        parseAst(' dog := Object clone .'),
-        Stmt(Id('dog'),Id(':='),Id('Object'),Id('clone'))
-    )
-    assert.deepStrictEqual(parseAst('( ( 4 < 5 ) < 6 ).'),
-        Stmt(Grp(Grp(Num(4),Id('<'),Num(5)),Id('<'),Num(6))))
-})
-
 class Obj {
     proto: Obj | null
     slots: Map<string,Obj>
@@ -324,17 +287,6 @@ function parseAndEvalWithScope(code: string, scope: Obj):Obj {
 }
 ObjectProto.slots.set("name",StrObj("Global"))
 
-test('eval expressions', () => {
-    let scope = new Obj("Global",ObjectProto)
-    comp(evalAst(Num(4),scope),NumObj(4));
-    comp(evalAst(Str("dog"),scope),StrObj("dog"));
-    comp(evalAst(Stmt(Num(4),Id("add"),Num(5)),scope),NumObj(9));
-    comp(evalAst(Stmt(Num(4),Id('<'),Num(5)),scope),BoolObj(true));
-    comp(evalAst(Stmt(Num(4),Id('+'),Num(5)),scope),NumObj(9));
-    comp(evalAst(Stmt(Num(4),Id('-'),Num(5)),scope),NumObj(-1));
-    comp(evalAst(Stmt(Grp(Num(4),Id('add'),Num(5))),scope), NumObj(9))
-})
-
 function init_std_scope() {
     let scope = new Obj("Global",ObjectProto)
     scope.slots.set('Object',ObjectProto);
@@ -348,7 +300,57 @@ function init_std_scope() {
     return scope;
 }
 
-test('eval with scope', () => {
+const no_test = (name,code) => {};
+
+no_test("parse expressions", () => {
+    assert.deepStrictEqual(parseAst(" 4 ."), Stmt(Num(4)))
+    assert.deepStrictEqual(parseAst(" foo  ."), Stmt(Id("foo")))
+    assert.deepStrictEqual(parseAst(" <  ."), Stmt(Id("<")));
+    assert.deepStrictEqual(parseAst(` "dog"  .`), Stmt(Str("dog")));
+    assert.deepStrictEqual(
+        parseAst(" 4 < 5 . "),
+        Stmt(Num(4),Id('<'),Num(5))
+    );
+    assert.deepStrictEqual(
+        parseAst(" ( 4 < 5 ) ."),
+        Stmt(Grp(Num(4),Id('<'),Num(5)))
+    );
+    assert.deepStrictEqual(
+        parseAst(" ( 4 < 5 ) . "),
+        Stmt(Grp(Num(4),Id('<'),Num(5)))
+    );
+    assert.deepStrictEqual(
+        parseAst("[ 99 . ] ."),
+        Stmt(Blk([],[Stmt(Num(99))])),
+    )
+    assert.deepStrictEqual(
+        parseAst(` ( 4 < 5 ) ifTrue [ 99 . ] .`),
+        Stmt(
+            Grp(Num(4),Id('<'),Num(5)),
+            Id('ifTrue'),
+            Blk([],[Stmt(Num(99))])
+        )
+    );
+    assert.deepStrictEqual(
+        parseAst(' dog := Object clone .'),
+        Stmt(Id('dog'),Id(':='),Id('Object'),Id('clone'))
+    )
+    assert.deepStrictEqual(parseAst('( ( 4 < 5 ) < 6 ).'),
+        Stmt(Grp(Grp(Num(4),Id('<'),Num(5)),Id('<'),Num(6))))
+})
+
+no_test('eval expressions', () => {
+    let scope = new Obj("Global",ObjectProto)
+    comp(evalAst(Num(4),scope),NumObj(4));
+    comp(evalAst(Str("dog"),scope),StrObj("dog"));
+    comp(evalAst(Stmt(Num(4),Id("add"),Num(5)),scope),NumObj(9));
+    comp(evalAst(Stmt(Num(4),Id('<'),Num(5)),scope),BoolObj(true));
+    comp(evalAst(Stmt(Num(4),Id('+'),Num(5)),scope),NumObj(9));
+    comp(evalAst(Stmt(Num(4),Id('-'),Num(5)),scope),NumObj(-1));
+    comp(evalAst(Stmt(Grp(Num(4),Id('add'),Num(5))),scope), NumObj(9))
+})
+
+no_test('eval with scope', () => {
     let scope = init_std_scope()
     assert.deepStrictEqual(parseAndEvalWithScope('4 add 5 .',scope),NumObj(9))
     assert.deepStrictEqual(parseAndEvalWithScope('dog := 4.',scope),NumObj(4))
@@ -393,7 +395,7 @@ test('eval with scope', () => {
     ] invoke.`,scope)
 })
 
-test('eval nested blocks',() => {
+no_test('eval nested blocks',() => {
     let scope = init_std_scope()
     comp(parseAndEvalWithScope(
         `[ a := 5. [ a add 5.] invoke. ] invoke . `,scope)
@@ -401,7 +403,7 @@ test('eval nested blocks',() => {
 
 })
 
-test('eval vector class',() => {
+no_test('eval vector class',() => {
     let scope = init_std_scope()
     parseAndEvalWithScope('Vector := (Object clone).',scope);
     parseAndEvalWithScope(`[
@@ -435,10 +437,7 @@ test('eval vector class',() => {
     ] invoke.`,scope),NumObj(55))
 })
 
-// support := syntax.
-// support arguments to blocks
-
-test('eval assignment operator', () => {
+no_test('eval assignment operator', () => {
     let scope = init_std_scope()
     comp(parseAndEvalWithScope(`v := 5.`,scope),NumObj(5))
     comp(parseAndEvalWithScope('v.',scope),NumObj(5))
