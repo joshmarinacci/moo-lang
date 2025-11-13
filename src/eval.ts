@@ -169,33 +169,19 @@ const NilObj= () => new Obj("NilLiteral", NilProto, {'value': NilProto})
 let BLOCK_COUNT = 0;
 function BlockObj(args:Ast[],body:Ast[], slots:Record<string,Obj>):Obj {
     let obj = new Obj("BlockLiteral",ObjectProto, slots)
-    // console.log("created block literal in scope",obj._proto_chain())
-    // obj.slots.set('value',value)
     obj.slots.set('invoke',(rec:Obj):Obj => {
         let scope = new Obj("block-scope-"+(++BLOCK_COUNT),rec.slots.get('scope') as Obj)
-        // console.log(`invoking block ${scope.name} with scope`,scope._proto_chain())
-        // console.log("receiver is block literal with proto chain",rec._proto_chain())
-        // console.log("=== is method? ".toUpperCase(), rec.slots.get('method')?.toString())
-        // if (rec.slots.get('scope')?.name === 'Global') {
-        //     console.log("==== PARENT is global".toUpperCase())
-        // }
         scope.slots.set("_name",StrObj('block-scope'))
         l.indent()
         let last = NilObj()
         for (let ast of body) {
-            // console.log("invoking statement",ast.toString())
             last = evalAst(ast,scope)
             if (!last) last = NilObj()
             if (last.is_return()) {
-                // console.log("current scope is", scope._proto_chain())
-                // console.log("ret scope is", last._proto_chain())
-                // console.log("is method = ", last.slots.get('method'))
-                // console.log(`returning ${last.slots.get('value')} target is`, last.slots.get('target')?._proto_chain())
                 if (last.slots.get('target') === scope) {
-                    // console.log("doing early return here ", last.slots.get('value'))
-                    return last.slots.get('value')
+                    l.outdent()
+                    return last.slots.get('value') as Obj
                 }
-                // console.log("normal quick return of",last)
                 l.outdent()
                 return last
             }
@@ -274,7 +260,7 @@ function eval_statement(asts: Array<Ast>, scope: Obj):Obj {
     for (let i=2; i<asts.length; i++) {
         args.push(evalAst(asts[i],scope))
     }
-    return invoke_method(receiver,message,args,scope)
+    return invoke_method(receiver, message, args, scope)
 }
 
 function evalAst(ast: Ast, scope:Obj):Obj {
@@ -297,7 +283,7 @@ class JoshLogger {
         this.insetCount = 0
     }
     p(...args:any[]) {
-        // console.log(this.generate_tab(),...args)
+        console.log(this.generate_tab(),...args)
     }
 
     private generate_tab() {
@@ -322,8 +308,11 @@ function parseAndEvalWithScope(code: string, scope: Obj):Obj {
     l.p(`==========\neval with scope '${code}'`)
     let ast = parseAst(code)
     // l.p(`ast is `,util.inspect(ast,false,10))
-    let res = evalAst(ast, scope)
-    // l.p("returning",res)
+    let res:Obj = evalAst(ast, scope)
+    if (res.is_return()) {
+        res = res.slots.get('value') as Obj
+    }
+    l.p("returning",res.toString())
     return res
 }
 ObjectProto.slots.set("name",StrObj("Global"))
@@ -499,7 +488,7 @@ no_test('eval assignment operator', () => {
 
 test('non local return', () => {
     let scope = init_std_scope()
-    parseAndEvalWithScope(`[ 
+    comp(parseAndEvalWithScope(`[ 
         T := (Object clone).
         T setSlot "nl" [ 
           "inside method" print.
@@ -513,12 +502,13 @@ test('non local return', () => {
           "after return" print.
         ].
         T nl. 
-    ] invoke.`,scope)//,NumObj(2))
+    ] invoke.`,scope),NumObj(2))
 })
 
 test('non local return 2', () => {
     let scope = init_std_scope()
-    parseAndEvalWithScope(`[
+    comp(parseAndEvalWithScope(`[
+        "doing regular return " print.
         return 2.
-    ] invoke.`,scope)//,NumObj(2))
+    ] invoke.`,scope),NumObj(2))
 })
