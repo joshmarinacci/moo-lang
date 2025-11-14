@@ -32,6 +32,10 @@ class Obj {
 
     lookup_symbol(value: string):Obj {
         if (value === 'self') return this
+        if (value === 'super') {
+            l.p("returning super on the object",this)
+            return this.proto as Obj
+        }
         if (this.slots.has(value)) return this.slots.get(value) as Obj
         if (this.proto) return this.proto.lookup_symbol(value)
         // console.log(`not found in scope ${value}`)
@@ -311,7 +315,7 @@ class JoshLogger {
 }
 const l = new JoshLogger();
 
-function parseAndEvalWithScope(code: string, scope: Obj):Obj {
+function pval(code: string, scope: Obj):Obj {
     l.p(`==========\neval with scope '${code}'`)
     let ast = parseAst(code)
     // l.p(`ast is `,util.inspect(ast,false,10))
@@ -394,37 +398,37 @@ test('eval expressions', () => {
 
 test('eval with scope', () => {
     let scope = init_std_scope()
-    assert.deepStrictEqual(parseAndEvalWithScope('4 add 5 .',scope),NumObj(9))
-    assert.deepStrictEqual(parseAndEvalWithScope('dog := 4.',scope),NumObj(4))
-    parseAndEvalWithScope('Object clone .',scope)
-    parseAndEvalWithScope('foo := 5 .',scope)
-    assert.deepStrictEqual(parseAndEvalWithScope(`foo print .`,scope),StrObj("5"))
+    assert.deepStrictEqual(pval('4 add 5 .',scope),NumObj(9))
+    assert.deepStrictEqual(pval('dog := 4.',scope),NumObj(4))
+    pval('Object clone .',scope)
+    pval('foo := 5 .',scope)
+    assert.deepStrictEqual(pval(`foo print .`,scope),StrObj("5"))
 
-    parseAndEvalWithScope('Dog := ( Object clone ) .', scope);
-    parseAndEvalWithScope('Dog setSlot "bark" [ "woof" print . ] .', scope);
-    parseAndEvalWithScope('Dog bark .', scope);
+    pval('Dog := ( Object clone ) .', scope);
+    pval('Dog setSlot "bark" [ "woof" print . ] .', scope);
+    pval('Dog bark .', scope);
 
-    comp(parseAndEvalWithScope('88.',scope),NumObj(88))
-    comp(parseAndEvalWithScope('88 .',scope),NumObj(88))
-    comp(parseAndEvalWithScope('[ 88 . ] invoke .',scope),NumObj(88))
+    comp(pval('88.',scope),NumObj(88))
+    comp(pval('88 .',scope),NumObj(88))
+    comp(pval('[ 88 . ] invoke .',scope),NumObj(88))
 
-    comp(parseAndEvalWithScope('( 4 < 5 ) cond [ 44. ] [ 88. ] .',scope),NumObj(44))
-    comp(parseAndEvalWithScope(`( 4 > 5 )
+    comp(pval('( 4 < 5 ) cond [ 44. ] [ 88. ] .',scope),NumObj(44))
+    comp(pval(`( 4 > 5 )
     cond [ 44. ]
      [ 88. ] .`,scope),NumObj(88))
-    comp(parseAndEvalWithScope('true .',scope),BoolObj(true))
-    comp(parseAndEvalWithScope('false .',scope),BoolObj(false))
-    comp(parseAndEvalWithScope('nil .',scope),NilObj())
+    comp(pval('true .',scope),BoolObj(true))
+    comp(pval('false .',scope),BoolObj(false))
+    comp(pval('nil .',scope),NilObj())
 
-    comp(parseAndEvalWithScope(
+    comp(pval(
         `[ self setSlot "a" 6. a add 4.] invoke .`,scope)
         ,NumObj(10))
 
-    parseAndEvalWithScope(`[
+    pval(`[
       ("global is " append (self name)) print.
     ] invoke.`,scope);
 
-    parseAndEvalWithScope(` [
+    pval(` [
         Cat := (Object clone).
         Cat setSlot "stripes" 4.
         Cat setSlot "speak" [
@@ -435,11 +439,14 @@ test('eval with scope', () => {
         cat := (Cat clone).
         cat speak.
     ] invoke.`,scope)
+
+    comp(pval(`["foo".] invoke.`,scope),StrObj("foo"))
+    comp(pval(`["foo" append 5.] invoke.`,scope),StrObj("foo5"))
 })
 
 test('eval nested blocks',() => {
     let scope = init_std_scope()
-    comp(parseAndEvalWithScope(
+    comp(pval(
         `[ a := 5. [ a add 5.] invoke. ] invoke . `,scope)
         ,NumObj(10))
 
@@ -447,8 +454,8 @@ test('eval nested blocks',() => {
 
 test('eval vector class',() => {
     let scope = init_std_scope()
-    parseAndEvalWithScope('Vector := (Object clone).',scope);
-    parseAndEvalWithScope(`[
+    pval('Vector := (Object clone).',scope);
+    pval(`[
     Vector setSlot "x" 0.
     Vector setSlot "y" 0.
     Vector setSlot "z" 0.
@@ -464,7 +471,7 @@ test('eval vector class',() => {
     ] invoke.
     `,scope)
 
-    comp(parseAndEvalWithScope(`[
+    comp(pval(`[
     a :=  ( Vector clone ).
     "here now" print.
     a setSlot "x" 10.
@@ -481,13 +488,26 @@ test('eval vector class',() => {
 
 test('eval assignment operator', () => {
     let scope = init_std_scope()
-    comp(parseAndEvalWithScope(`v := 5.`,scope),NumObj(5))
-    comp(parseAndEvalWithScope('v.',scope),NumObj(5))
+    comp(pval(`v := 5.`,scope),NumObj(5))
+    comp(pval('v.',scope),NumObj(5))
+    comp(pval(`[
+        T := (Object clone).
+        T setSlot "v" 0.
+        T setSlot "sv" [ x |
+           super setSlot "v" x.
+           self v.
+        ].
+        T setSlot "gv" [
+          self v.
+        ].
+        T sv 88.
+        T gv.
+    ] invoke.`,scope),NumObj(88))
 })
 
 test('eval blocks with args',() => {
     let scope = init_std_scope()
-    comp(parseAndEvalWithScope(`[
+    comp(pval(`[
         T := (Object clone).
         T setSlot "foo" [ x |
             "inside the block " print.
@@ -500,7 +520,7 @@ test('eval blocks with args',() => {
 
 test('non local return', () => {
     let scope = init_std_scope()
-    comp(parseAndEvalWithScope(`[ 
+    comp(pval(`[ 
         T := (Object clone).
         T setSlot "nl" [ 
           "inside method" print.
@@ -519,7 +539,7 @@ test('non local return', () => {
 
 test('non local return 2', () => {
     let scope = init_std_scope()
-    comp(parseAndEvalWithScope(`[
+    comp(pval(`[
         "doing regular return " print.
         return 2.
     ] invoke.`,scope),NumObj(2))
