@@ -169,9 +169,15 @@ const NilObj= () => new Obj("NilLiteral", NilProto, {'value': NilProto})
 let BLOCK_COUNT = 0;
 function BlockObj(args:Ast[],body:Ast[], slots:Record<string,Obj>):Obj {
     let obj = new Obj("BlockLiteral",ObjectProto, slots)
-    obj.slots.set('invoke',(rec:Obj):Obj => {
+    obj.slots.set('args',args)
+    obj.slots.set('invoke',(rec:Obj,...params):Obj => {
         let scope = new Obj("block-scope-"+(++BLOCK_COUNT),rec.slots.get('scope') as Obj)
         scope.slots.set("_name",StrObj('block-scope'))
+        for(let i=0; i<args.length; i++) {
+            let arg = args[i]
+            let param = params[i]
+            scope.slots.set(arg.value,param)
+        }
         l.indent()
         let last = NilObj()
         for (let ast of body) {
@@ -270,6 +276,7 @@ function evalAst(ast: Ast, scope:Obj):Obj {
     if (ast.type == 'group') return eval_group(ast as GroupAst, scope)
     if (ast.type == 'stmt')  return eval_statement((ast as StmtAst).value, scope)
     if (ast.type == 'block') return BlockObj((ast as BlockAst).args, (ast as BlockAst).body, {scope})
+    console.log("ast is",ast)
     throw new Error(`unknown ast type ${ast.type}`)
 }
 
@@ -334,7 +341,7 @@ const no_test = (name,code) => {
     // test(name,code)
 };
 
-no_test("parse expressions", () => {
+test("parse expressions", () => {
     assert.deepStrictEqual(parseAst(" 4 ."), Stmt(Num(4)))
     assert.deepStrictEqual(parseAst(" foo  ."), Stmt(Id("foo")))
     assert.deepStrictEqual(parseAst(" <  ."), Stmt(Id("<")));
@@ -369,9 +376,12 @@ no_test("parse expressions", () => {
     )
     assert.deepStrictEqual(parseAst('( ( 4 < 5 ) < 6 ).'),
         Stmt(Grp(Grp(Num(4),Id('<'),Num(5)),Id('<'),Num(6))))
+
+    assert.deepStrictEqual(parseAst('[ x | 4. ].'),
+        Stmt(Blk([Id('x')],[Stmt(Num(4))])))
 })
 
-no_test('eval expressions', () => {
+test('eval expressions', () => {
     let scope = new Obj("Global",ObjectProto)
     comp(evalAst(Num(4),scope),NumObj(4));
     comp(evalAst(Str("dog"),scope),StrObj("dog"));
@@ -382,7 +392,7 @@ no_test('eval expressions', () => {
     comp(evalAst(Stmt(Grp(Num(4),Id('add'),Num(5))),scope), NumObj(9))
 })
 
-no_test('eval with scope', () => {
+test('eval with scope', () => {
     let scope = init_std_scope()
     assert.deepStrictEqual(parseAndEvalWithScope('4 add 5 .',scope),NumObj(9))
     assert.deepStrictEqual(parseAndEvalWithScope('dog := 4.',scope),NumObj(4))
@@ -427,7 +437,7 @@ no_test('eval with scope', () => {
     ] invoke.`,scope)
 })
 
-no_test('eval nested blocks',() => {
+test('eval nested blocks',() => {
     let scope = init_std_scope()
     comp(parseAndEvalWithScope(
         `[ a := 5. [ a add 5.] invoke. ] invoke . `,scope)
@@ -435,7 +445,7 @@ no_test('eval nested blocks',() => {
 
 })
 
-no_test('eval vector class',() => {
+test('eval vector class',() => {
     let scope = init_std_scope()
     parseAndEvalWithScope('Vector := (Object clone).',scope);
     parseAndEvalWithScope(`[
@@ -469,22 +479,24 @@ no_test('eval vector class',() => {
     ] invoke.`,scope),NumObj(55))
 })
 
-no_test('eval assignment operator', () => {
+test('eval assignment operator', () => {
     let scope = init_std_scope()
     comp(parseAndEvalWithScope(`v := 5.`,scope),NumObj(5))
     comp(parseAndEvalWithScope('v.',scope),NumObj(5))
 })
 
-// test('eval blocks with args',() => {
-//     let scope = init_std_scope()
-//     comp(parseAndEvalWithScope(`[
-//         self setSlot "foo" [ x |
-//             "inside the block " print.
-//             nil.
-//         ].
-//         foo print.
-//     ] invoke.`,scope),NilObj())
-// })
+test('eval blocks with args',() => {
+    let scope = init_std_scope()
+    comp(parseAndEvalWithScope(`[
+        T := (Object clone).
+        T setSlot "foo" [ x |
+            "inside the block " print.
+            x print.
+            x.
+        ].
+        T foo 5.
+    ] invoke.`,scope),NumObj(5))
+})
 
 test('non local return', () => {
     let scope = init_std_scope()
