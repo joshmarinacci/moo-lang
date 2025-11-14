@@ -1,5 +1,5 @@
-import {Num, Blk, Str, Grp, Id, Stmt} from "./ast.ts"
 import type {Ast} from "./ast.ts";
+import {Blk, Grp, Id, Num, Stmt, Str} from "./ast.ts"
 
 export type Rule = (input:InputStream) => ParseResult;
 export class InputStream {
@@ -212,15 +212,20 @@ export let Statement = withProduction(
         vals.pop()
         return Stmt(...vals)
     })
+
+export let BlockArgs = withProduction(
+    Seq(ZeroOrMore(Seq(WS,Identifier,WS)),WS,Lit("|")),
+    (res)=>{
+        return res.production[0].flat().filter(v => v !== undefined)
+    }
+)
 export let Block = withProduction(
-    Seq(Lit('['), Optional(Seq(ZeroOrMore(Seq(WS,Identifier,WS)),WS,Lit("|"))), ZeroOrMore(Statement),WS,Optional(Exp),Lit("]"),WS)
+    Seq(Lit('['), Optional(BlockArgs), ZeroOrMore(Statement),WS,Optional(Exp),Lit("]"),WS)
     ,(res) =>{
-        // console.log("block production 1",res.production[1])
-        // console.log("block production 2",res.production[2])
         if (!res.production[1] && res.production[2]) {
             return Blk([],res.production[2])
         }
-        return Blk(res.production[1], res.production[1])
+        return Blk(res.production[1], res.production[2])
     })
 // fix the recursion
 RealExp = withProduction(

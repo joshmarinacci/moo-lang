@@ -141,6 +141,7 @@ test("block",() => {
     assert.ok(match("[x | ]", Block))
     assert.ok(match("[x y | ]", Block))
     assert.ok(match("[ | ]", Block))
+    assert.deepStrictEqual(produces("[x| 4.]",Block),Blk([Id('x')],[Stmt(Num(4))]))
 })
 test('parse expression',() => {
     assert.deepStrictEqual(parseAst("4 ."),Stmt(Num(4)))
