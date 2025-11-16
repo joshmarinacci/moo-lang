@@ -7,11 +7,13 @@ import assert from "node:assert";
 
 const d = new JoshLogger()
 
+type JSMethod = (rec:Obj, args:Array<Obj>) => Obj;
+
 class Obj {
     name: string;
     parent: Obj|null;
     private slots: Map<string, Obj>;
-    constructor(name: string, parent: Obj|null, props:Record<string,unknown>) {
+    constructor(name: string, parent: Obj|null, props:Record<string,JSMethod>) {
         this.name = name;
         this.parent = parent
         this.slots = new Map<string,Obj>
@@ -129,16 +131,12 @@ const ObjectProto = new Obj("ObjectProto", null,{
         return rec.clone();
     }
 });
+const NilProto = new Obj("NilProto",ObjectProto,{});
+const NilObj = () => new Obj("NilLiteral", NilProto, {})
 
-const DebugProto = new Obj("DebugProto",ObjectProto,{
-    'equals':(rec:Obj, args:Array<Obj>) => {
-        d.p("comparing",args[0],'to',args[1])
-        assert.deepStrictEqual(args[0],args[1])
-    },
-    'print':(rec:Obj, args:Array<Obj>) => {
-        d.p("debug printing")
-    }
-})
+const BooleanProto = new Obj("BooleanProto",ObjectProto,{});
+const BoolObj = (value:boolean) => new Obj("BooleanLiteral", BooleanProto, {'value':value})
+
 const js_num_op = (cb:(a:number,b:number)=>number) => {
     return function (rec:Obj, args:Array<Obj>){
         let a = rec.get_js_slot('value') as number
@@ -162,13 +160,27 @@ const NumberProto = new Obj("NumberProto",ObjectProto,{
     '>':js_bool_op((a,b)=>a>b),
     '==':js_bool_op((a,b)=>a==b),
 });
-const StringProto = new Obj("StringProto",ObjectProto,{});
-const BooleanProto = new Obj("BooleanProto",ObjectProto,{});
-const NilProto = new Obj("NilProto",ObjectProto,{});
 const NumObj = (value:number):Obj => new Obj("NumberLiteral", NumberProto, {'value': value})
-const BoolObj = (value:boolean) => new Obj("BooleanLiteral", BooleanProto, {'value':value})
-const NilObj = () => new Obj("NilLiteral", NilProto, {})
+
+
+const StringProto = new Obj("StringProto",ObjectProto,{
+    '+':((rec:Obj, args:Array<Obj>) => {
+        let a = rec.get_js_slot('value') as string;
+        let b = args[0].get_js_slot('value') as string;
+        return StrObj(a+b)
+    })
+});
 const StrObj = (value:string):Obj => new Obj("StringLiteral", StringProto, {'value': value})
+
+const DebugProto = new Obj("DebugProto",ObjectProto,{
+    'equals':(rec:Obj, args:Array<Obj>) => {
+        d.p("comparing",args[0],'to',args[1])
+        assert.deepStrictEqual(args[0],args[1])
+    },
+    'print':(rec:Obj, args:Array<Obj>) => {
+        d.p("debug printing")
+    }
+})
 const SymRef = (value:string):Obj => new Obj("SymbolReference",ObjectProto,{'value':value})
 const BlockProto = new Obj("BlockProto",ObjectProto,{
     'invoke':(rec:Obj,args:Array<Obj>) => {
@@ -369,6 +381,10 @@ test('scope tests',() => {
         ] invoke.
     ] invoke .`,scope,NumObj(5))
 })
+test('nil',() => {
+    let scope:Obj = make_default_scope();
+    cval(`nil .`,scope, NilObj())
+})
 test('numbers',() => {
     let scope:Obj = make_default_scope();
     cval('4 .',scope,NumObj(4));
@@ -389,9 +405,10 @@ test('booleans',() => {
     cval('4 == 4 .',scope,BoolObj(true));
     cval('4 == 5 .',scope,BoolObj(false));
 })
-test('nil',() => {
-    let scope:Obj = make_default_scope();
-    cval(`nil .`,scope, NilObj())
+test('strings',() => {
+    let scope = make_default_scope()
+    cval('"foo" .', scope,StrObj("foo"))
+    cval('"foo" + "bar" .', scope,StrObj("foobar"))
 })
 
 no_test('Debug tests',() => {
@@ -426,8 +443,6 @@ no_test('Point class',() => {
 })
 /*
 
-add NilObject and nil global symbols.
-add BooleanObject and true and false global symbols.
 implement if_true with tests
 try to implement Point class now
 
