@@ -150,6 +150,11 @@ const BoolObj = (value:boolean) => new Obj("BooleanLiteral", BooleanProto, {'val
 
 const js_num_op = (cb:(a:number,b:number)=>number) => {
     return function (rec:Obj, args:Array<Obj>){
+        // d.p("receiver type is", rec.name)
+        // d.p("arg type is ", args[0].name)
+        if (args[0].name !== "NumberLiteral") {
+            throw new Error("cannot add a non number to a number")
+        }
         let a = rec.get_js_slot('value') as number
         let b = args[0].get_js_slot('value') as number
         return NumObj(cb(a, b))
@@ -207,13 +212,24 @@ const BlockProto = new Obj("BlockProto",ObjectProto,{
         // if (rec.name !== 'Block') {
         //     throw new Error("cannot use 'invoke' on something that isn't a Block")
         // }
+        // d.p("parameters are", rec.get_slot('args'))
+        let params:Array<IdAst> = rec.get_slot('args')
+        // d.p("args are", args)
         let body = rec.get_js_slot('body') as Array<StmtAst>
         // d.p("body",body)
         if(!Array.isArray(body)) {
             console.error(body)
             throw new Error("block body isn't an array")
         }
-        let scope = rec;
+        let scope = new Obj("block-activation",rec,{})
+
+        for(let i=0; i<params.length; i++) {
+            let name = params[i]
+            let value = args[i]
+            d.p("setting parameter",name.value,'to',value)
+            scope.make_slot(name.value,value)
+        }
+
         // d.p("using block scope",scope)
         let res = body.map(a => eval_ast(a,scope))
         // d.p("block evaluated to",res)
@@ -255,7 +271,6 @@ function send_message(objs: Obj[], scope: Obj):Obj {
 
     let message = objs[1]
     // d.p("message",objs[1])
-    // d.p("args",objs.slice(2))
     let message_name = message.get_js_slot('value') as string
     // d.p(`message name: '${message_name}' `)
     if (message_name === 'value') {
@@ -263,8 +278,21 @@ function send_message(objs: Obj[], scope: Obj):Obj {
     }
     let method = rec.lookup_slot(message_name)
     // d.p("got the method",method)
+    let args:Array<Obj> = objs.slice(2)
+    // d.p("args",args)
+
+    args = args.map((a:Obj) => {
+        // console.log("arg is",a);
+        if (a.name === 'SymbolReference') {
+            let aa = scope.lookup_slot(a.get_js_slot('value') as string)
+            // console.log("found a better value",aa)
+            return aa
+        }
+        return a
+    })
+
     if (method instanceof Function) {
-        return method(rec,objs.slice(2))
+        return method(rec,args)
     }
     if (method.name === 'NumberLiteral') {
         return method
@@ -274,9 +302,9 @@ function send_message(objs: Obj[], scope: Obj):Obj {
         method.parent = rec
         let meth = method.get_js_slot('invoke') as Function
         // d.p('now method is',meth)
-        return meth(method,objs.slice(2))
+        return meth(method,args)
     }
-    return method.invoke(rec,objs.slice(2))
+    return method.invoke(rec,args)
 }
 
 function eval_ast(ast:Ast, scope:Obj):Obj {
@@ -464,6 +492,12 @@ test("block arg tests",() => {
     //     ].
     //     self foo 1.
     //  ] invoke .`,scope,NumObj(88))
+    cval(`[
+        self makeSlot "foo" [ v |
+            88 + v.
+        ].
+        self foo 1.
+     ] invoke .`,scope,NumObj(89))
 
     // cval(`[
     //     self makeSlot "foo" (Object clone).
