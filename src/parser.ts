@@ -162,7 +162,7 @@ export function Seq(...rules:Rule[]):Rule {
     }
 }
 
-function withProduction(rule:Rule, cb:(pass:ParseResult)=>unknown) {
+function withProduction(rule:Rule, cb:(pass:ParseResult)=>unknown):Rule {
     return function (input:InputStream) {
         let pass = rule(input)
         if (pass.succeeded()) {
@@ -171,9 +171,17 @@ function withProduction(rule:Rule, cb:(pass:ParseResult)=>unknown) {
         return pass
     }
 }
+
 export let WS = withProduction(
     Optional(OneOrMore(Or(Lit(" "),Lit("\n"))))
     ,(res) => undefined) // remove all whitespace from the tree
+
+function ws(rule:Rule) {
+    return withProduction(Seq(WS,rule,WS),(res) => {
+        return res.production[1]
+    })
+}
+
 export let Digit = Range("0","9");
 let Letter = Or(Range("a","z"),Range("A","Z"));
 let QQ = Lit('"')
@@ -193,34 +201,27 @@ export let Operator = withProduction(
 export let RealExp = Lit("dummy")
 let Exp = (input:InputStream) => RealExp(input)
 export let Group = withProduction(
-    Seq(Lit('('),WS,ZeroOrMore(Seq(WS,Exp)),WS,Lit(')'),WS)
+    Seq(ws(Lit('(')),ZeroOrMore(Seq(ws(Exp))),ws(Lit(')')))
     ,(res)=>{
-        let value = res.production as Array<Ast>
-        value = value.flat(2)
-        value = value.filter(v => v!== undefined)
-        value = value.slice(1, value.length -1)
+        let value = res.production as unknown as Array<Ast>
+        value = (value[1] as unknown as Array<Ast>).flat()
         return Grp(...value)
     })
 export let Statement = withProduction(
-    Seq(OneOrMore(Seq(WS,Exp,WS)),Lit("."))
+    Seq(OneOrMore(ws(Exp)),Lit("."))
     ,(res)=>{
-        // flatten and filter out the undefineds
-        let vals = res.production as Array<Ast>
-        vals = vals.flat(10)
-        vals = vals.filter(v => v !== undefined)
-        // remove the period
-        vals.pop()
+        let vals = res.production[0]
         return Stmt(...vals)
     })
 
 export let BlockArgs = withProduction(
-    Seq(ZeroOrMore(Seq(WS,Identifier,WS)),WS,Lit("|")),
+    Seq(ZeroOrMore(Seq(ws(Identifier))),ws(Lit("|"))),
     (res)=>{
         return res.production[0].flat().filter(v => v !== undefined)
     }
 )
 export let Block = withProduction(
-    Seq(Lit('['), Optional(BlockArgs), ZeroOrMore(Statement),WS,Optional(Exp),Lit("]"),WS)
+    Seq(Lit('['), Optional(BlockArgs), ZeroOrMore(Statement),ws(Optional(Exp)),Lit("]"))
     ,(res) =>{
         if (!res.production[1] && res.production[2]) {
             return Blk([],res.production[2])
