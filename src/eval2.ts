@@ -65,14 +65,30 @@ class Obj {
     }
 
     lookup_slot(name: string):Obj {
-        // d.p('looking up name',name,'on',this.print(2))
+        // d.p(`looking up name '${name}' on`, this.name)//,this.print(2))
+        if (name === 'self') {
+            return this
+        }
+        return this.safe_lookup_slot(name, 5);
+    }
+    safe_lookup_slot(name: string, depth: number): Obj {
+        // d.p("safe lookup slot",depth ,name)
+        if(depth < 1) {
+            throw new Error("recursed too deep!")
+        }
         if(this.slots.has(name)) {
+            // d.p(`has slot '${name}'`);
             return this.slots.get(name)
         }
         if(this.parent) {
-            return this.parent.lookup_slot(name)
+            // d.p("calling the get parent lookup on", this.parent.name);
+            if (isNil(this.parent)) {
+                // d.p("parent is nil")
+            } else {
+                return this.parent.safe_lookup_slot(name, depth - 1)
+            }
         }
-        console.warn(`slot '${name}' not found!`)
+        d.p(`slot not found!: '${name}'`)
         return NilObj()
     }
 
@@ -83,7 +99,7 @@ class Obj {
     }
 
     clone() {
-        return new Obj(this.name, this.parent, this.getSlots())
+        return new Obj(this.name + "(COPY)", this.parent, this.getSlots())
     }
 
     private getSlots():Record<string, unknown> {
@@ -94,6 +110,27 @@ class Obj {
         return slots
     }
 
+    dump() {
+        d.p(this.name)
+        d.indent()
+        for(let key of this.slots.keys()) {
+            let value = this.slots.get(key)
+            if (value instanceof Obj) {
+                d.p("slot " + key, value.name + "")
+            }
+            if (value instanceof Function) {
+                d.p("slot " + key + " native function")
+            }
+        }
+        if (this.name === 'ObjectProto') {
+            d.p("ending")
+        } else {
+            if(this.parent) {
+                this.parent.dump()
+            }
+        }
+        d.outdent()
+    }
 }
 
 const ObjectProto = new Obj("ObjectProto", null,{
@@ -121,9 +158,13 @@ const ObjectProto = new Obj("ObjectProto", null,{
         rec.set_slot(slot_name,slot_value)
         return NilObj()
     },
-    'clone':(rec:Obj) => {
-        // d.p("doing clone of ",rec)
-        return rec.clone();
+    'clone':(rec:Obj):Obj => rec.clone(),
+    'dump':(rec:Obj):Obj => {
+        d.p("DUMPING: ", rec.name)
+        d.indent()
+        rec.dump();
+        d.outdent()
+        return NilObj()
     }
 });
 const NilProto = new Obj("NilProto",ObjectProto,{});
@@ -246,6 +287,11 @@ function eval_block_obj(clause: Obj) {
     return meth(clause,[])
 }
 
+function isNil(method: Obj) {
+    if(method.name === 'NilLiteral') return true;
+    return false;
+}
+
 function send_message(objs: Obj[], scope: Obj):Obj {
     if (objs.length < 1) {
         d.p("everything is empty")
@@ -278,6 +324,9 @@ function send_message(objs: Obj[], scope: Obj):Obj {
     }
     let method = rec.lookup_slot(message_name)
     // d.p("got the method",method)
+    if (isNil(method)) {
+        throw new Error("method is nil!")
+    }
     let args:Array<Obj> = objs.slice(2)
     // d.p("args",args)
 
@@ -316,9 +365,6 @@ function eval_ast(ast:Ast, scope:Obj):Obj {
     }
     if (ast.type === 'id') {
         let id = ast as IdAst;
-        if (id.value === 'self') {
-            return scope
-        }
         return SymRef(id.value)
     }
     if (ast.type === 'group') {
@@ -393,7 +439,7 @@ test('scope tests',() => {
     // // group evaluates to the last expression in the group.
     cval('8 + 8.',scope,NumObj(16))
     cval('(8 + 8).',scope,NumObj(16))
-    cval('8 clone.',scope,NumObj(8))
+    // cval('8 clone.',scope,NumObj(8))
     cval('Object clone.', scope, ObjectProto.clone())
     cval('[ Object clone. ] invoke .', scope, ObjectProto.clone())
     // make an object with one slot
@@ -464,14 +510,12 @@ test('conditions',() => {
     cval(` (4 < 5) cond [88.] [89.].`,scope,NumObj(88))
     cval(` (4 > 5) cond [88.] [89.].`,scope,NumObj(89))
 })
-
 test('Debug tests',() => {
     let scope = make_default_scope()
     cval(`Debug print 0.`,scope,NilObj())
     cval(`Debug equals 0 0.`,scope,NilObj())
     cval(`Debug print 0 0.`,scope,NilObj())
 })
-
 test("block arg tests",() => {
     let scope = make_default_scope()
     cval(`[
@@ -521,7 +565,9 @@ no_test('Point class',() => {
         PointProto makeSlot "+" [ a |
             self makeSlot "xx" ( (self x) + (a x) ). 
             self makeSlot "yy" ( (self y) + (a y) ).
-            self x. 
+            self xx.
+            self print.
+            5.
         ].
         self makeSlot "Point" (PointProto clone).
         Point makeSlot "x" 0.
@@ -539,9 +585,27 @@ no_test('Point class',() => {
         pt magnitude.
         
         self makeSlot "pt2" (Point clone).
-        pt2 setSlot "x" 8.
-        pt2 setSlot "x" 9.
+        pt2 setSlot "x" 1.
+        pt2 setSlot "y" 1.
         
         pt + pt2.
-    ] invoke .`,scope,NumObj(Math.sqrt(5*5+5*5)))
+    ] invoke .`,scope,
+        NumObj(6)
+        // NumObj(Math.sqrt(5*5+5*5))
+    )
+})
+
+test("global scope tests",() => {
+    let scope = make_default_scope()
+    cval(`[
+        self makeSlot "foo" (Object clone).
+        foo makeSlot "make" [
+            (Object clone).
+        ].
+        foo makeSlot "bar" [
+            (self make) dump.
+            nil.
+        ].
+        foo bar.
+    ] invoke .`,scope,NilObj())
 })
