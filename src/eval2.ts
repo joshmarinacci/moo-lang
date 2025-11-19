@@ -260,7 +260,7 @@ const DebugProto = new Obj("DebugProto",ObjectProto,{
 })
 const SymRef = (value:string):Obj => new Obj("SymbolReference",ObjectProto,{'jsvalue':value})
 const BlockProto = new Obj("BlockProto",ObjectProto,{
-    'invoke':(rec:Obj,args:Array<Obj>) => {
+    'value':(rec:Obj,args:Array<Obj>) => {
         // d.p("this is a block invocation")
         // d.p("rec",rec)
         // if (rec.name !== 'Block') {
@@ -296,7 +296,7 @@ function eval_block_obj(clause: Obj) {
     if (clause.name !== 'Block') {
         return clause
     }
-    let meth = clause.get_js_slot('invoke') as Function
+    let meth = clause.get_js_slot('value') as Function
     return meth(clause,[])
 }
 
@@ -363,11 +363,11 @@ function send_message(objs: Obj[], scope: Obj):Obj {
     if (method.name === 'Block') {
         d.p("is a block as a method call")
         method.parent = rec
-        let meth = method.get_js_slot('invoke') as Function
+        let meth = method.get_js_slot('value') as Function
         d.p('now method is',meth)
         return meth(method,args)
     }
-    return method.invoke(rec,args)
+    throw new Error("invalid method")
 }
 
 function eval_ast(ast:Ast, scope:Obj):Obj {
@@ -473,40 +473,42 @@ test('scope tests',() => {
     // the value message on a literal returns itself
     cval(' 5 value .',scope,NumObj(5))
     // block evaluates to the last statement
-    cval('[ 5 . ] invoke .',scope, NumObj(5))
+    cval('[ 5 . ] value .',scope, NumObj(5))
     // scope inside block can accept makeSlot. then looks up the v slot.
-    cval(`[ self makeSlot "v" 5. self getSlot "v". ] invoke .`,scope, NumObj(5))
-    // //
-    // // group evaluates to the last expression in the group.
+    cval(`[ self makeSlot "v" 5. self getSlot "v". ] value .`,scope, NumObj(5))
+    cval(`[ self makeSlot "v" 5. self v. ] value .`,scope, NumObj(5))
+    cval(`[ self makeSlot "v" 5. v. ] value .`,scope, NumObj(5))
+
+    // group evaluates to the last expression in the group.
     cval('8 + 8.',scope,NumObj(16))
     cval('(8 + 8).',scope,NumObj(16))
     // cval('8 clone.',scope,NumObj(8))
     cval('Object clone.', scope, ObjectProto.clone())
-    cval('[ Object clone. ] invoke .', scope, ObjectProto.clone())
+    cval('[ Object clone. ] value .', scope, ObjectProto.clone())
     // make an object with one slot
     cval(`[
         self makeSlot "v" (Object clone).
         v makeSlot "w" 5.
         v w.
-    ] invoke.`,scope,NumObj(5))
+    ] value.`,scope,NumObj(5))
     cval(`[
         self makeSlot "v" (Object clone).
         v makeSlot "w" [ 5. ].
         v w.
-    ] invoke.`,scope,NumObj(5))
+    ] value.`,scope,NumObj(5))
 
     cval(`[
         self makeSlot "v" 5.
         [
           v.
-        ] invoke.
-    ] invoke .`,scope,NumObj(5))
+        ] value.
+    ] value .`,scope,NumObj(5))
 
     cval(`[
         self makeSlot "x" 5.
         self makeSlot "w" [ self x. ].
         self w.
-    ] invoke .`,scope,NumObj(5))
+    ] value .`,scope,NumObj(5))
 })
 test('nil',() => {
     let scope:Obj = make_default_scope();
@@ -565,19 +567,19 @@ test("block arg tests",() => {
             88.
         ]. 
         self foo.
-     ] invoke .`,scope,NumObj(88))
+     ] value .`,scope,NumObj(88))
     cval(`[
         self makeSlot "foo" [ v |
             88.
-        ]. 
+        ].
         self foo 1.
-     ] invoke .`,scope,NumObj(88))
+     ] value .`,scope,NumObj(88))
     cval(`[
         self makeSlot "foo" [ v |
             88 + v.
         ].
         self foo 1.
-     ] invoke .`,scope,NumObj(89))
+     ] value .`,scope,NumObj(89))
 
     cval(`[
         self makeSlot "foo" (Object clone).
@@ -591,7 +593,7 @@ test("block arg tests",() => {
             bar.
         ].
         Debug equals (foo get_bar_better) 88.
-    ] invoke . `,scope, NilObj())
+    ] value . `,scope, NilObj())
 })
 
 test('Point class',() => {
@@ -606,15 +608,11 @@ test('Point class',() => {
             ((self yy) + (self xx)) sqrt.
         ].
         PointProto makeSlot "+" [ a |
-            Debug print "inside of +".
             self makeSlot "xx" ( (self x) + (a x) ). 
-            Debug print "inside of + 2".
             self makeSlot "yy" ( (self y) + (a y) ).
-            Debug print "inside of + 3".
-            self makeSlot "pp" (Point clone).
-            Debug print "inside of + 4".
-            pp setSlot "x" xx.
-            pp setSlot "y" yy.
+            self makeSlot "pp" (Point make
+                ((self x) + (a x))
+                 ((self y) + (a y))).
             pp.
         ].
         PointProto makeSlot "print" [
@@ -624,22 +622,24 @@ test('Point class',() => {
         Point makeSlot "x" 0.
         Point makeSlot "y" 0.
         Point makeSlot "name" "Point".
+        Point makeSlot "make" [ x y |
+            self makeSlot "pp" (Point clone).
+            pp setSlot "x" x.
+            pp setSlot "y" y.
+            pp.
+        ].
 
-        self makeSlot "pt" (Point clone).
-        Debug equals (pt x) 0.
-        pt setSlot "x" 5.
-        pt setSlot "y" 5.
+        self makeSlot "pt" (Point make 5 5).
         Debug equals (pt x) 5.
+        Debug equals (pt y) 5.
         pt magnitude.
         
-        self makeSlot "pt2" (Point clone).
-        pt2 setSlot "x" 1.
-        pt2 setSlot "y" 1.
+        self makeSlot "pt2" (Point make 1 1).
         
         self makeSlot "pt3" (pt + pt2).
         pt3 dump.
         pt3 print.
-    ] invoke .`,scope,
+    ] value .`,scope,
         StrObj("Point(6,6)")
     )
 })
@@ -654,7 +654,7 @@ test("global scope tests",() => {
             blah x.
         ].
         foo bar.
-    ] invoke .`,scope,NumObj(5))
+    ] value .`,scope,NumObj(5))
 
     cval(`[
         Global makeSlot "Foo" (Object clone).
@@ -668,5 +668,5 @@ test("global scope tests",() => {
             blah name.
         ].
         Foo bar.
-    ] invoke .`,scope,StrObj("Foo"))
+    ] value .`,scope,StrObj("Foo"))
 })
