@@ -25,6 +25,9 @@ class Obj {
     make_slot(name: string, obj: Obj) {
         this.slots.set(name,obj)
     }
+    _make_js_slot(name: string, value:unknown) {
+        this.slots.set(name,value)
+    }
     set_slot(slot_name: string, slot_value: Obj) {
         // d.p(`setting slot ${slot_name} to `,slot_value.print(1))
         // d.p("on object",this.print(2))
@@ -153,6 +156,103 @@ class Obj {
     }
 }
 
+function eval_block_obj(clause: Obj) {
+    if (clause.name !== 'Block') {
+        return clause
+    }
+    let meth = clause.get_js_slot('value') as Function
+    return meth(clause,[])
+}
+function isNil(method: Obj) {
+    if(method.name === 'NilLiteral') return true;
+    return false;
+}
+function send_message(objs: Obj[], scope: Obj):Obj {
+    if (objs.length < 1) {
+        throw new Error("cannot send message with not even a receiver");
+    }
+    let rec = objs[0]
+    if(objs.length == 1) {
+        if (rec.name === 'SymbolReference') {
+            return scope.lookup_slot(rec._get_js_string())
+        }
+        return rec
+    }
+    d.p("sending message")
+    d.p('receiver',rec.name)
+    if (rec.name === 'SymbolReference') {
+        rec = scope.lookup_slot(rec._get_js_string())
+        d.p("better receiver is", rec)
+    }
+
+    let message = objs[1]
+    let message_name = message._get_js_string()
+    d.p(`message name: '${message_name}' `)
+    let method = rec.lookup_slot(message._get_js_string())
+    d.p("got the method",method)
+    if (isNil(method)) {
+        throw new Error("method is nil!")
+    }
+    let args:Array<Obj> = objs.slice(2)
+    d.p("args",args)
+
+    args = args.map((a:Obj) => {
+        if (a.name === 'SymbolReference') {
+            return scope.lookup_slot(a._get_js_string())
+        }
+        return a
+    })
+
+    if (method instanceof Function) {
+        return method(rec,args)
+    }
+    if (method.name === 'NumberLiteral') {
+        return method
+    }
+    if (method.name === 'StringLiteral') {
+        return method
+    }
+    if (method.name === 'Block') {
+        method.parent = rec
+        let meth = method.get_js_slot('value') as Function
+        return meth(method,args)
+    }
+    throw new Error("invalid method")
+}
+function eval_ast(ast:Ast, scope:Obj):Obj {
+    if (ast.type === 'num') return NumObj((ast as NumAst).value)
+    if (ast.type === "str") return StrObj((ast as StrAst).value)
+    if (ast.type === 'id') return SymRef((ast as IdAst).value)
+    if (ast.type === 'group') {
+        let group = ast as GroupAst;
+        d.indent()
+        let objs = group.value.map(a => eval_ast(a,scope))
+        let ret = send_message(objs,scope)
+        d.outdent()
+        return ret
+    }
+    if (ast.type === 'stmt') {
+        let stmt = ast as StmtAst;
+        d.indent()
+        let objs = stmt.value.map(a => eval_ast(a,scope))
+        let ret = send_message(objs,scope)
+        d.outdent()
+        return ret
+    }
+    if (ast.type === 'block') {
+        let blk = ast as BlockAst;
+        let blk2 = BlockProto.clone()
+        blk2.name = 'Block'
+        blk2._make_js_slot('args',blk.args);
+        blk2._make_js_slot('body',blk.body);
+        blk2.parent = scope;
+        return blk2
+    }
+    console.error("unknown ast type",ast)
+    throw new Error(`unknown ast type ${ast.type}`)
+}
+
+
 const ROOT = new Obj("ROOT", null,{
     'makeSlot':(rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()
@@ -186,7 +286,6 @@ const ObjectProto = new Obj("ObjectProto", ROOT, {})
 const NilProto = new Obj("NilProto",ObjectProto,{});
 const NilObj = () => new Obj("NilLiteral", NilProto, {})
 
-
 const BooleanProto = new Obj("BooleanProto",ObjectProto,{
     'value':(rec:Obj) => rec,
     'if_true':(rec:Obj, args:Array<Obj>):Obj => {
@@ -218,9 +317,7 @@ const js_num_op = (cb:(a:number,b:number)=>number) => {
 }
 const js_bool_op = (cb:(a:number,b:number)=>boolean) => {
     return function (rec:Obj, args:Array<Obj>){
-        let a = rec._get_js_number()
-        let b = args[0]._get_js_number()
-        return BoolObj(cb(a, b))
+        return BoolObj(cb(rec._get_js_number(), args[0]._get_js_number()))
     }
 }
 const NumberProto = new Obj("NumberProto",ObjectProto,{
@@ -236,14 +333,9 @@ const NumberProto = new Obj("NumberProto",ObjectProto,{
 });
 const NumObj = (value:number):Obj => new Obj("NumberLiteral", NumberProto, { 'jsvalue': value,})
 
-
 const StringProto = new Obj("StringProto",ObjectProto,{
     'value':(rec:Obj) => rec,
-    '+':((rec:Obj, args:Array<Obj>) => {
-        let a = rec._get_js_string()
-        let b = args[0]._get_js_string()
-        return StrObj(a+b)
-    })
+    '+':((rec:Obj, args:Array<Obj>) => StrObj(rec._get_js_string() + args[0]._get_js_string()))
 });
 const StrObj = (value:string):Obj => new Obj("StringLiteral", StringProto, {'jsvalue': value})
 
@@ -261,172 +353,30 @@ const DebugProto = new Obj("DebugProto",ObjectProto,{
 const SymRef = (value:string):Obj => new Obj("SymbolReference",ObjectProto,{'jsvalue':value})
 const BlockProto = new Obj("BlockProto",ObjectProto,{
     'value':(rec:Obj,args:Array<Obj>) => {
-        // d.p("this is a block invocation")
-        // d.p("rec",rec)
-        // if (rec.name !== 'Block') {
-        //     throw new Error("cannot use 'invoke' on something that isn't a Block")
-        // }
-        // d.p("parameters are", rec.get_slot('args'))
-        let params:Array<IdAst> = rec.get_slot('args')
-        // d.p("args are", args)
+        let params:Array<IdAst> = rec.get_slot('args') as unknown as Array<IdAst>
         let body = rec.get_js_slot('body') as Array<StmtAst>
-        // d.p("body",body)
-        if(!Array.isArray(body)) {
-            console.error(body)
-            throw new Error("block body isn't an array")
-        }
+        if(!Array.isArray(body)) throw new Error("block body isn't an array")
         let scope = new Obj("block-activation",rec,{})
-
         for(let i=0; i<params.length; i++) {
-            let name = params[i]
-            let value = args[i]
-            // d.p("setting parameter",name.value,'to',value)
-            scope.make_slot(name.value,value)
+            scope.make_slot(params[i].value,args[i])
         }
-
-        // d.p("using block scope",scope)
         let res = body.map(a => eval_ast(a,scope))
-        // d.p("block evaluated to",res)
         return res[res.length-1]
     }
 })
 
 
-function eval_block_obj(clause: Obj) {
-    if (clause.name !== 'Block') {
-        return clause
-    }
-    let meth = clause.get_js_slot('value') as Function
-    return meth(clause,[])
-}
-
-function isNil(method: Obj) {
-    if(method.name === 'NilLiteral') return true;
-    return false;
-}
-
-function send_message(objs: Obj[], scope: Obj):Obj {
-    if (objs.length < 1) {
-        d.p("everything is empty")
-        return null
-    }
-    if(objs.length == 1) {
-        d.p("message is only the receiver")
-        let rec = objs[0]
-        d.p(rec)
-        d.p("in the scope",scope)
-        if (rec.name === 'SymbolReference') {
-            d.p("returning " + " " + rec._get_js_string())
-            return scope.lookup_slot(rec._get_js_string())
-        }
-        return rec
-    }
-    d.p("sending message")
-    let rec = objs[0]
-    d.p('receiver',rec.name)
-    if (rec.name === 'SymbolReference') {
-        rec = scope.lookup_slot(rec._get_js_string())
-        d.p("better receiver is", rec)
-    }
-
-    let message = objs[1]
-    d.p("message",objs[1])
-    let message_name = message._get_js_string()
-    d.p(`message name: '${message_name}' `)
-    let method = rec.lookup_slot(message_name)
-    d.p("got the method",method)
-    if (isNil(method)) {
-        throw new Error("method is nil!")
-    }
-    let args:Array<Obj> = objs.slice(2)
-    d.p("args",args)
-
-    args = args.map((a:Obj) => {
-        d.p("arg is",a);
-        if (a.name === 'SymbolReference') {
-            let aa = scope.lookup_slot(a._get_js_string())
-            d.p("found a better value",aa)
-            return aa
-        }
-        return a
-    })
-
-    if (method instanceof Function) {
-        return method(rec,args)
-    }
-    if (method.name === 'NumberLiteral') {
-        return method
-    }
-    if (method.name === 'StringLiteral') {
-        return method
-    }
-    if (method.name === 'Block') {
-        d.p("is a block as a method call")
-        method.parent = rec
-        let meth = method.get_js_slot('value') as Function
-        d.p('now method is',meth)
-        return meth(method,args)
-    }
-    throw new Error("invalid method")
-}
-
-function eval_ast(ast:Ast, scope:Obj):Obj {
-    if (ast.type === 'num') {
-        return NumObj((ast as NumAst).value)
-    }
-    if (ast.type === "str") {
-        return StrObj((ast as StrAst).value)
-    }
-    if (ast.type === 'id') {
-        let id = ast as IdAst;
-        return SymRef(id.value)
-    }
-    if (ast.type === 'group') {
-        let group = ast as GroupAst;
-        d.indent()
-        let objs = group.value.map(a => eval_ast(a,scope))
-        let ret = send_message(objs,scope)
-        d.outdent()
-        return ret
-    }
-    if (ast.type === 'stmt') {
-        let stmt = ast as StmtAst;
-        d.indent()
-        let objs = stmt.value.map(a => eval_ast(a,scope))
-        // d.enable()
-        let ret = send_message(objs,scope)
-        // d.disable()
-        d.outdent()
-        return ret
-    }
-    if (ast.type === 'block') {
-        let blk = ast as BlockAst;
-        let blk2 = BlockProto.clone()
-        blk2.name = 'Block'
-        blk2.make_slot('args',blk.args);
-        blk2.make_slot('body',blk.body);
-        blk2.parent = scope;
-        return blk2
-    }
-    console.error("unknown ast type",ast)
-    throw new Error(`unknown ast type ${ast.type}`)
-}
-
 function objsEqual(a: Obj, b: Obj) {
     if(a.name !== b.name) return false
     if(a.slots.size !== b.slots.size) return false
     for(let key of a.slots.keys()) {
-        let vala = a.slots.get(key)
-        let valb = b.slots.get(key)
+        let vala = a.slots.get(key) as unknown;
+        let valb = b.slots.get(key) as unknown;
         if (typeof vala === 'number') {
-            if (vala !== valb) {
-                return false
-            }
+            if (vala !== valb) return false
         }
         if (typeof vala === 'string') {
-            if (vala !== valb) {
-                return false
-            }
+            if (vala !== valb) return false
         }
     }
     return true
@@ -595,7 +545,6 @@ test("block arg tests",() => {
         Debug equals (foo get_bar_better) 88.
     ] value . `,scope, NilObj())
 })
-
 test('Point class',() => {
     let scope = make_default_scope()
 
@@ -643,7 +592,6 @@ test('Point class',() => {
         StrObj("Point(6,6)")
     )
 })
-
 test("global scope tests",() => {
     let scope = make_default_scope()
     cval(`[
