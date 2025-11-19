@@ -182,6 +182,12 @@ function ws(rule:Rule) {
     })
 }
 
+export function ListOf (rule:Rule, separator:Rule) {
+    return withProduction(
+        Seq(Optional(rule),ZeroOrMore(Seq(separator,rule)))
+        ,(res) => res.production.flat(2).filter(l => l !== ','));
+}
+
 export let Digit = Range("0","9");
 let Letter = Or(Range("a","z"),Range("A","Z"));
 let QQ = Lit('"')

@@ -3,26 +3,19 @@ import assert from "node:assert";
 import {
     Exp,
     Identifier,
-    InputStream,
+    InputStream, ListOf,
     Lit,
-    Optional,
     type Rule,
     Seq,
     withProduction,
-    ZeroOrMore
 } from "./parser.ts";
 import {Id, Num, Stmt} from "./ast.ts";
 
-function ListOf (rule:Rule) {
-    return withProduction(
-        Seq(Optional(rule),ZeroOrMore(Seq(Lit(","),rule)))
-        ,(res) => res.production.flat(2).filter(l => l !== ','));
-}
 
-let MethodArgs = ListOf(Exp);
+let MethodArgs = ListOf(Exp,Lit(","));
 
 export let MethodCall = withProduction(
-    Seq(Identifier,Lit("."),Identifier,Lit("("),ListOf(Exp),Lit(")"))
+    Seq(Identifier,Lit("."),Identifier,Lit("("),MethodArgs,Lit(")"))
     ,(res)=> {
         return Stmt(
             res.production[0],
