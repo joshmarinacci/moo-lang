@@ -111,6 +111,9 @@ class Obj {
     _get_js_boolean():boolean {
         return this.get_js_slot('jsvalue') as boolean
     }
+    _get_js_array():Array<Obj> {
+        return this.get_js_slot('jsvalue') as Array<Obj>
+    }
 
     clone() {
         return new Obj(this.name + "(COPY)", this.parent, this.getSlots())
@@ -427,6 +430,30 @@ const BlockProto = new Obj("BlockProto",ObjectProto,{
     }
 })
 
+const ListProto = new Obj("ListProto",ObjectProto, {
+    'push':(rec:Obj, args:Array<Obj>):Obj=>{
+        let arr = rec._get_js_array()
+        arr.push(args[0]);
+        return NilObj()
+    },
+    'at':(rec:Obj,args:Array<Obj>):Obj => {
+        let arr = rec._get_js_array()
+        let index = args[0]._get_js_number()
+        return arr[index]
+    },
+    'setAt':(rec:Obj, args:Array<Obj>):Obj => {
+        let arr = rec._get_js_array()
+        let index = args[0]._get_js_number()
+        arr[index] = args[1]
+        return rec
+    },
+    'len':(rec):Obj=>{
+        let arr = rec._get_js_array()
+        return NumObj(arr.length)
+    }
+})
+ListProto._make_js_slot('jsvalue',[])
+
 
 function objsEqual(a: Obj, b: Obj) {
     if(a.name !== b.name) return false
@@ -444,8 +471,8 @@ function objsEqual(a: Obj, b: Obj) {
     return true
 }
 
-function cval(code:string, scope:Obj, expected:Obj) {
-    d.disable()
+function cval(code:string, scope:Obj, expected?:Obj) {
+    // d.disable()
     d.p('=========')
     d.p(`code is '${code}'`)
     let ast = parseAst(code);
@@ -457,7 +484,9 @@ function cval(code:string, scope:Obj, expected:Obj) {
     // obj.dump()
     d.p(obj)
     // assert.deepStrictEqual(obj,expected)
-    assert(objsEqual(obj,expected))
+    if(expected) {
+        assert(objsEqual(obj, expected))
+    }
 }
 function make_default_scope():Obj {
     let scope = new Obj("Global",ROOT,{});
@@ -469,6 +498,7 @@ function make_default_scope():Obj {
     scope.make_slot("false",BoolObj(false))
     scope.make_slot("Nil",NilProto)
     scope.make_slot('nil',NilObj())
+    scope.make_slot("List",ListProto)
     scope.make_slot("Global",scope)
     ObjectProto.parent = scope;
     return scope
@@ -740,3 +770,54 @@ test('non local return 2', () => {
         return 4 + 5.
     ] value.`,scope,NumObj(9))
 })
+test('list class', () => {
+    let scope = make_default_scope()
+    cval('list ::= (List clone).',scope);
+    cval(`[
+        list push 7.
+        list push 8.
+        list push 9.
+        list len.
+    ] value.`,scope,NumObj(3))
+    cval(`[
+        list at 0.
+    ] value.`,scope,NumObj(7))
+    cval(`[
+        list setAt 0 88.
+        list at 0.
+    ] value.`,scope,NumObj(88))
+})
+test('eval vector class',() => {
+    let scope = init_std_scope()
+    pval('Vector := (ObjectBase clone).',scope);
+    pval(`[
+    Vector setSlot "x" 0.
+    Vector setSlot "y" 0.
+    Vector setSlot "z" 0.
+    Vector setSlot "add" [
+        "pretending to add " print.
+    ].
+    Vector setSlot "g" [
+       "inside vector " print.
+       self x.
+    ].
+    v := (Vector clone).
+    v g.
+    ] invoke.
+    `,scope)
+
+    comp(pval(`[
+    a :=  ( Vector clone ).
+    "here now" print.
+    a setSlot "x" 10.
+    (a x ) print.
+    b := ( Vector clone ).
+    b setSlot "x" 20.
+    (b x) print.
+
+    c := (a add b).
+    55.
+
+    ] invoke.`,scope),NumObj(55))
+})
+
