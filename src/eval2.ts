@@ -717,7 +717,6 @@ test ('fib recursion',() => {
         Math fib 6.
      ] value . `,scope,NumObj(8))
 })
-
 test('non local return', () => {
     let scope = make_default_scope();
     cval(`[ 
@@ -735,7 +734,6 @@ test('non local return', () => {
         T nl. 
     ] value.`,scope,NumObj(2))
 })
-
 test('non local return 2', () => {
     let scope = make_default_scope();
     cval(`[
