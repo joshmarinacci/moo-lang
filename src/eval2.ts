@@ -13,10 +13,12 @@ class Obj {
     name: string;
     parent: Obj|null;
     slots: Map<string, Obj>;
+    _is_return: boolean;
     constructor(name: string, parent: Obj|null, props:Record<string,JSMethod>) {
         this.name = name;
         this.parent = parent
         this.slots = new Map<string,Obj>
+        this._is_return = false;
         for(let key in props) {
             this.slots.set(key,props[key])
         }
@@ -154,6 +156,10 @@ class Obj {
         }
         d.outdent()
     }
+
+    parent_chain() {
+        return this.name + ', ' + this.parent?.name + "," + this.parent?.parent?.name
+    }
 }
 
 function eval_block_obj(clause: Obj) {
@@ -178,12 +184,23 @@ function send_message(objs: Obj[], scope: Obj):Obj {
         }
         return rec
     }
+    if (rec._get_js_string() === 'return') {
+        d.p("rewriting for a return call", rec)
+        let ret = send_message(objs.slice(1),scope)
+        let ret2 = new Obj('non-local-return',scope.parent,{})
+        ret2._is_return = true
+        ret2.make_slot('value',ret)
+        ret2.make_slot('target',scope.parent as Obj);
+        return ret2;
+    }
+
     d.p("sending message")
     d.p('receiver',rec.name)
     if (rec.name === 'SymbolReference') {
         rec = scope.lookup_slot(rec._get_js_string())
         d.p("better receiver is", rec)
     }
+
 
     let message = objs[1]
     let message_name = message._get_js_string()
@@ -357,7 +374,11 @@ const NumObj = (value:number):Obj => new Obj("NumberLiteral", NumberProto, { 'js
 
 const StringProto = new Obj("StringProto",ObjectProto,{
     'value':(rec:Obj) => rec,
-    '+':((rec:Obj, args:Array<Obj>) => StrObj(rec._get_js_string() + args[0]._get_js_string()))
+    '+':((rec:Obj, args:Array<Obj>) => StrObj(rec._get_js_string() + args[0]._get_js_string())),
+    'print':(rec:Obj):Obj => {
+        console.log("PRINT",rec._get_js_string())
+        return NilObj()
+    }
 });
 const StrObj = (value:string):Obj => new Obj("StringLiteral", StringProto, {'jsvalue': value})
 
@@ -373,17 +394,36 @@ const DebugProto = new Obj("DebugProto",ObjectProto,{
     }
 })
 const SymRef = (value:string):Obj => new Obj("SymbolReference",ObjectProto,{'jsvalue':value})
+let BLOCK_COUNT = 0
 const BlockProto = new Obj("BlockProto",ObjectProto,{
     'value':(rec:Obj,args:Array<Obj>) => {
         let params:Array<IdAst> = rec.get_slot('args') as unknown as Array<IdAst>
         let body = rec.get_js_slot('body') as Array<StmtAst>
         if(!Array.isArray(body)) throw new Error("block body isn't an array")
-        let scope = new Obj("block-activation",rec,{})
+        let scope = new Obj(`block-activation-${++BLOCK_COUNT}`,rec,{})
         for(let i=0; i<params.length; i++) {
             scope.make_slot(params[i].value,args[i])
         }
-        let res = body.map(a => eval_ast(a,scope))
-        return res[res.length-1]
+        let last = NilObj()
+        for(let ast of body) {
+            last = eval_ast(ast,scope)
+            if (!last) last = NilObj()
+            if (last._is_return) {
+                let target:Obj = last.slots.get('target')
+                d.p("looking for fast return to", target?.parent_chain())
+                d.p("scope is", scope.parent_chain())
+                if (target === scope) {
+                    d.p("fast return found. returning",last.slots.get('value'))
+                    return last.slots.get('value') as Obj
+                }
+                if (target && target.parent === scope) {
+                    d.p("fast return through parent found. returning",last.slots.get('value'))
+                    return last.slots.get('value') as Obj
+                }
+                return last
+            }
+        }
+        return last
     }
 })
 
@@ -412,6 +452,7 @@ function cval(code:string, scope:Obj, expected:Obj) {
     d.p('ast is',ast)
     // d.p(ast)
     let obj = eval_ast(ast,scope);
+    if (obj._is_return) obj = obj.get_slot('value') as Obj;
     // d.p("returned")
     // obj.dump()
     // d.p(obj)
@@ -675,4 +716,29 @@ no_test ('fib recursion',() => {
         ].
         Math fib 6.
      ] invoke . `,scope,NumObj(8))
+})
+
+test('non local return', () => {
+    let scope = make_default_scope();
+    cval(`[ 
+        T ::= (Object clone).
+        T makeSlot "nl" [ 
+          ( 4 > 5 ) cond [
+            "method 1" print.
+            return 1.
+          ] [ 
+            "method 2" print.
+            return 2.
+          ].
+          "after return" print.
+        ].
+        T nl. 
+    ] value.`,scope,NumObj(2))
+})
+
+test('non local return 2', () => {
+    let scope = make_default_scope();
+    cval(`[
+        return 4 + 5.
+    ] value.`,scope,NumObj(9))
 })
