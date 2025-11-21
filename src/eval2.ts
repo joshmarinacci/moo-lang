@@ -25,18 +25,22 @@ class Obj {
     }
 
     make_slot(name: string, obj: Obj) {
+        console.log(`make slot ${this.name}.${name} = ${obj.name}'`)
         this.slots.set(name,obj)
     }
     _make_js_slot(name: string, value:unknown) {
         this.slots.set(name,value)
     }
-    set_slot(slot_name: string, slot_value: Obj) {
-        // d.p(`setting slot ${slot_name} to `,slot_value.print(1))
-        // d.p("on object",this.print(2))
-        if(this.slots.has(slot_name)) {
+    set_slot(slot_name: string, slot_value: Obj):void {
+        console.log(`set slot ${this.name}.${slot_name} = ${slot_value.name}`)
+        if(!this.slots.has(slot_name)) {
+            d.p(`${this.name} doesn't have the slot ${slot_name}`)
+            if(this.parent) {
+                return this.parent.set_slot(slot_name,slot_value)
+            }
+        } else {
             this.slots.set(slot_name, slot_value)
         }
-        // d.p(this)
     }
     print(depth:number):string {
         if (depth < 1) {
@@ -197,17 +201,17 @@ function send_message(objs: Obj[], scope: Obj):Obj {
         return ret2;
     }
 
-    d.p("sending message")
-    d.p('receiver',rec.name)
+    // d.p("sending message")
+    // d.p('receiver',rec.name)
     if (rec.name === 'SymbolReference') {
         rec = scope.lookup_slot(rec._get_js_string())
-        d.p("better receiver is", rec)
+        // d.p("better receiver is", rec)
     }
 
 
     let message = objs[1]
     let message_name = message._get_js_string()
-    d.p(`message name: '${message_name}' `)
+    // d.p(`message name: '${message_name}' `)
 
     if(message_name === "::=") {
         d.p("rewrite the message call to make a slot")
@@ -231,12 +235,12 @@ function send_message(objs: Obj[], scope: Obj):Obj {
 
 
     let method = rec.lookup_slot(message._get_js_string())
-    d.p("got the method",method)
+    // d.p("got the method",method)
     if (isNil(method)) {
         throw new Error("method is nil!")
     }
     let args:Array<Obj> = objs.slice(2)
-    d.p("args",args)
+    // d.p("args",args)
 
     args = args.map((a:Obj) => {
         if (a.name === 'SymbolReference') {
@@ -313,6 +317,10 @@ const ROOT = new Obj("ROOT", null,{
         let slot_name = args[0]._get_js_string()
         let slot_value = args[1]
         rec.set_slot(slot_name,slot_value)
+        return NilObj()
+    },
+    'setObjectName':(rec:Obj, args:Array<Obj>):Obj => {
+        rec.name = args[0]._get_js_string()
         return NilObj()
     },
     'clone':(rec:Obj):Obj => rec.clone(),
@@ -733,7 +741,7 @@ test('assignment operator', () => {
         ].
         T sv 88.
         T gv.
-    ] value.`,scope,NumObj(44))
+    ] value.`,scope,NumObj(88))
 })
 test ('fib recursion',() => {
     let scope = make_default_scope()
@@ -788,36 +796,27 @@ test('list class', () => {
     ] value.`,scope,NumObj(88))
 })
 test('eval vector class',() => {
-    let scope = init_std_scope()
-    pval('Vector := (ObjectBase clone).',scope);
-    pval(`[
-    Vector setSlot "x" 0.
-    Vector setSlot "y" 0.
-    Vector setSlot "z" 0.
-    Vector setSlot "add" [
-        "pretending to add " print.
-    ].
-    Vector setSlot "g" [
-       "inside vector " print.
-       self x.
-    ].
-    v := (Vector clone).
-    v g.
-    ] invoke.
-    `,scope)
-
-    comp(pval(`[
-    a :=  ( Vector clone ).
-    "here now" print.
-    a setSlot "x" 10.
-    (a x ) print.
-    b := ( Vector clone ).
-    b setSlot "x" 20.
-    (b x) print.
-
-    c := (a add b).
-    55.
-
-    ] invoke.`,scope),NumObj(55))
+    let scope = make_default_scope()
+    cval(`[
+        Vector ::= (ObjectBase clone).
+        Vector setObjectName "Vector".
+        Vector makeSlot "x" 2.
+        Vector makeSlot "y" 0.
+        Vector makeSlot "z" 0.
+        Vector makeSlot "add" [
+            "pretending to add " print.
+        ].
+        Vector makeSlot "sx" [ xx |
+           ("setting x " + xx) print.
+           self setSlot "x" xx.
+        ].
+        v ::= (Vector clone).
+        v sx 3.
+        v x.
+        
+        a ::= (Vector clone).
+        a sx 88.
+        a x.
+    ] value.`,scope,NumObj(88))
 })
 
