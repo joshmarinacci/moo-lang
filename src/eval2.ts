@@ -632,18 +632,18 @@ test('Debug tests',() => {
 })
 test("block arg tests",() => {
     let scope = make_default_scope()
-    cval(`[
+    cval(`
         self makeSlot "foo" [
             88.
         ]. 
         self foo.
-     ] value .`,scope,NumObj(88))
-    cval(`[
+     `,scope,NumObj(88))
+    cval(`
         self makeSlot "foo" [ v |
             88.
         ].
         self foo 1.
-     ] value .`,scope,NumObj(88))
+        `,scope,NumObj(88))
     cval(`[
         self makeSlot "foo" [ v |
             88 + v.
@@ -651,7 +651,7 @@ test("block arg tests",() => {
         self foo 1.
      ] value .`,scope,NumObj(89))
 
-    cval(`[
+    cval(`
         self makeSlot "foo" (Object clone).
         foo makeSlot "bar" 88.
         Debug equals (foo bar) 88.
@@ -663,12 +663,12 @@ test("block arg tests",() => {
             bar.
         ].
         Debug equals (foo get_bar_better) 88.
-    ] value . `,scope, NilObj())
+    `,scope, NilObj())
 })
 test('Point class',() => {
     let scope = make_default_scope()
 
-    cval(`[
+    cval(`
         Global makeSlot "PointProto" (Object clone).
         PointProto makeSlot "name" "PointProto".
         PointProto makeSlot "magnitude" [
@@ -708,7 +708,7 @@ test('Point class',() => {
         self makeSlot "pt3" (pt + pt2).
         pt3 dump.
         pt3 print.
-    ] value .`,scope,
+    `,scope,
         StrObj("Point(6,6)")
     )
 })
