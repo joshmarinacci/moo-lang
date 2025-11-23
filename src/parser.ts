@@ -193,11 +193,12 @@ export let Digit = Range("0","9");
 let Letter = Or(Range("a","z"),Range("A","Z"));
 let QQ = Lit('"')
 let Underscore = Lit("_")
+let Colon = Lit(':')
 export let Integer = withProduction(
     OneOrMore(Or(Digit,Underscore))
     ,(res) => Num(parseInt(res.slice)))
 export let Identifier = withProduction(
-    Seq(Letter,ZeroOrMore(Or(Letter,Digit,Underscore)))
+    Seq(Letter,ZeroOrMore(Or(Letter,Digit,Underscore,Colon)))
     ,(res)=> Id(res.slice))
 export let StringLiteral = withProduction(
     Seq(QQ,ZeroOrMore(AnyNot(QQ)),QQ)

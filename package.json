@@ -9,7 +9,8 @@
     "test-eval": "node src/eval.ts",
     "test-eval2": "node src/eval2.ts",
     "test-parser": "node src/parser.test.ts",
-    "test-raytracer": "node src/raytracer.ts"
+    "test-raytracer": "node src/raytracer.ts",
+    "test": "npm run test-eval2 && npm run test-parser"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",

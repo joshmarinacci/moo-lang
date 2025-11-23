@@ -72,6 +72,7 @@ test("parse identifier",() => {
     assert.ok(!match("1abc",Identifier))
     assert.ok(!match("_abc",Identifier))
     assert.deepStrictEqual(produces("abc",Identifier),Id("abc"))
+    assert.deepStrictEqual(produces("abc:",Identifier),Id("abc:"))
 })
 test("parse string literal",() => {
     assert.ok(match(`"abc"`,StringLiteral))

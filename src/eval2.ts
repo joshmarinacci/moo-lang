@@ -421,7 +421,7 @@ const StrObj = (value:string):Obj => new Obj("StringLiteral", StringProto, {'jsv
 
 const DebugProto = new Obj("DebugProto",ObjectProto,{
     'equals':(rec:Obj, args:Array<Obj>) => {
-        assert(objsEqual(args[0], args[1]))
+        assert(objsEqual(args[0], args[1]),`not equal ${args[0].print()} ${args[1].print()}`)
         return NilObj()
     },
     'print':(rec:Obj, args:Array<Obj>) => {
@@ -834,6 +834,9 @@ test('eval vector class',() => {
         Vector makeSlot "x" 0.
         Vector makeSlot "y" 0.
         Vector makeSlot "z" 0.
+        Vector makeSlot "x:" [xx |
+            self setSlot "x" xx.
+        ].
         Vector makeSlot "make" [ xx yy zz |
             self makeSlot "v" (Vector clone).
             v setSlot "x" xx.
@@ -848,6 +851,11 @@ test('eval vector class',() => {
                 ((a z) + (self z)).
         ].
         a ::= (Vector make 1 1 1).
+        
+        // check the setter
+        a x: 55.
+        Debug equals (a x) 55.
+        
         b ::= (Vector make 6 7 8).
         c ::= (a add b).
         c z.
