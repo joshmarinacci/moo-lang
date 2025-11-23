@@ -195,7 +195,7 @@ let QQ = Lit('"')
 let Underscore = Lit("_")
 let Colon = Lit(':')
 export let Integer = withProduction(
-    OneOrMore(Or(Digit,Underscore))
+    Seq(Optional(Lit('-')),OneOrMore(Or(Digit,Underscore)))
     ,(res) => Num(parseInt(res.slice)))
 export let Identifier = withProduction(
     Seq(Letter,ZeroOrMore(Or(Letter,Digit,Underscore,Colon)))

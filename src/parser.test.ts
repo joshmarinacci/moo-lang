@@ -63,6 +63,8 @@ test("parse integer",() => {
     assert.equal(matchOutput("44845a",Integer),"44845")
     assert.ok(!match("a44845",Integer))
     assert.deepStrictEqual(produces("44",Integer),Num(44))
+    assert.ok(match("-44",Integer))
+    assert.deepStrictEqual(produces("-44",Integer),Num(-44))
 })
 test("parse identifier",() => {
     assert.ok(match("abc",Identifier))

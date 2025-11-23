@@ -80,9 +80,9 @@ test('eval vector class',() => {
 
         // test subtract
         c ::= (a - b).
-        Debug equals (c x) (0-5).
-        Debug equals (c y) (0-6).
-        Debug equals (c z) (0-7).
+        Debug equals (c x) -5.
+        Debug equals (c y) -6.
+        Debug equals (c z) -7.
         
         // test dot
         Debug equals (a dot b) 21.

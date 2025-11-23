@@ -525,7 +525,7 @@ function objsEqual(a: Obj, b: Obj) {
 }
 
 export function cval(code:string, scope:Obj, expected?:Obj) {
-    // d.disable()
+    d.disable()
     d.p('=========')
     d.p(`code is '${code}'`)
     let body = parseBlockBody(code);
