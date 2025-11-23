@@ -28,14 +28,14 @@ class Obj {
         if(!obj) {
             throw new Error(`cannot make slot ${name}. value is null`)
         }
-        console.log(`make slot ${this.name}.${name} = ${obj.name}'`)
+        // console.log(`make slot ${this.name}.${name} = ${obj.name}'`)
         this.slots.set(name,obj)
     }
     _make_js_slot(name: string, value:unknown) {
         this.slots.set(name,value)
     }
     set_slot(slot_name: string, slot_value: Obj):void {
-        console.log(`set slot ${this.name}.${slot_name} = ${slot_value.name}`)
+        // console.log(`set slot ${this.name}.${slot_name} = ${slot_value.name}`)
         if(!this.slots.has(slot_name)) {
             d.p(`${this.name} doesn't have the slot ${slot_name}`)
             if(this.parent) {
@@ -68,7 +68,7 @@ class Obj {
             return `Nil`
         }
         if (this.name === 'Block') {
-            return `Block ${this.get_slot('body')}`
+            return `Block (${this.get_slot('args')}) ${this.get_slot('body')}`
         }
         let slots = Array.from(this.slots.keys()).map(key => {
             let val:unknown = this.slots.get(key)
@@ -121,7 +121,7 @@ class Obj {
                 return this.parent.safe_lookup_slot(name, depth - 1)
             }
         }
-        d.warn(`slot not found!: '${name}'`)
+        // d.warn(`slot not found!: '${name}'`)
         return NilObj()
     }
 
@@ -193,12 +193,12 @@ class Obj {
     }
 }
 
-function eval_block_obj(clause: Obj) {
+function eval_block_obj(clause: Obj, args:Array<Obj>) {
     if (clause.name !== 'Block') {
         return clause
     }
     let meth = clause.get_js_slot('value') as Function
-    return meth(clause,[])
+    return meth(clause,args)
 }
 function isNil(method: Obj) {
     if(method.name === 'NilLiteral') return true;
@@ -263,7 +263,7 @@ function send_message(objs: Obj[], scope: Obj):Obj {
         d.p("got the method", method.print())
     }
     if (isNil(method)) {
-        throw new Error("method is nil!")
+        throw new Error(`method is nil! could not find '${message._get_js_string()}'`)
     }
     let args:Array<Obj> = objs.slice(2)
     d.p("args",args)
@@ -366,17 +366,22 @@ const BooleanProto = new Obj("BooleanProto",ObjectProto,{
     'value':(rec:Obj) => rec,
     'if_true':(rec:Obj, args:Array<Obj>):Obj => {
         let val = rec._get_js_boolean()
-        if(val) return eval_block_obj(args[0])
+        if(val) return eval_block_obj(args[0],[])
         return NilObj()
     },
     'if_false':(rec:Obj, args:Array<Obj>):Obj => {
         let val = rec._get_js_boolean()
-        if(!val) return eval_block_obj(args[0])
+        if(!val) return eval_block_obj(args[0],[])
         return NilObj()
+    },
+    'and':(rec:Obj, args:Array<Obj>):Obj => {
+        let A = rec._get_js_boolean()
+        let B = args[0]._get_js_boolean()
+        return BoolObj(A && B)
     },
     'cond':(rec:Obj, args:Array<Obj>):Obj => {
         let val = rec._get_js_boolean()
-        return eval_block_obj(val?args[0]:args[1])
+        return eval_block_obj(val?args[0]:args[1],[])
     }
 });
 const BoolObj = (value:boolean) => new Obj("BooleanLiteral", BooleanProto, {'jsvalue':value})
@@ -405,7 +410,16 @@ const NumberProto = new Obj("NumberProto",ObjectProto,{
     '<':js_bool_op((a,b)=>a<b),
     '>':js_bool_op((a,b)=>a>b),
     '==':js_bool_op((a,b)=>a==b),
-    'sqrt':(rec:Obj):Obj => NumObj(Math.sqrt(rec._get_js_number()))
+    'mod':js_num_op((a,b)=>a%b),
+    'sqrt':(rec:Obj):Obj => NumObj(Math.sqrt(rec._get_js_number())),
+    'range':(rec:Obj, args:Array<Obj>):Obj => {
+        let start = rec._get_js_number()
+        let end = args[0]._get_js_number()
+        let block = args[1]
+        for(let i=start; i<end; i++) {
+            eval_block_obj(block, [NumObj(i)])
+        }
+    }
 });
 const NumObj = (value:number):Obj => new Obj("NumberLiteral", NumberProto, { 'jsvalue': value,})
 
@@ -438,7 +452,11 @@ const BlockProto = new Obj("BlockProto",ObjectProto,{
         let body = rec.get_js_slot('body') as Array<StmtAst>
         if(!Array.isArray(body)) throw new Error("block body isn't an array")
         let scope = new Obj(`block-activation-${++BLOCK_COUNT}`,rec,{})
-        console.log("inside of block body")
+        if(params.length !== args.length) {
+            console.warn("parameters and args for block are different lengths")
+            console.log(rec.print())
+            throw new Error(`block requires ${params.length} arguments\n ${rec.print()}`)
+        }
         for(let i=0; i<params.length; i++) {
             scope.make_slot(params[i].value,args[i])
         }
@@ -507,11 +525,11 @@ function objsEqual(a: Obj, b: Obj) {
 }
 
 function cval(code:string, scope:Obj, expected?:Obj) {
-    // d.disable()
+    d.disable()
     d.p('=========')
     d.p(`code is '${code}'`)
     let body = parseBlockBody(code);
-    // d.p('ast is',body)
+    d.p('ast is',body)
     let last = NilObj()
     if (Array.isArray(body)) {
         for(let ast of body) {
@@ -860,5 +878,21 @@ test('eval vector class',() => {
         c ::= (a add b).
         c z.
     ] value.`,scope,NumObj(9))
+})
+test('fizzbuzz',() => {
+    let scope = make_default_scope()
+    cval(`
+    [
+    1 range 100 [ n |
+        three ::= ((n mod 3) == 0).
+        five ::= ((n mod 5) == 0).
+        (three and five) if_true [ 
+            return ("FizzBuzz" print).  
+        ].
+        three if_true [ "Fizz" print. ].
+        five if_true [ "Buzz" print. ].
+    ].
+    88. 
+    ] value .`,scope,NumObj(88))
 })
 
