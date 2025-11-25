@@ -200,20 +200,29 @@ export const Digit = Range("0","9");
 const Letter = Or(Range("a","z"),Range("A","Z"));
 const QQ = Lit('"')
 const Q = Lit("'")
-let Underscore = Lit("_")
-let Colon = Lit(':')
+const Under = Lit("_")
+const Colon = Lit(':')
+const Plus = Lit("+")
+const Minus = Lit("-")
+const Sign = Or(Plus,Minus)
+
 export let Integer = produce(
-    Seq(Optional(Lit('-')),OneOrMore(Or(Digit,Underscore)))
-    ,(res) => Num(parseInt(res.slice)))
+    Seq(Optional(Sign),Digit,ZeroOrMore(Or(Digit,Under)))
+    ,(res) => Num(parseInt(res.slice.replace('_', ''))))
+
 export let Identifier = produce(
-    Seq(Letter,ZeroOrMore(Or(Letter,Digit,Underscore,Colon)))
+    Seq(Letter,ZeroOrMore(Or(Letter,Digit,Under,Colon)))
     ,(res)=> Id(res.slice))
 const QStringLiteral = produce(Seq(Q,ZeroOrMore(AnyNot(Q)),Q),(res) => Str(res.slice.substring(1, res.slice.length - 1)))
 const QQStringLiteral = produce(Seq(QQ,ZeroOrMore(AnyNot(QQ)),QQ),(res) => Str(res.slice.substring(1, res.slice.length - 1)))
 export const StringLiteral = Or(QStringLiteral, QQStringLiteral)
-export const Operator = produce(
-    Or(Lit("+"),Lit("-"),Lit("*"),Lit("/"),Lit("<"),Lit(">"),Lit("::="),Lit(":="),Lit("=="))
-    ,(res)=> Id(res.slice)) // operators are identifiers too
+
+const SymbolLiteral = Or(
+    Plus,Minus,Lit("*"),Lit("/"),
+    Lit("<"),Lit(">"),Lit(":"),Lit("="))
+// operators are identifiers too
+export const Operator = produce(ws(OneOrMore(SymbolLiteral)) ,(res)=> Id(res.production.join("")))
+
 export let RealExp = Lit("dummy")
 export let Exp = (input:InputStream) => RealExp(input)
 export let FunctionCall = produce(

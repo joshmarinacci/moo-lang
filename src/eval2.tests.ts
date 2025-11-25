@@ -87,7 +87,8 @@ test('conditions',() => {
 
     cval(` (4 < 5) cond 88 89.`,scope,NumObj(88))
     cval(` (4 > 5) cond 88 89.`,scope,NumObj(89))
-    cval(` (4 < 5) cond (44+44) 89.`,scope,NumObj(88))
+    cval(` (4 < 5) cond (44 + 44) 89.`,scope,NumObj(88))
+    cval(` (4 < 5) cond (44 - 44) 89.`,scope,NumObj(0))
 
     cval(` (4 < 5) cond [88.] [89.].`,scope,NumObj(88))
     cval(` (4 > 5) cond [88.] [89.].`,scope,NumObj(89))
