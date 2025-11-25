@@ -7,14 +7,14 @@ import {
     Lit,
     type Rule,
     Seq,
-    withProduction,
+    produce,
 } from "./parser.ts";
 import {Id, Num, Stmt} from "./ast.ts";
 
 
 let MethodArgs = ListOf(Exp,Lit(","));
 
-export let MethodCall = withProduction(
+export let MethodCall = produce(
     Seq(Identifier,Lit("."),Identifier,Lit("("),MethodArgs,Lit(")"))
     ,(res)=> {
         return Stmt(

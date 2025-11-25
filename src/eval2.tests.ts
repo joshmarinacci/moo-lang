@@ -13,7 +13,7 @@ test('scope tests',() => {
     // block evaluates to the last statement
     cval('[ 5 . ] value .',scope, NumObj(5))
     // scope inside block can accept makeSlot. then looks up the v slot.
-    cval(`[ self makeSlot "v" 5. self getSlot "v". ] value .`,scope, NumObj(5))
+    cval(`[ self makeSlot 'v' 5. self getSlot "v". ] value .`,scope, NumObj(5))
     cval(`[ self makeSlot "v" 5. self v. ] value .`,scope, NumObj(5))
     cval(`[ self makeSlot "v" 5. v. ] value .`,scope, NumObj(5))
 

@@ -162,7 +162,7 @@ export function Seq(...rules:Rule[]):Rule {
     }
 }
 
-export function withProduction(rule:Rule, cb:(pass:ParseResult)=>unknown):Rule {
+export function produce(rule:Rule, cb:(pass:ParseResult)=>unknown):Rule {
     return function (input:InputStream) {
         let pass = rule(input)
         if (pass.succeeded()) {
@@ -173,12 +173,12 @@ export function withProduction(rule:Rule, cb:(pass:ParseResult)=>unknown):Rule {
 }
 
 export let Comment = Seq(Lit('//'),ZeroOrMore(AnyNot(Lit('\n'))),Lit('\n'))
-export let WS = withProduction(
+export let WS = produce(
     Optional(OneOrMore(Or(Comment,Lit(" "),Lit("\n"))))
     ,(res) => undefined) // remove all whitespace from the tree
 
 function ws(rule:Rule) {
-    return withProduction(Seq(WS,rule,WS),(res) => {
+    return produce(Seq(WS,rule,WS),(res) => {
         return res.production[1]
     })
 }
@@ -187,7 +187,7 @@ const is_odd = (a:unknown,n:number) => (n%2 !==0)
 const is_not_undefined = (a:unknown) => typeof a !== 'undefined'
 
 export function ListOf (rule:Rule, separator:Rule) {
-    return withProduction(
+    return produce(
         Seq(Optional(rule),ZeroOrMore(Seq(separator,rule)))
         ,(res) => {
             return res.production.flat(2)
@@ -196,26 +196,27 @@ export function ListOf (rule:Rule, separator:Rule) {
         });
 }
 
-export let Digit = Range("0","9");
-let Letter = Or(Range("a","z"),Range("A","Z"));
-let QQ = Lit('"')
+export const Digit = Range("0","9");
+const Letter = Or(Range("a","z"),Range("A","Z"));
+const QQ = Lit('"')
+const Q = Lit("'")
 let Underscore = Lit("_")
 let Colon = Lit(':')
-export let Integer = withProduction(
+export let Integer = produce(
     Seq(Optional(Lit('-')),OneOrMore(Or(Digit,Underscore)))
     ,(res) => Num(parseInt(res.slice)))
-export let Identifier = withProduction(
+export let Identifier = produce(
     Seq(Letter,ZeroOrMore(Or(Letter,Digit,Underscore,Colon)))
     ,(res)=> Id(res.slice))
-export let StringLiteral = withProduction(
-    Seq(QQ,ZeroOrMore(AnyNot(QQ)),QQ)
-    ,(res) => Str(res.slice.substring(1, res.slice.length - 1)))
-export let Operator = withProduction(
+const QStringLiteral = produce(Seq(Q,ZeroOrMore(AnyNot(Q)),Q),(res) => Str(res.slice.substring(1, res.slice.length - 1)))
+const QQStringLiteral = produce(Seq(QQ,ZeroOrMore(AnyNot(QQ)),QQ),(res) => Str(res.slice.substring(1, res.slice.length - 1)))
+export const StringLiteral = Or(QStringLiteral, QQStringLiteral)
+export const Operator = produce(
     Or(Lit("+"),Lit("-"),Lit("*"),Lit("/"),Lit("<"),Lit(">"),Lit("::="),Lit(":="),Lit("=="))
     ,(res)=> Id(res.slice)) // operators are identifiers too
 export let RealExp = Lit("dummy")
 export let Exp = (input:InputStream) => RealExp(input)
-export let FunctionCall = withProduction(
+export let FunctionCall = produce(
     Seq(
         ListOf(Identifier,Lit('.')),
         Lit('('),
@@ -227,23 +228,23 @@ export let FunctionCall = withProduction(
         console.log("args",res.production[2])
         return new FunCallAst(res.production[0],res.production[2])
     });
-export let Group = withProduction(
+export let Group = produce(
     Seq(ws(Lit('(')),ZeroOrMore(Seq(ws(Exp))),ws(Lit(')')))
     ,(res)=> Grp(...(res.production[1].flat())))
-export let Statement = withProduction(
+export let Statement = produce(
     Seq(OneOrMore(ws(Exp)),Lit("."))
     ,(res)=> Stmt(...(res.production[0])))
-export let BlockArgs = withProduction(
+export let BlockArgs = produce(
     Seq(ZeroOrMore(Seq(ws(Identifier))),ws(Lit("|"))),
     (res)=> res.production[0].flat()
 )
-export let BlockBody = withProduction(Seq(ZeroOrMore(Statement), ws(Optional(Exp)))
+export let BlockBody = produce(Seq(ZeroOrMore(Statement), ws(Optional(Exp)))
     ,(res)=> {
         return res.production[0].flat()
     }
 );
 
-export let Block = withProduction(
+export let Block = produce(
     Seq(Lit('['), Optional(BlockArgs), BlockBody, Lit("]"))
     ,(res) =>{
         if (!res.production[1] && res.production[2]) {
@@ -252,7 +253,7 @@ export let Block = withProduction(
         return Blk(res.production[1], res.production[2])
     })
 // fix the recursion
-RealExp = withProduction(
+RealExp = produce(
     Or(Integer,Identifier,Operator,StringLiteral,Group,Block)
     ,(res)=> res.production)
 
