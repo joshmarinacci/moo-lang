@@ -12,9 +12,12 @@ import {
     Statement,
     RealExp,
     Group,
-    Integer,
-    Block, Operator, Identifier, StringLiteral, WS, parseAst, BlockBody, parseBlockBody, Exp, AnyNot, Comment, Float,
-    Binary, Hex
+    Block, Operator,
+    Identifier,
+    StringLiteral,
+    WS, parseAst, BlockBody, parseBlockBody, Exp, AnyNot,
+    Comment,
+    NumberLiteral
 } from "./parser.ts";
 import type {Rule} from "./parser.ts"
 import {Num, Blk, Str, Grp, Id, Stmt} from "./ast.ts"
@@ -57,30 +60,30 @@ test ("test parser itself", () => {
 })
 test("parse integer",() => {
     assert.ok(match("4",Digit))
-    assert.ok(match("44",Integer))
-    assert.ok(!match("a",Integer))
+    assert.ok(match("44",NumberLiteral))
+    assert.ok(!match("a",NumberLiteral))
     assert.equal(matchOutput("4",Digit),"4")
-    assert.equal(matchOutput("44",Integer),"44")
-    assert.equal(matchOutput("44845a",Integer),"44845")
-    assert.ok(!match("a44845",Integer))
-    assert.deepStrictEqual(produces("44",Integer),Num(44))
-    assert.ok(match("-44",Integer))
-    assert.deepStrictEqual(produces("-44",Integer),Num(-44))
-    assert.deepStrictEqual(produces("67",Integer),Num(67))
-    assert.deepStrictEqual(produces("6_7",Integer),Num(67))
+    assert.equal(matchOutput("44",NumberLiteral),"44")
+    assert.equal(matchOutput("44845a",NumberLiteral),"44845")
+    assert.ok(!match("a44845",NumberLiteral))
+    assert.deepStrictEqual(produces("44",NumberLiteral),Num(44))
+    assert.ok(match("-44",NumberLiteral))
+    assert.deepStrictEqual(produces("-44",NumberLiteral),Num(-44))
+    assert.deepStrictEqual(produces("67",NumberLiteral),Num(67))
+    assert.deepStrictEqual(produces("6_7",NumberLiteral),Num(67))
 })
 test("parse float", () => {
-    assert.deepStrictEqual(produces("-44.44",Float),Num(-44.44))
-    assert.deepStrictEqual(produces("0.44",Float),Num(0.44))
-    assert.deepStrictEqual(produces("0.4_4",Float),Num(0.44))
-    assert.deepStrictEqual(produces("0_0.44",Float),Num(0.44))
+    assert.deepStrictEqual(produces("-44.44",NumberLiteral),Num(-44.44))
+    assert.deepStrictEqual(produces("0.44",NumberLiteral),Num(0.44))
+    assert.deepStrictEqual(produces("0.4_4",NumberLiteral),Num(0.44))
+    assert.deepStrictEqual(produces("0_0.44",NumberLiteral),Num(0.44))
 })
 test('parse alt base numbers',() => {
-    assert.deepStrictEqual(produces("2r0001",Binary),Num(1))
-    assert.deepStrictEqual(produces("2r1111",Binary),Num(15))
-    assert.deepStrictEqual(produces("16r8",Hex),Num(8))
-    assert.deepStrictEqual(produces("16rA",Hex),Num(10))
-    assert.deepStrictEqual(produces("16rFF",Hex),Num(255))
+    assert.deepStrictEqual(produces("2r0001",NumberLiteral),Num(1))
+    assert.deepStrictEqual(produces("2r1111",NumberLiteral),Num(15))
+    assert.deepStrictEqual(produces("16r8",NumberLiteral),Num(8))
+    assert.deepStrictEqual(produces("16rA",NumberLiteral),Num(10))
+    assert.deepStrictEqual(produces("16rFF",NumberLiteral),Num(255))
     // assert.deepStrictEqual(produces("16rFFFF",Hexidecimal),Num(0xFFFF))
 })
 test("parse identifier",() => {
@@ -118,14 +121,14 @@ test("parse operators",() => {
 })
 
 test("handle whitespace",() => {
-    assert.ok(match("4",Integer))
-    assert.ok(match("4 ",Integer))
+    assert.ok(match("4",NumberLiteral))
+    assert.ok(match("4 ",NumberLiteral))
     assert.ok(match(" ", Lit(" ")))
     assert.ok(match("     ", OneOrMore(Lit(" "))))
     assert.ok(match("     ", WS))
-    assert.ok(match(" 4",Seq(WS,Integer)))
-    assert.ok(match(" 4 ",Seq(WS,Integer)))
-    assert.ok(match(" 4 5",Seq(WS,Integer,WS,Integer,WS)))
+    assert.ok(match(" 4",Seq(WS,NumberLiteral)))
+    assert.ok(match(" 4 ",Seq(WS,NumberLiteral)))
+    assert.ok(match(" 4 5",Seq(WS,NumberLiteral,WS,NumberLiteral,WS)))
 })
 test("parse group",() => {
     assert.ok(match("(4)",Group))

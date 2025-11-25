@@ -232,6 +232,8 @@ export const Hex = produce(
     }
 )
 
+export const NumberLiteral = Or(Binary, Hex, Float, Integer)
+
 export let Identifier = produce(
     Seq(Letter,ZeroOrMore(Or(Letter,Digit,Under,Colon)))
     ,(res)=> Id(res.slice))
@@ -285,7 +287,7 @@ export let Block = produce(
     })
 // fix the recursion
 RealExp = produce(
-    Or(Integer,Identifier,Operator,StringLiteral,Group,Block)
+    Or(NumberLiteral,Identifier,Operator,StringLiteral,Group,Block)
     ,(res)=> res.production)
 
 
