@@ -243,7 +243,7 @@ export const StringLiteral = Or(QStringLiteral, QQStringLiteral)
 
 const SymbolLiteral = Or(
     Plus,Minus,Lit("*"),Lit("/"),
-    Lit("<"),Lit(">"),Lit(":"),Lit("="))
+    Lit("<"),Lit(">"),Lit(":"),Lit("="),Lit("!"))
 // operators are identifiers too
 export const Operator = produce(ws(OneOrMore(SymbolLiteral)) ,(res)=> Id(res.production.join("")))
 
