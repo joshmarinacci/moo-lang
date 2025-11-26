@@ -1,8 +1,7 @@
-import test from "node:test";
 import {JoshLogger} from "./util.ts";
 import {parseBlockBody} from "./parser.ts";
 
-import {ListLiteralAst, Ast, BlockAst, GroupAst, IdAst, NumAst, StmtAst, StrAst, MapLiteralAst} from "./ast.ts"
+import {Ast, BlockAst, GroupAst, IdAst, ListLiteralAst, MapLiteralAst, NumAst, StmtAst, StrAst} from "./ast.ts"
 import assert from "node:assert";
 
 const d = new JoshLogger()
@@ -332,13 +331,11 @@ function eval_ast(ast:Ast, scope:Obj):Obj {
         let map = ast as MapLiteralAst
         let obj:Record<string, Obj> = {}
         map.value.forEach(pair => {
-            console.log('evaluating',pair)
-            let val = eval_ast(pair[1],scope)
-            obj[pair[0]] = val
+            let key = pair[0] as IdAst
+            let value = pair[1]
+            obj[key.value] = eval_ast(value,scope)
         })
-        let dict = DictObj(obj)
-        // dict.dump()
-        return dict
+        return DictObj(obj)
     }
     console.error("unknown ast type",ast)
     throw new Error(`unknown ast type ${ast.type}`)
@@ -570,7 +567,7 @@ export function cval(code:string, scope:Obj, expected?:Obj) {
     d.p('=========')
     d.p(`code is '${code}'`)
     let body = parseBlockBody(code);
-    d.p('ast is',body)
+    d.p('ast is',body.toString())
     let last = NilObj()
     if (Array.isArray(body)) {
         for(let ast of body) {

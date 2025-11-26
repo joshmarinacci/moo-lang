@@ -103,16 +103,18 @@ export class ListLiteralAst extends Ast {
         return "{" + this.value.join(',') +'}'
     }
 }
+
+type Pair = [Ast,Ast]
 export class MapLiteralAst extends Ast {
-    value:Array<[string,Ast]>
+    value:Array<Pair>
     type:string
-    constructor(value:Array<[string,Ast]>) {
+    constructor(value:Array<Pair>) {
         super();
         this.type = 'array-literal-map'
         this.value = value
     }
     toString() {
-        return "{  " + this.value.join(',') + '}'
+        return "{  " + this.value.map(([k,v]) => k+":"+v).join(',') + '}'
     }
 }
 
