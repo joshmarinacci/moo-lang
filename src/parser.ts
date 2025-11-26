@@ -297,7 +297,7 @@ export let Block = produce(
     })
 // fix the recursion
 RealExp = produce(
-    Or(NumberLiteral,Identifier,Operator,StringLiteral,Group,Block)
+    Or(ArrayLiteral, NumberLiteral,Identifier,Operator,StringLiteral,Group,Block)
     ,(res)=> res.production)
 
 

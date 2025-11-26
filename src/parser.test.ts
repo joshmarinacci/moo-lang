@@ -138,6 +138,7 @@ test("parse array literals",() => {
     assert.deepStrictEqual(produces("{ 4 , 5}",ArrayLiteral),ArrayLit(Num(4),Num(5)))
     assert.ok(match("{ 4, 5, 6 }",ArrayLiteral))
     assert.deepStrictEqual(produces("{ 4 , 5, 6}",ArrayLiteral),ArrayLit(Num(4),Num(5),Num(6)))
+    assert.deepStrictEqual(produces("{ 4 , 5, 6} .",Statement),Stmt(ArrayLit(Num(4),Num(5),Num(6))))
 })
 
 test("handle whitespace",() => {

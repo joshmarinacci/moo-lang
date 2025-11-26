@@ -2,7 +2,7 @@ import test from "node:test";
 import {JoshLogger} from "./util.ts";
 import {parseBlockBody} from "./parser.ts";
 
-import {Ast, BlockAst, GroupAst, IdAst, NumAst, StmtAst, StrAst} from "./ast.ts"
+import {ArrayLiteralAst, Ast, BlockAst, GroupAst, IdAst, NumAst, StmtAst, StrAst} from "./ast.ts"
 import assert from "node:assert";
 
 const d = new JoshLogger()
@@ -320,6 +320,11 @@ function eval_ast(ast:Ast, scope:Obj):Obj {
         blk2.parent = scope;
         return blk2
     }
+    if (ast.type === 'array-literal') {
+        let arr = ast as ArrayLiteralAst
+        let vals = arr.value.map(v => eval_ast(v,scope))
+        return ListObj(...vals)
+    }
     console.error("unknown ast type",ast)
     throw new Error(`unknown ast type ${ast.type}`)
 }
@@ -506,6 +511,7 @@ const ListProto = new Obj("ListProto",ObjectProto, {
     }
 })
 ListProto._make_js_slot('jsvalue',[])
+export const ListObj = (...args:Array<Obj>)=> new Obj("List", ListProto, {'jsvalue': args})
 
 
 function objsEqual(a: Obj, b: Obj) {
