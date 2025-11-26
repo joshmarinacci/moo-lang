@@ -85,9 +85,9 @@ export class Obj {
         }
     }
     print():string {
-        return this.safe_print(5)
+        return this._safe_print(5)
     }
-    safe_print(depth:number):string {
+    _safe_print(depth:number):string {
         if (depth < 1) {
             return this.name
         }
@@ -115,7 +115,7 @@ export class Obj {
                 if (val.name === 'Block') {
                     val = 'Block'
                 } else {
-                    val = val.safe_print(depth - 1)
+                    val = val._safe_print(depth - 1)
                 }
             } else {
                 if (val instanceof Function) {
@@ -126,7 +126,7 @@ export class Obj {
             }
             return key + ":" + val
         })
-        let parent = this.parent?this.parent.safe_print(1):'nil'
+        let parent = this.parent?this.parent._safe_print(1):'nil'
         return `${this.name} {${slots.join('\n')}}\n ${parent} `
     }
     has_slot(name: string) {
