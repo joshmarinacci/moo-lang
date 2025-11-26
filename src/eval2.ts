@@ -142,6 +142,9 @@ export class Obj {
     _get_js_array():Array<Obj> {
         return this.get_js_slot('jsvalue') as Array<Obj>
     }
+    _get_js_record():Record<string,Obj> {
+        return this.get_js_slot('jsvalue') as Record<string,Obj>
+    }
 
     clone() {
         return new Obj(this.name + "(COPY)", this.parent, this.getSlots())
@@ -513,6 +516,25 @@ const ListProto = new Obj("ListProto",ObjectProto, {
 ListProto._make_js_slot('jsvalue',[])
 export const ListObj = (...args:Array<Obj>)=> new Obj("List", ListProto, {'jsvalue': args})
 
+const DictProto = new Obj('DictProto',ObjectProto, {
+    'get':(rec:Obj, args:Array<Obj>):Obj => {
+        let arr = rec._get_js_record()
+        let key = args[0]._get_js_string()
+        return arr[key]
+    },
+    'set':(rec:Obj, args:Array<Obj>):Obj => {
+        let arr = rec._get_js_record()
+        let key = args[0]._get_js_string()
+        arr[key] = args[1]
+        return rec
+    },
+    'len':(rec):Obj=>{
+        let record = rec._get_js_record()
+        return NumObj(Object.keys(record).length)
+    }
+})
+DictProto._make_js_slot("jsvalue",{})
+
 
 function objsEqual(a: Obj, b: Obj) {
     if(a.name !== b.name) return false
@@ -562,6 +584,7 @@ export function make_default_scope():Obj {
     scope.make_slot("Nil",NilProto)
     scope.make_slot('nil',NilObj())
     scope.make_slot("List",ListProto)
+    scope.make_slot("Dict",DictProto)
     scope.make_slot("Global",scope)
     ObjectProto.parent = scope;
     return scope

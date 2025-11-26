@@ -12,6 +12,18 @@ test('array literals',() => {
     cval(`[
      { 4 5 }.
      ] value.`, scope, ListObj(NumObj(4),NumObj(5)))
-    // cval(`{ 4 5 }.`,scope,ListObj(NumObj(4)))
+})
+
+test('dict api',() => {
+    let scope = make_default_scope()
+    cval(`[
+        dict ::= (Dict clone).
+        dict set "six" 6.
+        dict set "seven" 7.
+        Debug equals (dict get "six") 6.
+        Debug equals (dict get "seven") 7.
+        dict len.
+        ] value.
+    `,scope,NumObj(2))
 })
 
