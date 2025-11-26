@@ -1,5 +1,5 @@
 import test from "node:test";
-import {cval} from "../src/eval2.ts";
+import {cval} from "../src/eval.ts";
 import {NumObj} from "../src/number.ts";
 import {make_standard_scope} from "../src/standard.ts";
 

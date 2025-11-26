@@ -1,5 +1,5 @@
 import {NilObj, Obj, ObjectProto} from "./obj.ts";
-import {eval_block_obj} from "./eval2.ts";
+import {eval_block_obj} from "./eval.ts";
 
 const BooleanProto = new Obj("BooleanProto",ObjectProto,{
     'value':(rec:Obj) => rec,

@@ -1,5 +1,5 @@
 import test from "node:test";
-import {cval} from "../src/eval2.ts";
+import {cval} from "../src/eval.ts";
 import assert from "node:assert";
 import {ArrayLiteral} from "../src/parser.ts";
 import {make_standard_scope} from "../src/standard.ts";

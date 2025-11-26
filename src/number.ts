@@ -1,5 +1,5 @@
 import {Obj, ObjectProto} from "./obj.ts";
-import {eval_block_obj} from "./eval2.ts";
+import {eval_block_obj} from "./eval.ts";
 import {BoolObj} from "./boolean.ts";
 
 const js_num_op = (cb:(a:number,b:number)=>number) => {
