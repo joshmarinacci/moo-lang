@@ -241,8 +241,8 @@ test ('fib recursion',() => {
     cval(`[
         Math ::= Object clone.
         Math makeSlot "fib" [n|
-            (n == 0) if_true [ return 0. ].
-            (n == 1) if_true [ return 1. ].
+            (n == 0) if_true [ ^ 0. ].
+            (n == 1) if_true [ ^ 1. ].
             (Math fib ( n - 2 ) ) + (Math fib (n - 1 ) ).
         ].
         Math fib 6.
@@ -253,14 +253,7 @@ test('non local return', () => {
     cval(`[ 
         T ::= (Object clone).
         T makeSlot "nl" [ 
-          ( 4 > 5 ) cond [
-            "method 1" print.
-            return 1.
-          ] [ 
-            "method 2" print.
-            return 2.
-          ].
-          "after return" print.
+          ( 4 > 5 ) cond [ ^ 1. ] [ ^ 2. ].
         ].
         T nl. 
     ] value.`,scope,NumObj(2))
