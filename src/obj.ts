@@ -33,13 +33,36 @@ export class Obj {
         }
         this._data_slots.set(name,obj)
         this._make_method_slot(name,(rec:Obj,args:Array<Obj>):Obj =>{
-            console.log(`calling data getter for ${name}`)
-            return NilObj()
+            return rec._get_data_slot(name)
         })
         this._make_method_slot(name+":",(rec:Obj,args:Array<Obj>):Obj =>{
-            console.log(`calling data setter for ${name}`)
-            return NilObj()
+            return rec._set_data_slot(name,args[0])
         })
+    }
+    _get_data_slot(name:string):Obj {
+        // console.log(`getting data slot ${name}`)
+        if (!this._data_slots.has(name)) {
+            if(this.parent) {
+                return this.parent._get_data_slot(name)
+            } else {
+                console.error(`no such data slot ${name}`)
+                return NilObj()
+            }
+        } else {
+            return this._data_slots.get(name)
+        }
+    }
+    _set_data_slot(name:string, value:Obj):Obj {
+        if(this._data_slots.has(name)) {
+            this._data_slots.set(name,value)
+            return NilObj()
+        } else {
+            if (this.parent) {
+                return this.parent._set_data_slot(name,value)
+            } else {
+                return NilObj()
+            }
+        }
     }
     _make_method_slot(name: string, obj: Obj) {
         if(!obj) {
@@ -163,7 +186,12 @@ export class Obj {
     }
 
     clone() {
-        return new Obj(this.name, this.parent, this.getSlots())
+        let obj = new Obj(this.name, this.parent, this.getSlots())
+        obj._data_slots = new Map<string, Obj>()
+        for(let key of this._data_slots.keys()) {
+            obj._data_slots.set(key,this._data_slots.get(key))
+        }
+        return obj
     }
 
     private getSlots():Record<string, unknown> {
@@ -216,6 +244,10 @@ export class Obj {
 }
 
 export const ROOT = new Obj("ROOT", null,{
+    'make_data_slot:':(rec:Obj, args:Array<Obj>) => {
+        rec._make_data_slot(args[0]._get_js_string(), args[1])
+        return NilObj()
+    },
     'makeSlot':(rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()
         let slot_value = args[1]

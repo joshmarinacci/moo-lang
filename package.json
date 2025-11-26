@@ -11,7 +11,8 @@
     "test-raytracer": "node tests/raytracer.ts",
     "test-lists": "node tests/arrays.test.ts",
     "test-images": "node tests/image.test.ts",
-    "test": "npm run test-eval && npm run test-parser && npm run test-lists && npm run test-images"
+    "test-point": "node tests/point.test.ts",
+    "test": "npm run test-eval && npm run test-parser && npm run test-lists && npm run test-images && npm run test-point"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",

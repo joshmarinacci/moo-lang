@@ -25,8 +25,8 @@ const DebugProto = new Obj("DebugProto",ObjectProto,{
         return NilObj()
     },
     'print':(rec:Obj, args:Array<Obj>) => {
-        d.p("debug printing".toUpperCase())
-        d.p(args)
+        // d.p("debug printing".toUpperCase())
+        args.forEach(arg => d.p("DEBUG", arg.to_string()))
         return NilObj()
     }
 })

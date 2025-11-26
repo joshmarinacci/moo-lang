@@ -23,6 +23,9 @@ function send_message(objs: Obj[], scope: Obj):Obj {
         throw new Error("cannot send message with not even a receiver");
     }
     let rec = objs[0]
+    if(!rec) {
+        console.error("receiver is null")
+    }
     if(objs.length == 1) {
         if (rec.name === 'SymbolReference') {
             return scope.lookup_slot(rec._get_js_string())
