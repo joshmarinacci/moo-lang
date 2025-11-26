@@ -242,8 +242,10 @@ export let Identifier = produce(
     Seq(Letter,ZeroOrMore(Or(Letter,Digit,Under,Colon))),
     (res)=> Id(res.slice))
 
+const SoloExp = Or(NumberLiteral, Identifier, StringLiteral)
+
 const ArrayLiteralValue = produce(
-    Seq(ws(NumberLiteral),Optional(Lit(","))),
+    Seq(ws(SoloExp),Optional(ws(Lit(",")))),
     (res)=> res.production[0])
 const ArrayListBody = produce(
     Seq(Lit("{"),ws(ZeroOrMore(ArrayLiteralValue)),Lit("}")),
@@ -253,8 +255,9 @@ const PlainIdentifier = produce(
     OneOrMore(Letter),
     (res) => Id(res.slice)
 )
+
 const ArrayLiteralPair = produce(
-    Seq(ws(PlainIdentifier), Lit(":"), ws(NumberLiteral)),
+    Seq(ws(PlainIdentifier), Lit(":"), ws(SoloExp)),
     (res) => [res.production[0], res.production[2]]
 )
 const ArrayMapBody = produce(

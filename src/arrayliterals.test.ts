@@ -10,6 +10,22 @@ export function match(source:string, rule:Rule) {
 
 const no_test = (name:string, cb:() => void) => {}
 
+
+test('parse array list literals',() => {
+    assert.ok(match("{}",ArrayLiteral))
+    assert.ok(match("{4}",ArrayLiteral))
+    assert.ok(match("{4 5}",ArrayLiteral))
+    assert.ok(match("{ 'a' 'b' }",ArrayLiteral))
+})
+
+test('parse array dict literals',() => {
+    assert.ok(match("{}",ArrayLiteral))
+    assert.ok(match("{a:5}",ArrayLiteral))
+    assert.ok(match("{ a:5 }",ArrayLiteral))
+    assert.ok(match("{ a:5 b:6 }",ArrayLiteral))
+    assert.ok(match("{ a:'a' b:'b' }",ArrayLiteral))
+})
+
 test('array literals',() => {
     let scope = make_default_scope()
     cval(`[
@@ -45,17 +61,4 @@ test('dict api',() => {
         dict len.
         ] value.
     `,scope,NumObj(2))
-})
-
-test('parse array list literals',() => {
-    assert.ok(match("{}",ArrayLiteral))
-    assert.ok(match("{4}",ArrayLiteral))
-    assert.ok(match("{4 5}",ArrayLiteral))
-})
-
-test('parse array dict literals',() => {
-    assert.ok(match("{}",ArrayLiteral))
-    assert.ok(match("{a:5}",ArrayLiteral))
-    assert.ok(match("{ a:5 }",ArrayLiteral))
-    assert.ok(match("{ a:5 b:6 }",ArrayLiteral))
 })
