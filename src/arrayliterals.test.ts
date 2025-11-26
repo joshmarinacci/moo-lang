@@ -48,6 +48,14 @@ test('dict literals', () => {
         p.
     ] value.
     `,scope, DictObj({x:NumObj(5)}))
+
+    cval(`[
+        v ::= { x:5 y: 6 }.
+        Debug equals (v get "x") 5.
+        Debug equals (v get "y") 6.
+        v.
+    ] value.
+    `,scope, DictObj({x:NumObj(5)}))
 })
 
 test('dict api',() => {
