@@ -23,7 +23,7 @@ test('set pixels color',() => {
         image setPixelAt: 5 0 (Color teal).
         image setPixelAt: 6 0 (Color yellow).
         image setPixelAt: 7 0 (Color magenta).
-        image save: "foo.png".
+        image save: "output/foo.png".
         88.
      ] value.`, scope, NumObj(88))
 })
@@ -36,6 +36,6 @@ test('fill image',() => {
             ((y mod 2) == 0) if_true [ return (Color green). ].
             Color black.
           ].
-        image save: "bar.png".
+        image save: "output/bar.png".
      ] value.`, scope)
 })

@@ -7,7 +7,6 @@ import {NumObj} from "./number.ts";
 export function setup_image(scope:Obj) {
     const ImageProto = new Obj("ImageProto",ObjectProto,{
         'make:':(rec:Obj, args:Array<Obj>):Obj => {
-            // console.log("make called")
             let image = new Obj("Image",ImageProto,{});
             image.make_slot("width",args[0])
             image.make_slot("height",args[1])
@@ -16,7 +15,6 @@ export function setup_image(scope:Obj) {
         },
         'save:':(rec:Obj, args:Array<Obj>):Obj => {
             let bitmap = rec._get_js_array() as unknown as Bitmap
-            // console.log("bitmap",bitmap)
             let filename = args[0]._get_js_string();
             console.log(`saving bitmap to ${filename}`)
             encodePNGToStream(bitmap,fs.createWriteStream(filename)).then(() => {
@@ -33,7 +31,6 @@ export function setup_image(scope:Obj) {
             return NilObj()
         },
         'fill:':(rec:Obj, args:Array<Obj>):Obj => {
-            console.log("filling", args[0])
             let bitmap = rec._get_js_array() as unknown as Bitmap
             for(let j = 0; j<bitmap.height; j++) {
                 for (let i = 0; i < bitmap.width; i++) {

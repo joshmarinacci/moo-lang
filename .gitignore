@@ -1,6 +1,7 @@
 /tmp
 /out-tsc
 
+/output
 /node_modules
 npm-debug.log*
 yarn-debug.log*
