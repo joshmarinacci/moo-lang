@@ -31,7 +31,7 @@ const BooleanProto = new Obj("BooleanProto",ObjectProto,{
 export const BoolObj = (value:boolean) => new Obj("BooleanLiteral", BooleanProto, {'jsvalue':value})
 
 export function setup_boolean(scope: Obj) {
-    scope.make_slot("Boolean", BooleanProto)
-    scope.make_slot("true",BoolObj(true))
-    scope.make_slot("false",BoolObj(false))
+    scope._make_method_slot("Boolean", BooleanProto)
+    scope._make_method_slot("true",BoolObj(true))
+    scope._make_method_slot("false",BoolObj(false))
 }

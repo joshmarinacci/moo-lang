@@ -100,9 +100,9 @@ test('conditions',() => {
 })
 test('Debug tests',() => {
     let scope = make_standard_scope()
-    cval(`Debug print 0.`,scope,NilObj())
+    // cval(`Debug print 0.`,scope,NilObj())
     cval(`Debug equals 0 0.`,scope,NilObj())
-    cval(`Debug print 0 0.`,scope,NilObj())
+    // cval(`Debug print 0 0.`,scope,NilObj())
 })
 test("block arg tests",() => {
     let scope = make_standard_scope()

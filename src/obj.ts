@@ -13,37 +13,52 @@ const d = new JoshLogger()
 export class Obj {
     name: string;
     parent: Obj|null;
-    slots: Map<string, Obj>;
+    _data_slots: Map<string, Obj>;
+    _method_slots: Map<string, Obj>;
     _is_return: boolean;
     constructor(name: string, parent: Obj|null, props:Record<string,unknown>) {
         this.name = name;
         this.parent = parent
-        this.slots = new Map<string,Obj>
+        this._data_slots = new Map<string,Obj>
+        this._method_slots = new Map<string,Obj>
         this._is_return = false;
         for(let key in props) {
-            this.slots.set(key,props[key])
+            this._method_slots.set(key,props[key])
         }
     }
 
-    make_slot(name: string, obj: Obj) {
+    _make_data_slot(name:string, obj:Obj) {
         if(!obj) {
-            throw new Error(`cannot make slot ${name}. value is null`)
+            throw new Error(`cannot make data slot ${name}. value is null`)
         }
-        // console.log(`make slot ${this.name}.${name} = ${obj.name}'`)
-        this.slots.set(name,obj)
+        this._data_slots.set(name,obj)
+        this._make_method_slot(name,(rec:Obj,args:Array<Obj>):Obj =>{
+            console.log(`calling data getter for ${name}`)
+            return NilObj()
+        })
+        this._make_method_slot(name+":",(rec:Obj,args:Array<Obj>):Obj =>{
+            console.log(`calling data setter for ${name}`)
+            return NilObj()
+        })
+    }
+    _make_method_slot(name: string, obj: Obj) {
+        if(!obj) {
+            throw new Error(`cannot make method slot ${name}. value is null`)
+        }
+        this._method_slots.set(name,obj)
     }
     _make_js_slot(name: string, value:unknown) {
-        this.slots.set(name,value)
+        this._method_slots.set(name,value)
     }
     set_slot(slot_name: string, slot_value: Obj):void {
         // console.log(`set slot ${this.name}.${slot_name} = ${slot_value.name}`)
-        if(!this.slots.has(slot_name)) {
+        if(!this._method_slots.has(slot_name)) {
             d.p(`${this.name} doesn't have the slot ${slot_name}`)
             if(this.parent) {
                 return this.parent.set_slot(slot_name,slot_value)
             }
         } else {
-            this.slots.set(slot_name, slot_value)
+            this._method_slots.set(slot_name, slot_value)
         }
     }
     print():string {
@@ -71,8 +86,8 @@ export class Obj {
         if (this.name === 'Block') {
             return `Block (${this.get_slot('args')}) ${this.get_slot('body')}`
         }
-        let slots = Array.from(this.slots.keys()).map(key => {
-            let val:unknown = this.slots.get(key)
+        let slots = Array.from(this._method_slots.keys()).map(key => {
+            let val:unknown = this._method_slots.get(key)
             if (val instanceof Obj) {
                 if (val.name === 'Block') {
                     val = 'Block'
@@ -92,10 +107,10 @@ export class Obj {
         return `${this.name} {${slots.join('\n')}}\n ${parent} `
     }
     has_slot(name: string) {
-        return this.slots.has(name)
+        return this._method_slots.has(name)
     }
     get_slot(name: string):Obj {
-        return this.slots.get(name)
+        return this._method_slots.get(name)
     }
 
     lookup_slot(name: string):Obj {
@@ -110,9 +125,9 @@ export class Obj {
         if(depth < 1) {
             throw new Error("recursed too deep!")
         }
-        if(this.slots.has(name)) {
+        if(this._method_slots.has(name)) {
             // d.p(`has slot '${name}'`);
-            return this.slots.get(name)
+            return this._method_slots.get(name)
         }
         if(this.parent) {
             // d.p("calling the get parent lookup on", this.parent.name);
@@ -129,7 +144,7 @@ export class Obj {
     get_js_slot(name: string):unknown {
         // d.p("getting js slot",name)
         // d.p("this is",this)
-        return this.slots.get(name)
+        return this._method_slots.get(name)
     }
     _get_js_number():number {
         return this.get_js_slot('jsvalue') as number
@@ -153,8 +168,8 @@ export class Obj {
 
     private getSlots():Record<string, unknown> {
         let slots:Record<string,unknown> = {}
-        for(let key of this.slots.keys()) {
-            slots[key] = this.slots.get(key)
+        for(let key of this._method_slots.keys()) {
+            slots[key] = this._method_slots.get(key)
         }
         return slots
     }
@@ -166,8 +181,8 @@ export class Obj {
         }
         d.p(this.name)
         d.indent()
-        for(let key of this.slots.keys()) {
-            let value = this.slots.get(key)
+        for(let key of this._method_slots.keys()) {
+            let value = this._method_slots.get(key)
             if (value instanceof Obj) {
                 if (value.has_slot('jsvalue')) {
                     d.p("slot " + key, value.name, value.get_js_slot('jsvalue') + "")
@@ -192,9 +207,6 @@ export class Obj {
         d.outdent()
     }
 
-    parent_chain() {
-        return this.name + ', ' + this.parent?.name + "," + this.parent?.parent?.name
-    }
     to_string():string {
         if (this._get_js_string()) {
             return this._get_js_string()
@@ -207,7 +219,7 @@ export const ROOT = new Obj("ROOT", null,{
     'makeSlot':(rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()
         let slot_value = args[1]
-        rec.make_slot(slot_name,slot_value)
+        rec._make_method_slot(slot_name,slot_value)
         if (slot_value.name === 'Block') {
             slot_value.parent = rec
         }
@@ -241,7 +253,7 @@ export const ObjectProto = new Obj("ObjectProto", ROOT, {})
 export const NilObj = () => new Obj("NilLiteral", NilProto, {})
 
 export function setup_object(scope: Obj) {
-    scope.make_slot("Object", ObjectProto)
-    scope.make_slot("Nil", NilProto)
-    scope.make_slot('nil', NilObj())
+    scope._make_method_slot("Object", ObjectProto)
+    scope._make_method_slot("Nil", NilProto)
+    scope._make_method_slot('nil', NilObj())
 }

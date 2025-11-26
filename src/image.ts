@@ -8,8 +8,8 @@ export function setup_image(scope:Obj) {
     const ImageProto = new Obj("ImageProto",ObjectProto,{
         'make:':(rec:Obj, args:Array<Obj>):Obj => {
             let image = new Obj("Image",ImageProto,{});
-            image.make_slot("width",args[0])
-            image.make_slot("height",args[1])
+            image._make_method_slot("width",args[0])
+            image._make_method_slot("height",args[1])
             image._make_js_slot("jsvalue",make(10,10))
             return image
         },
@@ -43,7 +43,7 @@ export function setup_image(scope:Obj) {
             return NilObj()
         }
     });
-    scope.make_slot("Image",ImageProto)
+    scope._make_method_slot("Image",ImageProto)
     const ColorProto = new Obj("ColorProto",ObjectProto,{
         'from:':(rec:Obj, args:Array<Obj>):Obj => {
             let data = args[0]._get_js_array()
@@ -54,7 +54,7 @@ export function setup_image(scope:Obj) {
             return NumObj(rgba)
         },
     })
-    scope.make_slot("Color",ColorProto)
+    scope._make_method_slot("Color",ColorProto)
     cval(`[
         Color makeSlot "red"   16rFF0000FF.
         Color makeSlot "green" 16r00FF00FF.

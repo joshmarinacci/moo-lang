@@ -4,10 +4,10 @@ import {JoshLogger} from "./util.ts";
 
 export function objsEqual(a: Obj, b: Obj) {
     if(a.name !== b.name) return false
-    if(a.slots.size !== b.slots.size) return false
-    for(let key of a.slots.keys()) {
-        let vala = a.slots.get(key) as unknown;
-        let valb = b.slots.get(key) as unknown;
+    if(a._method_slots.size !== b._method_slots.size) return false
+    for(let key of a._method_slots.keys()) {
+        let vala = a._method_slots.get(key) as unknown;
+        let valb = b._method_slots.get(key) as unknown;
         if (typeof vala === 'number') {
             if (vala !== valb) return false
         }
@@ -32,5 +32,5 @@ const DebugProto = new Obj("DebugProto",ObjectProto,{
 })
 
 export function setup_debug(scope: Obj) {
-    scope.make_slot("Debug", DebugProto)
+    scope._make_method_slot("Debug", DebugProto)
 }

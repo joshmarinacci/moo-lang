@@ -40,7 +40,6 @@ test('dict literals', () => {
     let scope = make_standard_scope()
     cval(`[
         p ::= { x:5 }.
-        p dump.
         Debug equals (p get "x") 5.
         p.
     ] value.

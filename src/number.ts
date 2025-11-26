@@ -40,5 +40,5 @@ const NumberProto = new Obj("NumberProto",ObjectProto,{
 export const NumObj = (value:number):Obj => new Obj("NumberLiteral", NumberProto, { 'jsvalue': value,})
 
 export function setup_number(scope: Obj) {
-    scope.make_slot("Number", NumberProto)
+    scope._make_method_slot("Number", NumberProto)
 }

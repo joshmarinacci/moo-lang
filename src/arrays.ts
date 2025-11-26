@@ -48,8 +48,8 @@ export const DictObj = (obj:Record<string, Obj>) => new Obj("Dict",DictProto,{"j
 
 
 export function setup_arrays(scope:Obj) {
-    scope.make_slot("List",ListProto)
-    scope.make_slot("Dict",DictProto)
+    scope._make_method_slot("List",ListProto)
+    scope._make_method_slot("Dict",DictProto)
 }
 
 

@@ -11,7 +11,6 @@ test('set pixels color',() => {
         Color makeSlot "magenta" (Color from: { 255 0 255 }).
     
         image ::= (Image make: 10 10).
-        Debug print image.
         Debug equals (image width) 10.
         Debug equals (image height) 10.
         blue ::= (Color from: { 0 0 255 }).

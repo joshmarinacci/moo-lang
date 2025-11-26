@@ -14,7 +14,7 @@ export function make_standard_scope():Obj {
     setup_image(scope)
     setup_arrays(scope)
 
-    scope.make_slot("Global",scope)
+    scope._make_method_slot("Global",scope)
     ObjectProto.parent = scope;
 
     return scope

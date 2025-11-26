@@ -34,8 +34,8 @@ function send_message(objs: Obj[], scope: Obj):Obj {
         let ret = send_message(objs.slice(1),scope)
         let ret2 = new Obj('non-local-return',scope.parent,{})
         ret2._is_return = true
-        ret2.make_slot('value',ret)
-        ret2.make_slot('target',scope.parent as Obj);
+        ret2._make_method_slot('value',ret)
+        ret2._make_method_slot('target',scope.parent as Obj);
         return ret2;
     }
 
@@ -169,23 +169,21 @@ const BlockProto = new Obj("BlockProto",ObjectProto,{
             throw new Error(`block requires ${params.length} arguments\n ${rec.print()}`)
         }
         for(let i=0; i<params.length; i++) {
-            scope.make_slot(params[i].value,args[i])
+            scope._make_method_slot(params[i].value,args[i])
         }
         let last = NilObj()
         for(let ast of body) {
             last = eval_ast(ast,scope)
             if (!last) last = NilObj()
             if (last._is_return) {
-                let target:Obj = last.slots.get('target')
-                // d.p("looking for fast return to", target?.parent_chain())
-                // d.p("scope is", scope.parent_chain())
+                let target:Obj = last._method_slots.get('target')
                 if (target === scope) {
                     // d.p("fast return found. returning",last.slots.get('value'))
-                    return last.slots.get('value') as Obj
+                    return last._method_slots.get('value') as Obj
                 }
                 if (target && target.parent === scope) {
                     // d.p("fast return through parent found. returning",last.slots.get('value'))
-                    return last.slots.get('value') as Obj
+                    return last._method_slots.get('value') as Obj
                 }
                 return last
             }
