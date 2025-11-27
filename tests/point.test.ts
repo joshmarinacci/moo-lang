@@ -1,7 +1,6 @@
 import test from "node:test";
 import {make_standard_scope} from "../src/standard.ts";
 import {cval} from "../src/eval.ts";
-import {StrObj} from "../src/string.ts";
 import {NumObj} from "../src/number.ts";
 
 test('Point class',() => {

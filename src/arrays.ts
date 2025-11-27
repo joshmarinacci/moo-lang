@@ -1,5 +1,6 @@
 import {NilObj, Obj, ObjectProto} from "./obj.ts";
 import {NumObj} from "./number.ts";
+import {eval_block_obj} from "./eval.ts";
 
 export const ListProto = new Obj("ListProto",ObjectProto, {
     'push':(rec:Obj, args:Array<Obj>):Obj=>{
@@ -7,7 +8,17 @@ export const ListProto = new Obj("ListProto",ObjectProto, {
         arr.push(args[0]);
         return NilObj()
     },
+    'add:':(rec:Obj, args:Array<Obj>):Obj=>{
+        let arr = rec._get_js_array()
+        arr.push(args[0]);
+        return NilObj()
+    },
     'at':(rec:Obj,args:Array<Obj>):Obj => {
+        let arr = rec._get_js_array()
+        let index = args[0]._get_js_number()
+        return arr[index]
+    },
+    'at:':(rec:Obj,args:Array<Obj>):Obj => {
         let arr = rec._get_js_array()
         let index = args[0]._get_js_number()
         return arr[index]
@@ -18,10 +29,52 @@ export const ListProto = new Obj("ListProto",ObjectProto, {
         arr[index] = args[1]
         return rec
     },
+    'setAt:':(rec:Obj, args:Array<Obj>):Obj => {
+        let arr = rec._get_js_array()
+        let index = args[0]._get_js_number()
+        arr[index] = args[1]
+        return rec
+    },
     'len':(rec):Obj=>{
         let arr = rec._get_js_array()
         return NumObj(arr.length)
-    }
+    },
+    'size':(rec):Obj=>{
+        let arr = rec._get_js_array()
+        return NumObj(arr.length)
+    },
+    'do:':(rec:Obj, args:Array<Obj>):Obj=>{
+        let arr = rec._get_js_array()
+        let block = args[0]
+        arr.forEach((v,i) => {
+            let ret = eval_block_obj(block,[v]) as Obj
+        })
+        return NilObj()
+    },
+    'select:':(rec:Obj, args:Array<Obj>):Obj=>{
+        let arr = rec._get_js_array()
+        let block = args[0]
+        let res = arr.map((v,i) => {
+            return eval_block_obj(block,[v]) as Obj
+        }).filter(b => b._get_js_boolean())
+        return ListObj(...res)
+    },
+    'reject:':(rec:Obj, args:Array<Obj>):Obj=>{
+        let arr = rec._get_js_array()
+        let block = args[0]
+        let res = arr.map((v,i) => {
+            return eval_block_obj(block,[v]) as Obj
+        }).filter(b => !b._get_js_boolean())
+        return ListObj(...res)
+    },
+    'collect:':(rec:Obj, args:Array<Obj>):Obj=>{
+        let arr = rec._get_js_array()
+        let block = args[0]
+        let res = arr.map((v,i) => {
+            return eval_block_obj(block,[v]) as Obj
+        });
+        return ListObj(...res)
+    },
 })
 ListProto._make_js_slot('jsvalue',[])
 export const ListObj = (...args:Array<Obj>)=> new Obj("List", ListProto, {'jsvalue': args})

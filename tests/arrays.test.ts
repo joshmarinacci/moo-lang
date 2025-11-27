@@ -54,6 +54,40 @@ test('dict literals', () => {
     `,scope, DictObj({x:NumObj(5)}))
 })
 
+test('list api', () => {
+    let scope = make_standard_scope()
+    cval(`[
+        l ::= (List clone).
+        Debug equals (l len) 0.
+        
+        l add: 1.
+        Debug equals (l size) 1.
+        Debug equals (l at: 0) 1.
+        
+        l add: 3.
+        Debug equals (l size) 2.
+        l setAt: 1 8.
+        Debug equals (l size) 2.
+        Debug equals (l at: 1) 8.
+
+        l do: [ n | n. ].         
+        
+        l add: 5. 
+
+        // array contains 1 8 5
+        Debug equals ((l select: [n | n > 1. ]) size) 2.
+        Debug equals ((l select: [n | n > 6. ]) size) 1.
+        Debug equals ((l reject: [n | n > 6. ]) size) 2.
+        
+        
+        l2 ::= (l collect: [n | n * 2.]).
+        // array contains 2 16 10
+        Debug equals (l2 size) 3.
+        Debug equals (l2 at: 0) 2.
+        Debug equals (l2 at: 1) 16.
+        88.
+    ] value.`,scope)
+})
 test('dict api',() => {
     let scope = make_standard_scope()
     cval(`[

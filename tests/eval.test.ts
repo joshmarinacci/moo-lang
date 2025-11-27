@@ -223,23 +223,6 @@ test('non local return 3', () => {
         ^ 4 + 5.
     ] value.`,scope,NumObj(9))
 })
-test('list class', () => {
-    let scope = make_standard_scope()
-    cval('list ::= (List clone).',scope);
-    cval(`[
-        list push 7.
-        list push 8.
-        list push 9.
-        list len.
-    ] value.`,scope,NumObj(3))
-    cval(`[
-        list at 0.
-    ] value.`,scope,NumObj(7))
-    cval(`[
-        list setAt 0 88.
-        list at 0.
-    ] value.`,scope,NumObj(88))
-})
 test('eval vector class',() => {
     let scope = make_standard_scope()
     cval(`[
