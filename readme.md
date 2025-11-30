@@ -49,8 +49,8 @@ Point makeSlot "make" [ x y |
 ].
 
 pt ::= (Point make 5 5).
-Debug equals (pt x) 5.
-Debug equals (pt y) 5.
+Debug equals: (pt x) 5.
+Debug equals: (pt y) 5.
 pt magnitude.
 
 self makeSlot "pt2" (Point make 1 1).
@@ -66,7 +66,7 @@ pt3 print.
 * **numbers**: only integers. `-1234`
 * **strings**: double quotes. `"foo"`
 * **comments**: double slash to the end of line `// a comment`
-* **booleans**: `true` and `false` are global instances of the built in `BooleanObject`. operators: `or` and `and`. messages: `if_true`, `if_false`, 
+* **booleans**: `true` and `false` are global instances of the built in `BooleanObject`. operators: `or:` and `and:`. messages: `ifTrue:`, `ifFalse:`, 
  and `cond`.  
 
 To make the code cleaner, we add the dot, `.` operator for object field resolution, so instead of `4 + (self x)` you

@@ -33,26 +33,26 @@ test('Point class',() => {
         ].
 
         pt ::= (Point make 5 5).
-        Debug equals (pt x) 5.
-        Debug equals (pt y) 5.
+        Debug equals: (pt x) 5.
+        Debug equals: (pt y) 5.
         
         // setters
         pt x: 6.
         pt y: 5.
-        Debug equals (pt x) 6.
-        Debug equals (pt y) 5.
+        Debug equals: (pt x) 6.
+        Debug equals: (pt y) 5.
         
         // magnitude
         pt x: 0.
         pt y: 5.
-        Debug equals (pt magnitude) 5.
+        Debug equals: (pt magnitude) 5.
         
         pt2 ::= (Point make 1 1).
         
         // addition
         pt3 ::= (pt + pt2).
-        Debug equals (pt3 x) 1.
-        Debug equals (pt3 y) 6.
+        Debug equals: (pt3 x) 1.
+        Debug equals: (pt3 y) 6.
 
         88.
     `,scope,

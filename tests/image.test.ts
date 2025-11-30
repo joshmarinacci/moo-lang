@@ -11,8 +11,8 @@ test('set pixels color',() => {
         Color makeSlot "magenta" (Color from: { 255 0 255 }).
     
         image ::= (Image make: 10 10).
-        Debug equals (image width) 10.
-        Debug equals (image height) 10.
+        Debug equals: (image width) 10.
+        Debug equals: (image height) 10.
         blue ::= (Color from: { 0 0 255 }).
         image setPixelAt: 0 0 (Color red).
         image setPixelAt: 1 0 (Color green).
@@ -31,8 +31,8 @@ test('fill image',() => {
     cval(`[
         image ::= (Image make: 10 10).
         image fill: [x y |
-            ((x mod 2) == 0) if_true [ return (Color red). ].
-            ((y mod 2) == 0) if_true [ return (Color green). ].
+            ((x mod 2) == 0) ifTrue: [ return (Color red). ].
+            ((y mod 2) == 0) ifTrue: [ return (Color green). ].
             Color black.
           ].
         image save: "output/bar.png".

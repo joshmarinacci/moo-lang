@@ -27,8 +27,8 @@ test('array literals',() => {
     let scope = make_standard_scope()
     cval(`[
         l ::= { 4 5 }.
-        Debug equals (l at: 0) 4.
-        Debug equals (l at: 1) 5.
+        Debug equals: (l at: 0) 4.
+        Debug equals: (l at: 1) 5.
         l size.
      ] value.`, scope, NumObj(2))
     cval(`[
@@ -40,15 +40,15 @@ test('dict literals', () => {
     let scope = make_standard_scope()
     cval(`[
         p ::= { x:5 }.
-        Debug equals (p get: "x") 5.
+        Debug equals: (p get: "x") 5.
         p.
     ] value.
     `,scope, DictObj({x:NumObj(5)}))
 
     cval(`[
         v ::= { x:5 y: 6 }.
-        Debug equals (v get: "x") 5.
-        Debug equals (v get: "y") 6.
+        Debug equals: (v get: "x") 5.
+        Debug equals: (v get: "y") 6.
         v.
     ] value.
     `,scope, DictObj({x:NumObj(5)}))
@@ -58,33 +58,33 @@ test('list api', () => {
     let scope = make_standard_scope()
     cval(`[
         l ::= (List clone).
-        Debug equals (l size) 0.
+        Debug equals: (l size) 0.
         
         l add: 1.
-        Debug equals (l size) 1.
-        Debug equals (l at: 0) 1.
+        Debug equals: (l size) 1.
+        Debug equals: (l at: 0) 1.
         
         l add: 3.
-        Debug equals (l size) 2.
+        Debug equals: (l size) 2.
         l setAt: 1 8.
-        Debug equals (l size) 2.
-        Debug equals (l at: 1) 8.
+        Debug equals: (l size) 2.
+        Debug equals: (l at: 1) 8.
 
         l do: [ n | n. ].         
         
         l add: 5. 
 
         // array contains 1 8 5
-        Debug equals ((l select: [n | n > 1. ]) size) 2.
-        Debug equals ((l select: [n | n > 6. ]) size) 1.
-        Debug equals ((l reject: [n | n > 6. ]) size) 2.
+        Debug equals: ((l select: [n | n > 1. ]) size) 2.
+        Debug equals: ((l select: [n | n > 6. ]) size) 1.
+        Debug equals: ((l reject: [n | n > 6. ]) size) 2.
         
         
         l2 ::= (l collect: [n | n * 2.]).
         // array contains 2 16 10
-        Debug equals (l2 size) 3.
-        Debug equals (l2 at: 0) 2.
-        Debug equals (l2 at: 1) 16.
+        Debug equals: (l2 size) 3.
+        Debug equals: (l2 at: 0) 2.
+        Debug equals: (l2 at: 1) 16.
         
         67.
     ] value.`,scope, NumObj(67))
@@ -96,24 +96,24 @@ test('dict api',() => {
         dict ::= (Dict clone).
         dict set: "six" 6.
         dict set: "seven" 7.
-        Debug equals (dict get: "six") 6.
-        Debug equals (dict get: "seven") 7.
+        Debug equals: (dict get: "six") 6.
+        Debug equals: (dict get: "seven") 7.
         dict size.
 
         
         keys ::= (dict keys).
-        Debug equals (keys size) 2.
-        Debug equals (keys at: 0) "six".        
-        Debug equals (keys at: 1) "seven".        
+        Debug equals: (keys size) 2.
+        Debug equals: (keys at: 0) "six".        
+        Debug equals: (keys at: 1) "seven".        
 
         values ::= (dict values).        
-        Debug equals (values size) 2.
-        Debug equals (values at: 0) 6.
-        Debug equals (values at: 1) 7.
+        Debug equals: (values size) 2.
+        Debug equals: (values at: 0) 6.
+        Debug equals: (values at: 1) 7.
         
         values2 ::= ((dict values) collect: [n | n + 2.]).
-        Debug equals (values2 at: 0) 8.
-        Debug equals (values2 at: 1) 9.
+        Debug equals: (values2 at: 0) 8.
+        Debug equals: (values2 at: 1) 9.
         
         67.
         ] value.
@@ -125,24 +125,24 @@ test('set api',() => {
     cval(`[
         set ::= (Set clone).
         set add: 1.
-        Debug equals (set size) 1.
+        Debug equals: (set size) 1.
 
         set add: 88.
-        Debug equals (set size) 2.
+        Debug equals: (set size) 2.
 
         // duplicates don't increase the size        
         set add: 88.
-        // Debug equals (set size) 2.
+        // Debug equals: (set size) 2.
         
         A ::= (Set withAll: ({ 1 2 3 })).
         B ::= (Set withAll: { 3 4 5 }).
         C ::= (A - B).
-        // Debug equals (A size) 3.
-        // Debug equals (B size) 3.
-        // Debug equals (C size) 2.
+        // Debug equals: (A size) 3.
+        // Debug equals: (B size) 3.
+        // Debug equals: (C size) 2.
         
         D ::= (A + B).
-        // Debug equals (D size) 5.
+        // Debug equals: (D size) 5.
         
         67.
         ] value.

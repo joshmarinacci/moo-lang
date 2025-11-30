@@ -53,18 +53,18 @@ test('eval vector class',() => {
         
         // check the setters
         a x: 55.
-        Debug equals (a x) 55.
+        Debug equals: (a x) 55.
         a y: 66.
-        Debug equals (a y) 66.
+        Debug equals: (a y) 66.
         a z: 5.
-        Debug equals (a z) 5.
+        Debug equals: (a z) 5.
         
         a ::= (Vector make 1 1 1).
         b ::= (Vector make 6 7 8).
         c ::= (a + b).
-        Debug equals (c x) 7.
-        Debug equals (c y) 8.
-        Debug equals (c z) 9.
+        Debug equals: (c x) 7.
+        Debug equals: (c y) 8.
+        Debug equals: (c z) 9.
         
         99.
     ] value.`,scope,NumObj(99))
@@ -74,24 +74,24 @@ test('eval vector class',() => {
         a ::= (Vector make 1 1 1).
         b ::= (Vector make 6 7 8).
         c ::= (a + b).
-        Debug equals (c x) 7.
-        Debug equals (c y) 8.
-        Debug equals (c z) 9.
+        Debug equals: (c x) 7.
+        Debug equals: (c y) 8.
+        Debug equals: (c z) 9.
 
         // test subtract
         c ::= (a - b).
-        Debug equals (c x) -5.
-        Debug equals (c y) -6.
-        Debug equals (c z) -7.
+        Debug equals: (c x) -5.
+        Debug equals: (c y) -6.
+        Debug equals: (c z) -7.
         
         // test dot
-        Debug equals (a dot b) 21.
+        Debug equals: (a dot b) 21.
         
         // test cross
         c ::= (a cross b).
-        Debug equals (c x) 1.
-        Debug equals (c y) (0 - 2).
-        Debug equals (c z) 1.
+        Debug equals: (c x) 1.
+        Debug equals: (c y) (0 - 2).
+        Debug equals: (c z) 1.
                 
         99.
     ] value.`,scope,NumObj(99))

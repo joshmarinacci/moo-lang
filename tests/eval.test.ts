@@ -85,23 +85,23 @@ test('strings',() => {
 })
 test('conditions',() => {
     let scope = make_standard_scope()
-    cval(` (4 < 5) if_true 88.`,scope,NumObj(88))
-    cval(` (4 > 5) if_true 88.`,scope,NilObj())
-    cval(` (4 < 5) if_false 88.`,scope,NilObj())
-    cval(` (4 > 5) if_false 88.`,scope,NumObj(88))
+    cval(` (4 < 5) ifTrue: 88.`,scope,NumObj(88))
+    cval(` (4 > 5) ifTrue: 88.`,scope,NilObj())
+    cval(` (4 < 5) ifFalse: 88.`,scope,NilObj())
+    cval(` (4 > 5) ifFalse: 88.`,scope,NumObj(88))
 
-    cval(` (4 < 5) cond 88 89.`,scope,NumObj(88))
-    cval(` (4 > 5) cond 88 89.`,scope,NumObj(89))
-    cval(` (4 < 5) cond (44 + 44) 89.`,scope,NumObj(88))
-    cval(` (4 < 5) cond (44 - 44) 89.`,scope,NumObj(0))
+    cval(` (4 < 5) cond: 88 89.`,scope,NumObj(88))
+    cval(` (4 > 5) cond: 88 89.`,scope,NumObj(89))
+    cval(` (4 < 5) cond: (44 + 44) 89.`,scope,NumObj(88))
+    cval(` (4 < 5) cond: (44 - 44) 89.`,scope,NumObj(0))
 
-    cval(` (4 < 5) cond [88.] [89.].`,scope,NumObj(88))
-    cval(` (4 > 5) cond [88.] [89.].`,scope,NumObj(89))
+    cval(` (4 < 5) cond: [88.] [89.].`,scope,NumObj(88))
+    cval(` (4 > 5) cond: [88.] [89.].`,scope,NumObj(89))
 })
 test('Debug tests',() => {
     let scope = make_standard_scope()
     // cval(`Debug print 0.`,scope,NilObj())
-    cval(`Debug equals 0 0.`,scope,NilObj())
+    cval(`Debug equals: 0 0.`,scope,NilObj())
     // cval(`Debug print 0 0.`,scope,NilObj())
 })
 test("block arg tests",() => {
@@ -128,15 +128,15 @@ test("block arg tests",() => {
     cval(`
         self makeSlot "foo" (Object clone).
         foo makeSlot "bar" 88.
-        Debug equals (foo bar) 88.
+        Debug equals: (foo bar) 88.
         foo makeSlot "get_bar" [
             self bar.
         ].
-        Debug equals (foo get_bar) 88.
+        Debug equals: (foo get_bar) 88.
         foo makeSlot "get_bar_better" [
             bar.
         ].
-        Debug equals (foo get_bar_better) 88.
+        Debug equals: (foo get_bar_better) 88.
     `,scope, NilObj())
 })
 test("global scope tests",() => {
@@ -194,8 +194,8 @@ test ('fib recursion',() => {
     cval(`[
         Math ::= Object clone.
         Math makeSlot "fib" [n|
-            (n == 0) if_true [ ^ 0. ].
-            (n == 1) if_true [ ^ 1. ].
+            (n == 0) ifTrue: [ ^ 0. ].
+            (n == 1) ifTrue: [ ^ 1. ].
             (Math fib ( n - 2 ) ) + (Math fib (n - 1 ) ).
         ].
         Math fib 6.
@@ -206,7 +206,7 @@ test('non local return', () => {
     cval(`[ 
         T ::= (Object clone).
         T makeSlot "nl" [ 
-          ( 4 > 5 ) cond [ ^ 1. ] [ ^ 2. ].
+          ( 4 > 5 ) cond: [ ^ 1. ] [ ^ 2. ].
         ].
         T nl. 
     ] value.`,scope,NumObj(2))
@@ -251,7 +251,7 @@ test('eval vector class',() => {
         
         // check the setter
         a x: 55.
-        Debug equals (a x) 55.
+        Debug equals: (a x) 55.
         
         b ::= (Vector make 6 7 8).
         c ::= (a add b).
@@ -265,11 +265,11 @@ test('fizzbuzz',() => {
     1 range 100 [ n |
         three ::= ((n mod 3) == 0).
         five ::= ((n mod 5) == 0).
-        (three and five) if_true [ 
+        (three and: five) ifTrue: [ 
             return ("FizzBuzz" print).  
         ].
-        three if_true [ "Fizz" print. ].
-        five if_true [ "Buzz" print. ].
+        three ifTrue: [ "Fizz" print. ].
+        five ifTrue: [ "Buzz" print. ].
     ].
     88. 
     ] value .`,scope,NumObj(88))
@@ -322,16 +322,16 @@ test('JS style function calls ',() => {
     // cval(`
     //     a ::= (Object clone).
     //     a makeSlot "x" 55.
-    //     Debug equals (a x) 55.
-    //     Debug equals (a.x) 55.
-    //     Debug equals a.x 55.
+    //     Debug equals: (a x) 55.
+    //     Debug equals: (a.x) 55.
+    //     Debug equals: a.x 55.
     //
     //     a makeSlot "do" [xx|
     //         (self x) + xx.
     //     ].
     //
-    //     Debug equals (a do 1) 56.
-    //     Debug equals (a do 1) 56.
+    //     Debug equals: (a do 1) 56.
+    //     Debug equals: (a do 1) 56.
     //
     //     99.
     // `,scope,NumObj(99))
