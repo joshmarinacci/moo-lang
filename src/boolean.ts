@@ -24,6 +24,10 @@ const BooleanProto = new Obj("BooleanProto",ObjectProto,{
         let B = args[0]._get_js_boolean()
         return BoolObj(A || B)
     },
+    'not':(rec:Obj, args:Array<Obj>):Obj => {
+        let A = rec._get_js_boolean()
+        return BoolObj(!A)
+    },
     'cond:':(rec:Obj, args:Array<Obj>):Obj => {
         let val = rec._get_js_boolean()
         return eval_block_obj(val?args[0]:args[1],[])

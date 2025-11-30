@@ -15,11 +15,21 @@ test('booleans',() => {
     cval('4 == 5 .',scope,BoolObj(false));
 })
 
+test('boolean logic',() => {
+    let scope:Obj = make_standard_scope();
+    cval('true and: true.',scope,BoolObj(true))
+    cval('true and: false.',scope,BoolObj(false))
+    cval('true or: false.',scope,BoolObj(true))
+    cval('false or: true.',scope,BoolObj(true))
+    cval('true not.',scope,BoolObj(false))
+    cval('false not.',scope,BoolObj(true))
+})
+
 test('common protocol',() => {
     let scope = make_standard_scope()
     cval(`true print.`,scope,StrObj('true'))
     cval(`false print.`,scope,StrObj('false'))
     cval(`true == true.`,scope,BoolObj(true))
     cval(`true == false.`,scope,BoolObj(false))
-    cval(`(true == 'true').`,scope,BoolObj(true))
+    cval(`(true == 'true').`,scope,BoolObj(false))
 })

@@ -14,6 +14,9 @@ export function objsEqual(a: Obj, b: Obj) {
         if (typeof vala === 'string') {
             if (vala !== valb) return false
         }
+        if (typeof vala === 'boolean') {
+            if (vala !== valb) return false
+        }
     }
     return true
 }
