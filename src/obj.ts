@@ -241,6 +241,12 @@ export class Obj {
         }
         return this.print()
     }
+
+    is_kind_of(name: string):boolean {
+        if(this.name == name) return true
+        if(this.parent) return this.parent.is_kind_of(name)
+        return false;
+    }
 }
 
 export const ROOT = new Obj("ROOT", null,{

@@ -1,6 +1,7 @@
 import {Obj, ObjectProto} from "./obj.ts";
 import {eval_block_obj} from "./eval.ts";
 import {BoolObj} from "./boolean.ts";
+import {StrObj} from "./string.ts";
 
 const js_num_op = (cb:(a:number,b:number)=>number) => {
     return function (rec:Obj, args:Array<Obj>){
@@ -14,6 +15,9 @@ const js_num_op = (cb:(a:number,b:number)=>number) => {
 }
 const js_bool_op = (cb:(a:number,b:number)=>boolean) => {
     return function (rec:Obj, args:Array<Obj>){
+        if (!args[0].is_kind_of('NumberProto')) {
+            throw new Error(`argument not a number ${args[0].name}`)
+        }
         return BoolObj(cb(rec._get_js_number(), args[0]._get_js_number()))
     }
 }
@@ -25,7 +29,16 @@ const NumberProto = new Obj("NumberProto",ObjectProto,{
     '/':js_num_op((a,b)=>a/b),
     '<':js_bool_op((a,b)=>a<b),
     '>':js_bool_op((a,b)=>a>b),
-    '==':js_bool_op((a,b)=>a==b),
+    '==':(rec:Obj,args:Array<Obj>) => {
+        if (!args[0].is_kind_of('NumberProto')) {
+            return BoolObj(false)
+        } else {
+            if(rec._get_js_number() == args[0]._get_js_number()) {
+                return BoolObj(true)
+            }
+        }
+        return BoolObj(false)
+    },
     'mod:':js_num_op((a,b)=>a%b),
     'sqrt':(rec:Obj):Obj => NumObj(Math.sqrt(rec._get_js_number())),
     'range:':(rec:Obj, args:Array<Obj>):Obj => {
@@ -35,6 +48,9 @@ const NumberProto = new Obj("NumberProto",ObjectProto,{
         for(let i=start; i<end; i++) {
             eval_block_obj(block, [NumObj(i)])
         }
+    },
+    'print':(rec:Obj):Obj => {
+        return StrObj(rec._get_js_number()+'')
     }
 });
 export const NumObj = (value:number):Obj => new Obj("NumberLiteral", NumberProto, { 'jsvalue': value,})

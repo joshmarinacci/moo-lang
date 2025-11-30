@@ -148,3 +148,65 @@ test('set api',() => {
         ] value.
     `,scope, NumObj(67))
 })
+
+
+/*
+class JSSet {
+  data: Map<string,Obj>
+  constructor() {
+      this.data = new Map()
+  }
+  put(obj:Obj) {
+      if(!this.data.has(obj.hashvalue()) {
+          this.data.set(obj.hashvalue(),obj)
+      }
+  }
+  has(obj:Obj) {
+      this.data.has(obj.hashvalue())
+  }
+  union(set:JSSet) {
+  }
+  intersect(set:JSSet) {
+  }
+  difference(set:JSSet) {
+  }
+  //union:
+      set ::= Set clone.
+      self do: [v | set put: v].
+      A do: [v | set put: v].
+      ^ set.
+
+  //intersect:
+      set ::= Set clone.
+      self do [v |
+          (A has: v) ifTrue: [ set put: v]
+      ].
+      ^ set.
+
+  // difference:
+      set ::= Set clone.
+      self do: [v |
+          (A has: v) ifFalse: [ set put: v]
+      ].
+      A do:[v |
+          (self has: v) ifFalse: [ set put: v]
+      ].
+      ^ set.
+
+  //select :: filter
+      set ::= Set clone.
+      self do: [v |
+          (A value: {v}) ifTrue: [ set put: v]
+      ].
+      ^ set.
+
+  //detect :: find
+  //collect :: map
+  //reject :: !filter
+  //inject :: fold / reduce
+  //inject value collection
+
+
+}
+
+ */
