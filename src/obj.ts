@@ -291,6 +291,7 @@ export const ROOT = new Obj("ROOT", null,{
         return NilObj()
     },
     'clone':(rec:Obj):Obj => rec.clone(),
+    // 'isKindOf:':(rec:Obj, args:Array<Obj>) => BoolObj(rec.is_kind_of(args[0]._get_js_string())),
     'dump':(rec:Obj):Obj => {
         d.p("DUMPING: ", rec.name)
         d.indent()

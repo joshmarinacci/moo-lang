@@ -52,7 +52,7 @@ test("foo",() => {
 - [ ] List print. impl in ST by mapping to str then joining with add.
 - [ ] Dict print
 - [ ] Set print
-- [ ] Object ==  same name, same hashcode. same JS ref?
+- [x] Object ==  same name, same hashcode. same JS ref?
 - [ ] expose Object isKindOf:
 - [x] List, Dict, Set == by reference to start
 - [x] new JSset impl
