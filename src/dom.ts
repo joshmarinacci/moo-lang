@@ -7,9 +7,18 @@ export function setup_dom(scope: Obj) {
     const DomProxyProto = new Obj("DomProxyProto",ObjectProto,{
         'init':(rec:Obj, args:Array<Obj>):Obj => {
             console.log("setting up the dom proxy")
-            const div = document.createElement('div')
-            div.id = "editor-root";
-            document.body.appendChild(div);
+            const editorRoot = document.createElement('div')
+            editorRoot.id = "editor-root";
+            document.body.appendChild(editorRoot);
+
+            const editorContent = document.createElement('div')
+            editorContent.id = "editor-content";
+            editorRoot.appendChild(editorContent);
+
+            const editorConsole = document.createElement('li')
+            editorConsole.id = "editor-console";
+            editorConsole.innerHTML = "";
+            editorContent.appendChild(editorConsole);
             return NilObj()
         },
         'document':(rec:Obj) => {
@@ -24,8 +33,12 @@ export function setup_dom(scope: Obj) {
             return object
         },
         'append:':(rec:Obj, args:Array<Obj>):Obj => {
-            console.log("adding element to the document")
             $("#editor-root").append(args[0]._get_js_unknown() as Element)
+            return NilObj()
+        },
+        "clear":(rec:Obj) => {
+            $("#editor-content").innerHTML = ""
+            $("#editor-console").innerHTML = ""
             return NilObj()
         }
     });

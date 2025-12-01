@@ -8,11 +8,25 @@
             border: 1px solid #ccc;
             padding: 1rem;
         }
+        #repl {
+            width: 40rem;
+            height: 10rem;
+        }
+        #editor-console {
+            border: 1px solid gold;
+            list-style: none;
+            li {
+                border: 0px solid red;
+                padding: 0.5rem;
+            }
+        }
     </style>
 </head>
 <body>
 
 <h1>Smalltalk Browser Demo</h1>
+
+<textarea id="repl"></textarea>
 
 <script type="module">
     import {parseBlockBody} from "./src/parser.ts";
@@ -43,6 +57,15 @@
         }
         if (last._is_return) last = last.get_slot('value');
         d.p("returned", last.print())
+        const li = document.createElement('li')
+        if(last.is_kind_of('NumberProto')) {
+            li.innerText = "Number: " + last._get_js_number()
+        } else if(last.is_kind_of('StringProto')) {
+            li.innerText = "String: " + last._get_js_string()
+        } else {
+            li.innerText = "Object: " + last.print()
+        }
+        $("#editor-console").append(li)
         return last
     }
 
@@ -52,12 +75,26 @@
             button ::= (dom makeButton: "hi there").
             Debug print: 'here'.
             dom append: button.
+            Global makeSlot "dom" dom.
         ] value.`,scope)
 
-    // on($("#start-button"),'click',() => {
-    //     console.log("doing stuff on the click")
-    //     console.log(scope)
-    // })
+    on($("#repl"),'change',() => {
+        // console.log("repl changed")
+    })
+    on($("#repl"),'input',(e) => {
+        // console.log("repl input",e)
+    })
+    on($("#repl"),'keydown',(e) => {
+        if(e.key === 'Enter' && e.metaKey) {
+            const textArea = $("#repl")
+            const selectionStart = textArea.selectionStart;
+            const selectionEnd = textArea.selectionEnd;
+            const selectedText = textArea.value.substring(selectionStart, selectionEnd);
+
+            console.log("executing", selectedText)
+            cval(selectedText, scope)
+        }
+    })
 </script>
 </body>
 </html>
