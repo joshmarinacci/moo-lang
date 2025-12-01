@@ -48,22 +48,20 @@ test("foo",() => {
 
 # next up
 
-- [ ] Lists
-  - [ ] Lists are having a shared js list array.
-  - [ ] List print. impl in ST by mapping to str then joining with add.
-- [ ] Dict 
-* Dict print
-* Set print
-* Object ==  same name, same hashcode. same JS ref?
-* expose Object isKindOf:
-* List, Dict, Set == by reference to start
-* new JSset impl
-* units
-  - [ ] 10 unit: “meters”
+- [x] Lists are having a shared js list array.
+- [ ] List print. impl in ST by mapping to str then joining with add.
+- [ ] Dict print
+- [ ] Set print
+- [ ] Object ==  same name, same hashcode. same JS ref?
+- [ ] expose Object isKindOf:
+- [x] List, Dict, Set == by reference to start
+- [x] new JSset impl
+- [ ] units
+  - [x] 10 unit: “meters”
   - [ ] 10m * 2ft as: “square inches”
   - [ ] 10_meters is shorthand
-  - [ ] Turns into UnitNumber with new arithmetic functions
-  - [ ] Print turns into string
+  - [x] Turns into UnitNumber with new arithmetic functions
+  - [x] Print turns into string
   - [ ] Number_unitname is sugar for number unit: unitname. 
 
 
@@ -77,6 +75,10 @@ test("foo",() => {
   - [ ] Render. List of classes. Project to DOM LI
   - [ ] Button to trigger loading and rendering the scope
   - [ ] ObjectBrowser render: DOMProxy.  
+
+
+Fix precedence of parsing so that we don't need so many parens
+ unary > binary > keyword 
 
 
 

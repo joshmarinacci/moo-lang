@@ -35,30 +35,73 @@ test('common protocol',() => {
 })
 
 test('units',() => {
-/*
+    let scope = make_standard_scope()
+    cval(`[
+        Global makeSlot "UnitNumberProto" (Object clone).
+        UnitNumberProto makeSlot "name" "UnitNumber".
+        UnitNumberProto makeSlot "+" [b |
+            UnitNumber make: ((self amount) + (b amount))
+                ((self unit))
+                (self dimension).            
+        ].
+        UnitNumberProto makeSlot "-" [b |
+            UnitNumber make: ((self amount) - (b amount))
+                ((self unit))
+                (self dimension).            
+        ].
+        UnitNumberProto makeSlot "*" [b |
+            UnitNumber make: ((self amount) * (b amount))
+                ((self unit))
+                ((self dimension) + 1).            
+        ].
+        
+        UnitNumberProto makeSlot "print" [
+            (((self amount) print) + " ") + ((self unit)) .
+        ].
+        
+        Global makeSlot "UnitNumber" (UnitNumberProto clone).
+        UnitNumber make_data_slot: "amount" 0.
+        UnitNumber make_data_slot: "unit" "meter".
+        UnitNumber make_data_slot: "dimension" 1.
+        UnitNumber makeSlot "name" "UnitNumber".
+        UnitNumber makeSlot "make:" [a u d |
+            un ::= (UnitNumber clone).
+            un amount: a.
+            un unit: u.
+            un dimension: d.
+            un.
+        ].
+    ] value.`,scope)
+    cval(`[
+        A ::= (UnitNumber make: 10 'meter' 1).
+        Debug equals: (A amount) 10.
+        Debug equals: (A unit) 'meter'.
+        Debug equals: (A dimension) 1.
+        Debug equals: (A print) "10 meter". 
 
-10 unit: 'meters'.
-(10 unit: 'feet') * (10 unit: 'feet') == 100 dimUnit: 2 'feet'.
+
+        B ::= (UnitNumber make: 15 'meter' 1).
+
+        V ::= (A + B).
+        Debug equals: (V amount) 25.
+        Debug equals: (V unit) 'meter'.
+        Debug equals: (V dimension) 1.
+
+        V ::= (A - B).
+        Debug equals: (V amount) -5.
+        Debug equals: (V unit) 'meter'.
+        Debug equals: (V dimension) 1.
+
+        V ::= (A * B).
+        Debug equals: (V amount) 150.
+        Debug equals: (V unit) 'meter'.
+        Debug equals: (V dimension) 2.
+
+        67.
+        ] value.`,scope,NumObj(67) )
+/*
 (100 dimUnit: 2 'feet') print == '100 feet^2'.
 ((100 unit: 'feet') as: 'meter') == (8.9 unit: 'meter').
 (UnitNumber from: 10 'meter') == (10 unit: 'meter').
-
-
-(10 negate) == -10.
-
-(true not) == false.
-
-
-10 print == '10'.
-10.8 print == '10.8'.
-10 unit: 'meter' == '10 meter'.
 */
 })
-
-/*
-'foo' == 'foo' // true
-'foo' == 'bar' // false
-4 + 5 == 9 // true
-
-
-*/

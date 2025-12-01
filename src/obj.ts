@@ -8,6 +8,7 @@ export function isNil(method: Obj) {
 }
 
 const d = new JoshLogger()
+d.enable()
 
 
 export class Obj {
