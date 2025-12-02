@@ -132,6 +132,15 @@ dom clear.
   Debug print: v.
   button ::= (dom makeButton: v).
   button onClick: [
+     Debug print: ("this object is " + v) .
+  ].
+  dom append: button.
+].
+
+(Global getSlotNames) do: [k v |
+  button ::= (dom makeButton: k).
+  button onClick: [
+     Debug print: ("this object is " + k) .
      Debug print: v.
   ].
   dom append: button.
