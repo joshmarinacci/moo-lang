@@ -29,7 +29,7 @@ function matchOutput(source:string, rule:Rule) {
 }
 function produces(source:string, rule:Rule) {
     let input = new InputStream(source,0);
-    return rule(input).production
+    return rule(input).ast
 }
 
 test ("test parser itself", () => {

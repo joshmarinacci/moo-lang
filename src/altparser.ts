@@ -18,9 +18,9 @@ export let MethodCall = produce(
     Seq(Identifier,Lit("."),Identifier,Lit("("),MethodArgs,Lit(")"))
     ,(res)=> {
         return Stmt(
-            res.production[0],
-            res.production[2],
-            ...res.production[4],
+            res.ast[0],
+            res.ast[2],
+            ...res.ast[4],
         )
     })
 
@@ -31,7 +31,7 @@ function match(source:string, rule:Rule) {
 }
 function produces(source:string, rule:Rule) {
     let input = new InputStream(source,0);
-    return rule(input).production
+    return rule(input).ast
 }
 
 test("parse method call",() => {

@@ -29,7 +29,7 @@ export class ParseResult {
     used:number;
     success: boolean;
     readonly slice: string;
-    production: Ast
+    ast: Ast
     constructor(input:string, position:number,used:number, success:boolean) {
         this.input = input;
         this.position = position;
@@ -58,7 +58,7 @@ export function Lit(value:string) {
             }
         }
         let res = input.okay(value.length)
-        res.production = value
+        res.ast = value
         return res
     }
 }
@@ -81,11 +81,11 @@ export function ZeroOrMore(rule:Rule):Rule {
             let pass = rule(input.advance(count))
             if (pass.succeeded()) {
                 count += pass.used
-                prods.push(pass.production)
+                prods.push(pass.ast)
             }
             if (!pass.succeeded()) {
                 let res =  input.okay(count)
-                res.production = prods
+                res.ast = prods
                 return res
             }
         }
@@ -113,11 +113,11 @@ export function OneOrMore(rule:Rule):Rule {
             let pass = rule(input.advance(count))
             if (pass.succeeded()) {
                 count += pass.used
-                prods.push(pass.production)
+                prods.push(pass.ast)
             }
             if (!pass.succeeded()) {
                 let res = input.okay(count)
-                res.production = prods
+                res.ast = prods
                 return res
             }
         }
@@ -154,10 +154,10 @@ export function Seq(...rules:Rule[]):Rule {
             let pass = rule(input.advance(count))
             if (pass.failed()) return pass
             count += pass.used
-            prods.push(pass.production)
+            prods.push(pass.ast)
         }
         let pass = input.okay(count)
-        pass.production = prods
+        pass.ast = prods
         return pass
     }
 }
@@ -166,7 +166,7 @@ export function produce(rule:Rule, cb:(pass:ParseResult)=>unknown):Rule {
     return function (input:InputStream) {
         let pass = rule(input)
         if (pass.succeeded()) {
-            pass.production = cb(pass)
+            pass.ast = cb(pass)
         }
         return pass
     }
@@ -179,7 +179,7 @@ export let WS = produce(
 
 export function ws(rule:Rule) {
     return produce(Seq(WS,rule,WS),(res) => {
-        return res.production[1]
+        return res.ast[1]
     })
 }
 
@@ -190,7 +190,7 @@ export function ListOf (rule:Rule, separator:Rule) {
     return produce(
         Seq(Optional(rule),ZeroOrMore(Seq(separator,rule)))
         ,(res) => {
-            return res.production.flat(2)
+            return res.ast.flat(2)
                 .filter(is_odd)
                 .filter(is_not_undefined)
         });
@@ -246,10 +246,10 @@ const SoloExp = Or(NumberLiteral, Identifier, StringLiteral)
 
 const ArrayLiteralValue = produce(
     Seq(ws(SoloExp),Optional(ws(Lit(",")))),
-    (res)=> res.production[0])
+    (res)=> res.ast[0])
 const ArrayListBody = produce(
     Seq(Lit("{"),ws(ZeroOrMore(ArrayLiteralValue)),Lit("}")),
-    (res) => ListLit(...res.production[1]))
+    (res) => ListLit(...res.ast[1]))
 
 const PlainIdentifier = produce(
     OneOrMore(Letter),
@@ -258,11 +258,11 @@ const PlainIdentifier = produce(
 
 const ArrayLiteralPair = produce(
     Seq(ws(PlainIdentifier), Lit(":"), ws(SoloExp)),
-    (res) => [res.production[0], res.production[2]]
+    (res) => [res.ast[0], res.ast[2]]
 )
 const ArrayMapBody = produce(
     Seq(Lit("{"),OneOrMore(ArrayLiteralPair),Lit("}")),
-    (res) => MapLit(...res.production[1]))
+    (res) => MapLit(...res.ast[1]))
 
 export const ArrayLiteral = Or(ArrayMapBody, ArrayListBody)
 
@@ -271,30 +271,30 @@ const SymbolLiteral = Or(
     Plus,Minus,Lit("*"),Lit("/"),
     Lit("<"),Lit(">"),Lit(":"),Lit("="),Lit("!"))
 // operators are identifiers too
-export const Operator = produce(ws(OneOrMore(SymbolLiteral)) ,(res)=> Id(res.production.join("")))
+export const Operator = produce(ws(OneOrMore(SymbolLiteral)) ,(res)=> Id(res.ast.join("")))
 
 export let RealExp = Lit("dummy")
 export let Exp = (input:InputStream) => RealExp(input)
 export let Group = produce(
     Seq(ws(Lit('(')),ZeroOrMore(Seq(ws(Exp))),ws(Lit(')')))
-    ,(res)=> Grp(...(res.production[1].flat())))
+    ,(res)=> Grp(...(res.ast[1].flat())))
 
 export let Statement = produce(
     Seq(OneOrMore(ws(Exp)),Lit("."))
-    ,(res)=> Stmt(...(res.production[0])))
+    ,(res)=> Stmt(...(res.ast[0])))
 
 export let BlockArgs = produce(
     Seq(ZeroOrMore(Seq(ws(Identifier))),ws(Lit("|"))),
-    (res)=> res.production[0].flat()
+    (res)=> res.ast[0].flat()
 )
 
 export let BlockBody = produce(
     Seq(ZeroOrMore(Statement), ws(Optional(Exp))),
     (res)=> {
-        if (typeof res.production[1] !== "undefined") {
-            return res.production.flat()
+        if (typeof res.ast[1] !== "undefined") {
+            return res.ast.flat()
         } else {
-            return res.production[0].flat()
+            return res.ast[0].flat()
         }
     }
 );
@@ -302,10 +302,10 @@ export let BlockBody = produce(
 export let Block = produce(
     Seq(Lit('['), Optional(BlockArgs), BlockBody, Lit("]")),
     (res) => {
-        if (!res.production[1] && res.production[2]) {
-            return Blk([],res.production[2])
+        if (!res.ast[1] && res.ast[2]) {
+            return Blk([],res.ast[2])
         }
-        return Blk(res.production[1], res.production[2])
+        return Blk(res.ast[1], res.ast[2])
     })
 
 const Return = produce(Lit("^"),()=>Ret())
@@ -313,16 +313,16 @@ const Return = produce(Lit("^"),()=>Ret())
 // this fixes up the recursion
 RealExp = produce(
     Or(Return,ArrayLiteral, NumberLiteral,Identifier,Operator,StringLiteral,Group,Block)
-    ,(res)=> res.production)
+    ,(res)=> res.ast)
 
 
 
 export function parseAst(source:string):Ast {
     let input = new InputStream(source.trim(),0);
-    return Statement(input).production
+    return Statement(input).ast
 }
 
 export function parseBlockBody(source:string):Ast {
     let input = new InputStream(source.trim(),0);
-    return BlockBody(input).production
+    return BlockBody(input).ast
 }
