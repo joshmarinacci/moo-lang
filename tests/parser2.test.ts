@@ -1,4 +1,5 @@
-import {Ast2} from "../src/ast2.ts";
+import {Binary, Grp, PlnId, Method, Num, Str, SymId, Unary, Keyword, KArg, KeyId, Ass} from "../src/ast2.ts";
+import type {Ast2} from "../src/ast2.ts";
 import {InputStream} from "../src/parser.ts";
 import assert from "node:assert";
 import {SoloExp3} from "../src/parser2.ts";
@@ -11,21 +12,22 @@ export function precedence(source:string, target:Ast2) {
 }
 
 test('parse precedence',() => {
-    console.log("precedence")
-    precedence('foo',Id('foo'))
+    precedence('foo',PlnId('foo'))
     precedence('4',Num(4))
-    precedence('foo print',[Id("foo"),Id('print')])
-    precedence('5 print',[Num(5),Id('print')])
-    precedence('(5) print',[Grp(Num(5)),Id('print')])
-    precedence('(foo) print',[Grp(Id("foo")),Id('print')])
-    precedence('foo + bar ',[Id("foo"),[Id('+'),Id('bar')]])
-    precedence('4 + bar ',[Num(4),[Id('+'),Id('bar')]])
-    precedence('4 + 5 ',[Num(4),[Id('+'),Num(5)]])
-    precedence('4 + (5) ',[Num(4),[Id('+'),Grp(Num(5))]])
-    // precedence('4 + 5 + 6 ',[Num(4),[Id('+'),[Num(5), [Id('+'), Num(6)]]]])
-    precedence('foo do: bar ',[Id("foo"),[[Id('do:'),Id('bar')]]])
-    precedence('4 do: 5 ',[Num(4),[[Id('do:'),Num(5)]]])
-    precedence('(4) do: 5 ',[Grp(Num(4)),[[Id('do:'),Num(5)]]])
-    precedence('foo := 4 do: 5 ',[ Id('foo'),  [Num(4),[[Id('do:'),Num(5)]]]     ]  )
-    // precedence('foo := ( 4 do: 5 ) ',[ Id('foo'),  Grp(Num(4),[[Id('do:'),Num(5)]]     )  ])
+    precedence('foo print',Method(PlnId("foo"),Unary(PlnId('print'))))
+    precedence('5 print',Method(Num(5),Unary(PlnId('print'))))
+    precedence('(5) print',Method(Grp([Num(5)]),Unary(PlnId('print'))))
+    precedence('(foo) print',Method(Grp([PlnId("foo")]),Unary(PlnId('print'))))
+    precedence('foo + bar ',Method(PlnId("foo"),Binary(SymId('+'),PlnId('bar'))))
+
+    precedence('4 + bar ', Method(Num(4),Binary(SymId('+'),PlnId('bar'))))
+    precedence('4 + 5 ', Method(Num(4),Binary(SymId('+'),Num(5))))
+    precedence('4 + (5) ', Method(Num(4), Binary(SymId('+'), Grp([Num(5)])) ))
+
+    // precedence('4 + 5 + 6 ', Method(Method(Num(4),Binary(SymId('+'),Num(5))), Binary(SymId('+'), Num(6))))
+    precedence('foo do: bar ',Method(PlnId("foo"),Keyword([ KArg(KeyId('do:'),PlnId('bar')) ])))
+    precedence('4 do: 5 ', Method(Num(4),Keyword([KArg(KeyId('do:'),Num(5))])))
+    precedence('(4) do: 5 ', Method(Grp([Num(4)]), Keyword([ KArg(KeyId('do:'),Num(5))])))
+    precedence('foo := 4 do: 5 ', Ass(PlnId('foo'), Method(Num(4), Keyword([ KArg(KeyId('do:'),Num(5))]))))
+    // precedence('foo := ( 4 do: 5 ) ', Ass(PlnId('foo'),  Grp( [Method(Num(4), Keyword([ KArg(KeyId('do:'),Num(5))]))])))
 })
