@@ -20,8 +20,8 @@ import {
     NumberLiteral, ArrayLiteral,
 } from "../src/parser.ts";
 import type {Rule} from "../src/parser.ts"
-import {Blk, Str, Grp, Stmt, ListLit, Ret, Ast, Id} from "../src/ast.ts"
-import {Num, PlnId} from "../src/ast2.ts"
+import {Blk, Grp, Stmt, ListLit, Ret, Ast, Id} from "../src/ast.ts"
+import {Num, PlnId, Str} from "../src/ast2.ts"
 import {match} from "./common.ts";
 import {precedence} from "./parser3.test.ts";
 
@@ -82,12 +82,10 @@ test("parse identifier",() => {
     precedence("a_bc",PlnId("a_bc"))
 })
 test("parse string literal",() => {
-    assert.ok(match(`'abc'`,StringLiteral))
-    assert.ok(match(`"abc"`,StringLiteral))
-    assert.ok(match(`''`,StringLiteral))
-    assert.deepStrictEqual(produces(`'abc'`,StringLiteral),Str("abc"))
-    assert.deepStrictEqual(produces(`''`,StringLiteral),Str(""))
-    assert.deepStrictEqual(produces(`'a b c'`,StringLiteral),Str("a b c"))
+    precedence(`'abc'`,Str("abc"))
+    precedence(`"abc"`,Str("abc"))
+    precedence(`''`,Str(""))
+    precedence(`'a b c'`,Str("a b c"))
 })
 test("parse operators",() => {
     assert.ok(match("+",Operator))

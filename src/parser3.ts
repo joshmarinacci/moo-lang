@@ -6,7 +6,7 @@ import type {Ast2, PlainId} from "./ast2.ts"
 export function parse(input:string):Ast2 {
     const mooGrammar = ohm.grammar(String.raw`
 Moo {
-  Exp         = Assignment | Keyword | Binary | Unary | Group | string | ident | Number
+  Exp         = Assignment | Keyword | Binary | Unary | Group | String | ident | Number
   Assignment  = ident ":=" Exp
   Unary       = Exp ident
   Binary      = Exp Operator Exp
@@ -22,7 +22,11 @@ Moo {
   num16       = "16r" (digit | "A" | "B" | "C" | "D" | "E" | "F")+
   float        = "-"? dig+ "." dig+
   integer      = "-"? dig+
-  string      = "'" (~ "'" any) * "'"
+  String      = qstr | qqstr
+  q = "'"
+  qq = "\""
+  qstr      = q (~ q any) * q
+  qqstr      = qq (~ qq any) * qq
 }
 `);
 
@@ -44,7 +48,8 @@ Moo {
         integer:(sign,digits)=> Num(parseInt(sign.sourceString + digits.sourceString.replace('_', ''))),
         num2:(prefx,digits) => Num(parseInt(digits.sourceString,2)),
         num16:(prefx,digits) => Num(parseInt(digits.sourceString,16)),
-        string:(_a,name,_b) => Str(name.sourceString)
+        qstr:(_a,name,_b) => Str(name.sourceString),
+        qqstr:(_a,name,_b) => Str(name.sourceString),
     })
 
 
