@@ -14,6 +14,7 @@ export function precedence(source:string, target:Ast2) {
 test('parse precedence',() => {
     precedence('foo',PlnId('foo'))
     precedence('4',Num(4))
+    precedence('"4"',Str("4"))
     precedence('foo print',Method(PlnId("foo"),Unary(PlnId('print'))))
     precedence('5 print',Method(Num(5),Unary(PlnId('print'))))
     precedence('(5) print',Method(Grp([Num(5)]),Unary(PlnId('print'))))
