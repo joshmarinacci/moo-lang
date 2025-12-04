@@ -19,6 +19,7 @@ import type {
     StringLiteral,
     UnaryCall
 } from "./ast2.ts";
+import assert from "node:assert";
 
 const d = new JoshLogger()
 d.disable()
@@ -146,6 +147,7 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
     }
     if(call.type === 'keyword-call') {
         // console.log('keyword call')
+        // console.log("receiver",rec.print())
         let method_name = call.args.map(arg => {
             return arg.name.name
         }).join("")
@@ -204,7 +206,14 @@ export function eval_ast(ast:Ast2, scope:Obj):Obj {
     if (ast.type === 'message-call') {
         let msg = ast as MessageCall
         // console.log('message call', msg)
+        // console.log("receiver is",msg.receiver)
         let rec = eval_ast(msg.receiver,scope)
+        // console.log("receiver evaluated to",rec)
+        if (rec.name === 'SymbolReference') {
+            rec = scope.lookup_slot(rec._get_js_string())
+            // console.log("looked up value of the symbol")
+        }
+
         return perform_call(rec,msg.call,scope)
     }
     throw new Error(`unknown ast type '${ast.type}'`)
@@ -272,10 +281,10 @@ export function cval(code:string, scope:Obj, expected?:Obj) {
     if(typeof expected !== 'undefined') {
         if(!objsEqual(last,expected)) {
             console.log("not equal")
-            console.log(last)
-            console.log(expected)
+            console.log(last.print())
+            console.log(expected.print())
         }
-        // assert(objsEqual(last, expected))
+        assert(objsEqual(last, expected))
     }
 }
 

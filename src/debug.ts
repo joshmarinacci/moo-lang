@@ -5,6 +5,11 @@ import {JoshLogger} from "./util.ts";
 export function objsEqual(a: Obj, b: Obj) {
     if(a.name !== b.name) return false
     if(a._method_slots.size !== b._method_slots.size) return false
+    // console.log("comparing",a,b)
+    if(a.name === 'BooleanLiteral') {
+        // console.log("comparing",typeof a._get_js_unknown(),typeof b._get_js_unknown())
+        return a._get_js_boolean() === b._get_js_boolean()
+    }
     for(let key of a._method_slots.keys()) {
         let vala = a._method_slots.get(key) as unknown;
         let valb = b._method_slots.get(key) as unknown;
