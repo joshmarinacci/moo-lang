@@ -30,12 +30,17 @@ test('parse precedence',() => {
     precedence('(4) + (5) ', Method(Grp(Num(4)), Binary(SymId('+'), Grp(Num(5))) ))
 
     // precedence('4 + 5 + 6 ', Method(Method(Num(4),Binary(SymId('+'),Num(5))), Binary(SymId('+'), Num(6))))
-    precedence('foo do: bar ',Method(PlnId("foo"),Keyword( KArg(KeyId('do:'),PlnId('bar')) )))
+    precedence('foo do: bar ',Method(PlnId("foo"),Keyword(  KArg(KeyId('do:'),PlnId('bar')) )))
+    precedence('foo do: bar with: baz ',Method(PlnId("foo"),Keyword(  KArg(KeyId('do:'),PlnId('bar')), KArg(KeyId('with:'),PlnId('baz')) )))
     precedence('4 do: 5 ', Method(Num(4),Keyword(KArg(KeyId('do:'),Num(5)))))
     precedence('(4) do: 5 ', Method(Grp(Num(4)), Keyword( KArg(KeyId('do:'),Num(5)))))
     precedence('foo := 4 ', Ass(PlnId('foo'), Num(4)))
     precedence('foo := (4) ', Ass(PlnId('foo'), Grp(Num(4))))
     precedence('foo := 4 do: 5 ', Ass(PlnId('foo'), Method(Num(4), Keyword( KArg(KeyId('do:'),Num(5))))))
+    precedence('foo := 4 do: 5 with: 6 ', Ass(PlnId('foo'), Method(Num(4), Keyword(
+        KArg(KeyId('do:'),Num(5)),
+        KArg(KeyId('with:'),Num(6))
+    ))))
 })
 
 test("parse integer",() => {

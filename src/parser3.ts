@@ -28,7 +28,8 @@ Moo {
   Assignment  = ident ":=" Exp
   Unary       = Exp ident
   Binary      = Exp Operator Exp
-  Keyword     = Exp kident Exp
+  KArg        = kident (ident|Number|Group)
+  Keyword     = Exp KArg+
   Group       = "(" Exp ")"
   
   Operator    = ("+" | "-" | "*" | "/" | "<" | ">" | "=" | "!")+
@@ -57,7 +58,8 @@ Moo {
         Statement:(value,_period) => Stmt(value.ast()),
         Unary:(receiver, method)=> Method(receiver.ast(), Unary(method.ast())),
         Binary:(receiver,op,arg)=> Method(receiver.ast(), Binary(op.ast(), arg.ast())),
-        Keyword:(receiver,keyid,arg)=> Method(receiver.ast(), Keyword(KArg(keyid.ast(), arg.ast()))),
+        KArg:(kident, exp) => KArg(kident.ast(), exp.ast()),
+        Keyword:(receiver,args)=> Method(receiver.ast(), Keyword(...args.ast())),
         Assignment:(ident,_op,arg)=> Ass(ident.ast(), arg.ast()),
         Group:(_a, exp, _b)=> Grp(exp.ast()),
         Operator:(v) => SymId(v.sourceString),

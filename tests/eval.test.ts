@@ -63,13 +63,13 @@ test('conditions',() => {
     cval(` (4 < 5) ifFalse: 88.`,scope,NilObj())
     cval(` (4 > 5) ifFalse: 88.`,scope,NumObj(88))
 
-    // cval(` (4 < 5) cond: 88 89.`,scope,NumObj(88))
-    // cval(` (4 > 5) cond: 88 89.`,scope,NumObj(89))
-    // cval(` (4 < 5) cond: (44 + 44) 89.`,scope,NumObj(88))
-    // cval(` (4 < 5) cond: (44 - 44) 89.`,scope,NumObj(0))
+    cval(` (4 < 5) ifTrue: 88 ifFalse: 89.`,scope,NumObj(88))
+    cval(` (4 > 5) ifTrue: 88 ifFalse: 89.`,scope,NumObj(89))
+    cval(` (4 < 5) ifTrue: (44 + 44) ifFalse: 89.`,scope,NumObj(88))
+    cval(` (4 < 5) ifTrue: (44 - 44) ifFalse: 89.`,scope,NumObj(0))
 
-    // cval(` (4 < 5) cond: [88.] [89.].`,scope,NumObj(88))
-    // cval(` (4 > 5) cond: [88.] [89.].`,scope,NumObj(89))
+    // cval(` (4 < 5) ifTrue: [88.] ifFalse: [89.].`,scope,NumObj(88))
+    // cval(` (4 > 5) ifTrue: [88.] ifFalse: [89.].`,scope,NumObj(89))
 })
 test('Debug tests',() => {
     let scope = make_standard_scope()
