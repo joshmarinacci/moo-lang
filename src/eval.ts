@@ -122,10 +122,10 @@ function send_message(objs: Obj[], scope: Obj):Obj {
 }
 
 function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scope: Obj):Obj {
-    console.log("doing call",call.type)
+    // console.log("doing call",call.type)
     if(call.type === 'unary-call') {
         let method = rec.lookup_slot(call.message.name)
-        console.log('method is',method)
+        // console.log('method is',method)
         if (isNil(method)) {
             throw new Error(`method is nil! could not find '${call.message.name}'`)
         }
@@ -139,21 +139,26 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
             throw new Error(`method is nil! could not find '${call.operator.name}'`)
         }
         let arg = eval_ast(call.argument,scope)
-        console.log('method is',method)
+        // console.log('method is',method)
         if (method instanceof Function) {
             return method(rec,[arg])
         }
     }
     if(call.type === 'keyword-call') {
-        console.log('keyword call')
-        let method = rec.lookup_slot(call.args[0].name.name)
+        // console.log('keyword call')
+        let method_name = call.args.map(arg => {
+            return arg.name.name
+        }).join("")
+        // console.log('method name',method_name)
+        let method = rec.lookup_slot(method_name)
         if (isNil(method)) {
-            throw new Error(`method is nil! could not find '${call.args[0].name.name}'`)
+            throw new Error(`method is nil! could not find '${method_name}'`)
         }
-        let arg = eval_ast(call.args[0].value,scope)
-        console.log('method is',method)
+        let args = call.args.map(arg => eval_ast(arg.value,scope))
+        // console.log('method is',method)
+        // console.log('args are',args)
         if (method instanceof Function) {
-            return method(rec,[arg])
+            return method(rec,args)
         }
     }
 }
@@ -198,7 +203,7 @@ export function eval_ast(ast:Ast2, scope:Obj):Obj {
     // }
     if (ast.type === 'message-call') {
         let msg = ast as MessageCall
-        console.log('message call', msg)
+        // console.log('message call', msg)
         let rec = eval_ast(msg.receiver,scope)
         return perform_call(rec,msg.call,scope)
     }
