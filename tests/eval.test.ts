@@ -3,7 +3,6 @@ import {cval, sval} from "../src/eval.ts";
 import {make_standard_scope} from "../src/standard.ts";
 import {NilObj, Obj, ObjectProto} from "../src/obj.ts";
 import {NumObj} from "../src/number.ts";
-import {StrObj} from "../src/string.ts";
 
 
 test('scope tests',() => {

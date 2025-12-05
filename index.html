@@ -35,11 +35,11 @@
 <textarea id="repl"></textarea>
 
 <script type="module">
-    import {parseBlockBody} from "./src/parser.ts";
     import {NilObj} from "./src/obj.ts";
     import {JoshLogger} from "./src/util.ts";
     import {eval_ast} from "./src/eval.ts";
     import {make_browser_scope} from "./src/browser.ts";
+    import {parse} from "./src/parser3.ts";
 
     let scope = make_browser_scope()
 
@@ -73,7 +73,7 @@
         d.disable()
         d.p('=========')
         d.p(`code is '${code}'`)
-        let body = parseBlockBody(code);
+        let body = parse(code,'Statement');
         d.p('ast is', body.toString())
         try {
             let last = NilObj()
@@ -95,12 +95,12 @@
     }
 
     cval(`[
-            dom ::= (DomProxy clone).
+            dom := (DomProxy clone).
             dom init.
-            button ::= (dom makeButton: "hi there").
+            button := (dom makeButton: "hi there").
             Debug print: 'here'.
             dom append: button.
-            Global makeSlot "dom" dom.
+            Global makeSlot: "dom" with: dom.
         ] value.`,scope)
 
     on($("#repl"),'change',() => {
