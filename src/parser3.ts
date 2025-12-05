@@ -54,7 +54,18 @@ Moo {
     semantics.addOperation<Ast2>("ast",{
         _iter: (...children) => children.map(ch => ch.ast()),
         BlockArgs:(args,_bar) => args.children.map(ch => ch.ast()),
-        Block:(_a, args,body, exp,_b) => BlkArgs(args.ast().flat(), body.children.map(ch => ch.ast())),
+        Block:(_a, args,body, exp,_b) => {
+            // console.log("block")
+            // console.log("args", args.ast())
+            // console.log("exp",exp.ast())
+            // console.log("body is",body.ast())
+            let bod = body.children.map(ch => ch.ast())
+            if(exp.ast().length > 0) {
+                bod.push(Stmt(exp.ast()[0]))
+            }
+            // console.log("final  is",bod)
+            return BlkArgs(args.ast().flat(), bod)
+        },
         Statement:(value,_period) => Stmt(value.ast()),
         Unary:(receiver, method)=> Method(receiver.ast(), Unary(method.ast())),
         Binary:(receiver,op,arg)=> Method(receiver.ast(), Binary(op.ast(), arg.ast())),

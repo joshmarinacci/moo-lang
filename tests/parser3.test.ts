@@ -1,6 +1,21 @@
 import {parse} from "../src/parser3.ts"
 import test from "node:test";
-import {Ass, type Ast2, Binary, Grp, KArg, KeyId, Keyword, Method, Num, PlnId, Str, SymId, Unary} from "../src/ast2.ts";
+import {
+    Ass,
+    type Ast2,
+    Binary, Blk, BlkArgs,
+    Grp,
+    KArg,
+    KeyId,
+    Keyword,
+    Method,
+    Num,
+    PlnId,
+    Stmt,
+    Str,
+    SymId,
+    Unary
+} from "../src/ast2.ts";
 import assert from "node:assert";
 
 
@@ -50,3 +65,19 @@ test("parse integer",() => {
     precedence("67",Num(67))
     precedence("6_7",Num(67))
 })
+
+test("block statement",() => {
+    precedence("[ ]",Blk())
+    precedence("[ 4 ]",Blk(Stmt(Num(4))))
+    precedence("[ 4 ] value.",Stmt(Method(Blk(Stmt(Num(4))),Unary(PlnId('value')))))
+    precedence("[ 4. 5 ] value.",Stmt(Method(BlkArgs([],[Stmt(Num(4)),Stmt(Num(5))]),Unary(PlnId('value')))))
+    precedence("[ 4. 5. ] value.",Stmt(Method(BlkArgs([],[Stmt(Num(4)),Stmt(Num(5))]),Unary(PlnId('value')))))
+})
+test("block with args",() => {
+    precedence("[ | ]",BlkArgs([],[]))
+    precedence("[ x | ]",BlkArgs([PlnId('x')],[]))
+    precedence("[ x | 4 ]",BlkArgs([PlnId('x')],[Stmt(Num(4))]))
+    precedence("[ x y | 4. 5 ]",BlkArgs([PlnId('x'), PlnId('y')],[Stmt(Num(4)), Stmt(Num(5))]))
+})
+
+
