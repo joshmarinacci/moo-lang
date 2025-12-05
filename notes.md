@@ -133,9 +133,10 @@ next to fix
 * [x] list api
 * [x] dict api
 * [x] comments again
-* [ ] set api
-* [ ] list literal
-* [ ] dict literals
+* [x] set api
+* [x] list literal
+* [x] dict literals
+* [x] images
 
 
 

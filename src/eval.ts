@@ -143,6 +143,9 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
                 return meth(method,[])
             }
         }
+        if (method instanceof Obj) {
+            return method
+        }
     }
     if(call.type === 'binary-call') {
         let method = rec.lookup_slot(call.operator.name)
@@ -315,7 +318,7 @@ const BlockProto = new Obj("BlockProto",ObjectProto,{
 
 
 export function cval(code:string, scope:Obj, expected?:Obj) {
-    // d.disable()
+    d.disable()
     d.p('=========')
     d.p(`code is '${code}'`)
     let body = parse(code,'Statement');

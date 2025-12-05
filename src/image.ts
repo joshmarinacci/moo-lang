@@ -6,10 +6,10 @@ import {NumObj} from "./number.ts";
 
 export function setup_image(scope:Obj) {
     const ImageProto = new Obj("ImageProto",ObjectProto,{
-        'make:':(rec:Obj, args:Array<Obj>):Obj => {
+        'makeWidth:height:':(rec:Obj, args:Array<Obj>):Obj => {
             let image = new Obj("Image",ImageProto,{});
-            image._make_method_slot("width",args[0])
-            image._make_method_slot("height",args[1])
+            image._make_data_slot("width",args[0])
+            image._make_data_slot("height",args[1])
             image._make_js_slot("jsvalue",make(10,10))
             return image
         },
@@ -22,7 +22,7 @@ export function setup_image(scope:Obj) {
             })
             return NilObj()
         },
-        'setPixelAt:':(rec:Obj, args:Array<Obj>):Obj => {
+        'setPixelAt:y:color:':(rec:Obj, args:Array<Obj>):Obj => {
             let bitmap = rec._get_js_array() as unknown as Bitmap
             let x = args[0]._get_js_number()
             let y = args[1]._get_js_number()
@@ -56,10 +56,10 @@ export function setup_image(scope:Obj) {
     })
     scope._make_method_slot("Color",ColorProto)
     cval(`[
-        Color makeSlot "red"   16rFF0000FF.
-        Color makeSlot "green" 16r00FF00FF.
-        Color makeSlot "blue"  16r0000FFFF.
-        Color makeSlot "white" 16rFFFFFFFF.
-        Color makeSlot "black" 16r000000FF.
+        Color makeSlot: "red"   with: 16rFF0000FF.
+        Color makeSlot: "green" with: 16r00FF00FF.
+        Color makeSlot: "blue"  with: 16r0000FFFF.
+        Color makeSlot: "white" with: 16rFFFFFFFF.
+        Color makeSlot: "black" with: 16r000000FF.
         ] value.`,scope)
 }

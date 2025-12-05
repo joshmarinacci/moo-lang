@@ -33,7 +33,7 @@ Moo {
   Return      = "^" Exp
   Unary       = Exp ident
   Binary      = Exp Operator Exp
-  KArg        = kident (ident|Number|String|Block|Group)
+  KArg        = kident (ident|Number|String|Block|Group|ArrayLiteral)
   Keyword     = Exp KArg+
   Group       = "(" Exp ")"
   ArrayLiteral = ArrayList | ArrayMap
