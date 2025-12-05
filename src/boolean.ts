@@ -36,7 +36,7 @@ const BooleanProto = new Obj("BooleanProto",ObjectProto,{
         let A = rec._get_js_boolean()
         return BoolObj(!A)
     },
-    'cond:':(rec:Obj, args:Array<Obj>):Obj => {
+    'cond:with:':(rec:Obj, args:Array<Obj>):Obj => {
         let val = rec._get_js_boolean()
         return eval_block_obj(val?args[0]:args[1],[])
     },

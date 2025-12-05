@@ -10,7 +10,7 @@ import {
     Keyword,
     Method,
     Num,
-    PlnId,
+    PlnId, Ret,
     Stmt,
     Str,
     SymId,
@@ -92,6 +92,11 @@ test('assignment',() => {
         Stmt(PlnId('v')),
     ]), Unary(PlnId('value')))))
 
+})
+test('return statement',() => {
+    precedence('67',Num(67))
+    precedence('^67',Ret(Num(67)))
+    precedence('^(6+7)',Ret(Grp(Method(Num(6),Binary(SymId('+'),Num(7))))))
 })
 
 

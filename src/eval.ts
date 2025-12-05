@@ -125,6 +125,7 @@ export function eval_block_obj(clause: Obj, args:Array<Obj>) {
 function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scope: Obj):Obj {
     d.p("doing call",call.type)
     if(call.type === 'unary-call') {
+        d.p(`method name '${call.message.name}' `)
         let method = rec.lookup_slot(call.message.name)
         // console.log('method is',method)
         if (isNil(method)) {
@@ -132,6 +133,14 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
         }
         if (method instanceof Function) {
             return method(rec,[])
+        }
+        if (method.name === 'Block') {
+            method.parent = rec
+            let meth = method.get_js_slot('value') as Function
+            // console.log("looked up method is",meth)
+            if (meth instanceof Function) {
+                return meth(method,[])
+            }
         }
     }
     if(call.type === 'binary-call') {
@@ -146,8 +155,8 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
         }
     }
     if(call.type === 'keyword-call') {
-        // console.log('KEYWORD CALL')
-        // console.log("receiver:",rec.print())
+        d.p('KEYWORD CALL')
+        // d.p("receiver:",rec.print())
         let method_name = call.args.map(arg => {
             return arg.name.name
         }).join("")
@@ -163,11 +172,21 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
         if (method instanceof Function) {
             return method(rec,args)
         }
+        if (method.name === 'Block') {
+            method.parent = rec
+            let meth = method.get_js_slot('value') as Function
+            console.log("looked up method is",meth)
+            if (meth instanceof Function) {
+                return meth(method,args)
+            }
+        }
     }
+
+    throw new Error("method call not performed properly.")
 }
 
 export function eval_ast(ast:Ast2, scope:Obj):Obj {
-    d.p(`eval: '${ast.type}' `)
+    // d.p(`eval: '${ast.type}' `)
     if (ast.type === 'number-literal') return NumObj((ast as NumberLiteral).value)
     if (ast.type === "string-literal") return StrObj((ast as StringLiteral).value)
     // if (ast.type === 'plain-identifier') return SymRef((ast as PlainId).name)
@@ -184,23 +203,33 @@ export function eval_ast(ast:Ast2, scope:Obj):Obj {
         d.outdent()
         return ret
     }
-
-    // if (ast.type === 'return') return SymRef("return")
+    if (ast.type === 'return') {
+        d.p("doing return of content:", AstToString(ast.value))
+        let value = eval_ast(ast.value,scope)
+        d.p("returned value", value.print())
+        let ret = new Obj('non-local-return',scope.parent,{})
+        ret._is_return = true
+        ret._make_method_slot('value',value)
+        ret._make_method_slot('target',scope.parent as Obj)
+        return ret
+    }
     if (ast.type === 'group') {
         d.p("doing group:",AstToString(ast))
         let group = ast as Group
-        console.log("actual group is",group)
         let objs = group.body.map(a => eval_ast(a,scope))
         return objs[objs.length-1]
     }
     if (ast.type === 'statement') {
+        d.p("statement is", AstToString(ast))
+        d.indent()
         let stmt = ast as Statement;
-        // console.log("statement is", stmt)
         let ret = eval_ast(stmt.value, scope)
-        // console.log("statement returned ", ret.print())
+        d.p("statement returned ", ret.print())
+        d.outdent()
         return ret
     }
     if (ast.type === 'block-literal') {
+        d.p("making block literal " + AstToString(ast))
         let blk = ast as BlockLiteral
         let blk2 = BlockProto.clone()
         blk2.name = 'Block'

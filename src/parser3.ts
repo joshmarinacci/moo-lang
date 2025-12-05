@@ -10,6 +10,7 @@ import {
     Method,
     Num,
     PlnId,
+    Ret,
     Stmt,
     Str,
     SymId,
@@ -21,11 +22,12 @@ import type {Ast2} from "./ast2.ts"
 export function parse(input:string, rule:string):Ast2 {
     const mooGrammar = ohm.grammar(String.raw`
 Moo {
-  Exp         = Assignment | Keyword | Binary | Unary | Group | Block | String | ident | Number
+  Exp         = Return | Assignment | Keyword | Binary | Unary | Group | Block | String | ident | Number
   Block = "[" BlockArgs? Statement* Exp? "]"
   BlockArgs   = ident* "|"
   Statement   = (Assignment | Exp) "."
   Assignment  = ident ":=" Exp
+  Return      = "^" Exp
   Unary       = Exp ident
   Binary      = Exp Operator Exp
   KArg        = kident (ident|Number|String|Block|Group)
@@ -72,6 +74,7 @@ Moo {
         KArg:(kident, exp) => KArg(kident.ast(), exp.ast()),
         Keyword:(receiver,args)=> Method(receiver.ast(), Keyword(...args.ast())),
         Assignment:(ident,_op,arg)=> Ass(ident.ast(), arg.ast()),
+        Return:(caret, value) => Ret(value.ast()),
         Group:(_a, exp, _b)=> Grp(exp.ast()),
         Operator:(v) => SymId(v.sourceString),
         ident:(start,rest)=> PlnId(start.sourceString+rest.sourceString),
