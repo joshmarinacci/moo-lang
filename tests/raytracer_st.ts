@@ -1,22 +1,24 @@
 import test from "node:test";
-import {cval, make_default_scope, NumObj} from "../src/eval.ts";
+import {cval } from "../src/eval.ts";
+import {make_standard_scope} from "../src/standard.ts";
+import {NumObj} from "../src/number.ts";
 
 test('eval vector class',() => {
-    let scope = make_default_scope()
+    let scope = make_standard_scope()
     cval(`[
-        Global makeSlot "Vector" (ObjectBase clone).
-        Vector setObjectName "Vector".
-        Vector makeSlot "x" 0.
-        Vector makeSlot "y" 0.
-        Vector makeSlot "z" 0.
-        Vector makeSlot "x:" [xx |
-            self setSlot "x" xx.
+        Global makeSlot: "Vector" with: (ObjectBase clone).
+        Vector setObjectName: "Vector".
+        Vector makeSlot: "x" with: 0.
+        Vector makeSlot: "y" with: 0.
+        Vector makeSlot: "z" with: 0.
+        Vector makeSlot: "x:" with: [xx |
+            self setSlot: "x" with: xx.
         ].
-        Vector makeSlot "y:" [yy |
-            self setSlot "y" yy.
+        Vector makeSlot: "y:" with: [yy |
+            self setSlot: "y" with: yy.
         ].
-        Vector makeSlot "z:" [zz |
-            self setSlot "z" zz.
+        Vector makeSlot: "z:" with: [zz |
+            self setSlot: "z" with: zz.
         ].
         Vector makeSlot "make" [ xx yy zz |
             self makeSlot "v" (Vector clone).

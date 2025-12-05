@@ -95,6 +95,7 @@ export class Obj {
         if (depth < 1) {
             return this.name
         }
+        if (this.name === 'Global') return `Global Scope`
         if (this.name === 'NumberLiteral') {
             return `NumberLiteral (${this._get_js_number()})`;
         }
@@ -270,11 +271,11 @@ export class Obj {
 }
 
 export const ROOT = new Obj("ROOT", null,{
-    'make_data_slot:':(rec:Obj, args:Array<Obj>) => {
+    'make_data_slot:with:':(rec:Obj, args:Array<Obj>) => {
         rec._make_data_slot(args[0]._get_js_string(), args[1])
         return NilObj()
     },
-    'makeSlot':(rec:Obj, args:Array<Obj>):Obj => {
+    'makeSlot:with:':(rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()
         let slot_value = args[1]
         rec._make_method_slot(slot_name,slot_value)
@@ -283,7 +284,7 @@ export const ROOT = new Obj("ROOT", null,{
         }
         return NilObj();
     },
-    'getSlot':(rec:Obj, args:Array<Obj>):Obj => {
+    'getSlot:':(rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()
         return rec.get_slot(slot_name)
     },
@@ -300,6 +301,7 @@ export const ROOT = new Obj("ROOT", null,{
     'clone':(rec:Obj):Obj => rec.clone(),
     // 'isKindOf:':(rec:Obj, args:Array<Obj>) => BoolObj(rec.is_kind_of(args[0]._get_js_string())),
     'dump':(rec:Obj):Obj => {
+        console.log("DUMPOING")
         d.p("DUMPING: ", rec.name)
         d.indent()
         rec.dump();

@@ -28,13 +28,13 @@ Moo {
   Assignment  = ident ":=" Exp
   Unary       = Exp ident
   Binary      = Exp Operator Exp
-  KArg        = kident (ident|Number|Group)
+  KArg        = kident (ident|Number|String|Block|Group)
   Keyword     = Exp KArg+
   Group       = "(" Exp ")"
   
   Operator    = ("+" | "-" | "*" | "/" | "<" | ">" | "=" | "!")+
   ident       = letter (letter|digit|"_")* 
-  kident      = letter+ ":"
+  kident      = letter (letter|digit|"_")* ":"
   Number      = num2 | num16 | float | integer
   dig         = digit | "_"
   num2        = "2r" ("0" | "1")+
@@ -64,7 +64,7 @@ Moo {
         Group:(_a, exp, _b)=> Grp(exp.ast()),
         Operator:(v) => SymId(v.sourceString),
         ident:(start,rest)=> PlnId(start.sourceString+rest.sourceString),
-        kident:(a,b) => KeyId(a.sourceString + b.sourceString),
+        kident:(a,b,colon) => KeyId(a.sourceString + b.sourceString + colon.sourceString),
         float:(sign,prefix,dot,postfix) => Num(parseFloat(
                 (sign.sourceString +prefix.sourceString + dot.sourceString + postfix.sourceString)
                 .replace('_', '')

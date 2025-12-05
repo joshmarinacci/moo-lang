@@ -146,12 +146,12 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
         }
     }
     if(call.type === 'keyword-call') {
-        // console.log('keyword call')
-        // console.log("receiver",rec.print())
+        // console.log('KEYWORD CALL')
+        // console.log("receiver:",rec.print())
         let method_name = call.args.map(arg => {
             return arg.name.name
         }).join("")
-        // console.log('method name',method_name)
+        // console.log('method name:',method_name)
         let method = rec.lookup_slot(method_name)
         if (isNil(method)) {
             throw new Error(`method is nil! could not find '${method_name}'`)
@@ -159,6 +159,7 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
         let args = call.args.map(arg => eval_ast(arg.value,scope))
         // console.log('method is',method)
         // console.log('args are',args)
+        // console.log("invoking")
         if (method instanceof Function) {
             return method(rec,args)
         }
@@ -210,7 +211,7 @@ export function eval_ast(ast:Ast2, scope:Obj):Obj {
         // console.log('message call', msg)
         // console.log("receiver is",msg.receiver)
         let rec = eval_ast(msg.receiver,scope)
-        // console.log("receiver evaluated to",rec)
+        // console.log("receiver evaluated to",rec.print())
         if (rec.name === 'SymbolReference') {
             rec = scope.lookup_slot(rec._get_js_string())
             // console.log("looked up value of the symbol")
@@ -226,6 +227,7 @@ const SymRef = (value:string):Obj => new Obj("SymbolReference",ObjectProto,{'jsv
 let BLOCK_COUNT = 0
 const BlockProto = new Obj("BlockProto",ObjectProto,{
     'value':(rec:Obj,args:Array<Obj>) => {
+        // console.log("inside of the block")
         let params:Array<IdAst> = rec.get_slot('args') as unknown as Array<IdAst>
         let body = rec.get_js_slot('body') as Array<StmtAst>
         if(!Array.isArray(body)) throw new Error("block body isn't an array")

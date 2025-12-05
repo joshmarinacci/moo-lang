@@ -17,9 +17,9 @@ test('scope tests',() => {
     // block evaluates to the last statement
     cval('[ 5 . ] value .',scope, NumObj(5))
     // // scope inside block can accept makeSlot. then looks up the v slot.
-    // cval(`[ self makeSlot 'v' 5. self getSlot "v". ] value .`,scope, NumObj(5))
-    // cval(`[ self makeSlot "v" 5. self v. ] value .`,scope, NumObj(5))
-    // cval(`[ self makeSlot "v" 5. v ] value .`,scope, NumObj(5))
+    // cval(`[ self makeSlot: 'v' with: 5. self getSlot: "v". ] value .`,scope, NumObj(5))
+    // cval(`[ self makeSlot: "v" with: 5. self v. ] value .`,scope, NumObj(5))
+    // cval(`[ self makeSlot: "v" with: 5. v ] value .`,scope, NumObj(5))
     //
     // // group evaluates to the last expression in the group.
     cval('8 + 8.',scope,NumObj(16))
@@ -29,13 +29,13 @@ test('scope tests',() => {
     cval('[ Object clone. ] value .', scope, ObjectProto.clone())
     // make an object with one slot
     // cval(`[
-    //     self makeSlot "v" (Object clone).
-    //     v makeSlot "w" 5.
+    //     self makeSlot: "v" with: (Object clone).
+    //     v makeSlot: "w" with: 5.
     //     v w.
     // ] value.`,scope,NumObj(5))
     // cval(`[
-    //     self makeSlot "v" (Object clone).
-    //     v makeSlot "w" [ 5. ].
+    //     self makeSlot: "v" with: (Object clone).
+    //     v makeSlot: "w" with: [ 5. ].
     //     v w.
     // ] value.`,scope,NumObj(5))
     //
@@ -78,7 +78,7 @@ test('Debug tests',() => {
 test("block arg tests",() => {
     let scope = make_standard_scope()
     cval(`
-        self makeSlot "foo" [
+        self makeSlot: "foo" with: [
             88.
         ]. 
         self foo.
