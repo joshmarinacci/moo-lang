@@ -277,7 +277,7 @@ const SymRef = (value:string):Obj => new Obj("SymbolReference",ObjectProto,{'jsv
 let BLOCK_COUNT = 0
 const BlockProto = new Obj("BlockProto",ObjectProto,{
     'value':(rec:Obj,args:Array<Obj>) => {
-        // console.log("inside of the block")
+        d.p("inside of the block")
         let params:Array<PlainId> = rec.get_slot('args') as unknown as Array<PlainId>
         let body = rec.get_js_slot('body') as Array<Statement>
         if(!Array.isArray(body)) throw new Error("block body isn't an array")
@@ -287,8 +287,10 @@ const BlockProto = new Obj("BlockProto",ObjectProto,{
             console.log(rec.print())
             throw new Error(`block requires ${params.length} arguments\n ${rec.print()}`)
         }
+        d.p("params", params)
         for(let i=0; i<params.length; i++) {
-            scope._make_method_slot(params[i].value,args[i])
+            d.p("param", params[i], args[i])
+            scope._make_method_slot(params[i].name,args[i])
         }
         let last = NilObj()
         for(let ast of body) {

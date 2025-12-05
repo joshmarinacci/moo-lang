@@ -92,12 +92,12 @@ test("block arg tests",() => {
         ].
         self foo: 1.
     ] value.`,scope,NumObj(88))
-    // cval(`[
-    //     self makeSlot: "foo:" with: [ v |
-    //         88 + v.
-    //     ].
-    //     self foo: 1.
-    // ] value .`,scope,NumObj(89))
+    cval(`[
+        self makeSlot: "foo:" with: [ v |
+            88 + v.
+        ].
+        self foo: 1.
+    ] value .`,scope,NumObj(89))
     // cval(`[
     //     self makeSlot: "foo" with: (Object clone).
     //     foo makeSlot: "bar" with: 88.
@@ -194,7 +194,6 @@ test('non local return 2', () => {
 })
 test('eval vector class',() => {
     let scope = make_standard_scope()
-    // the 'a' in the add: method isn't resolving properly.
     cval(`[
         Global makeSlot: "Vector" with: (ObjectBase clone).
         Vector setObjectName: "Vector".

@@ -6,7 +6,7 @@ import {StrObj} from "./string.ts";
 const js_num_op = (cb:(a:number,b:number)=>number) => {
     return function (rec:Obj, args:Array<Obj>){
         if (args[0].name !== "NumberLiteral") {
-            throw new Error("cannot add a non number to a number")
+            throw new Error(`cannot add a non number to a number: ${args[0].name}`);
         }
         let a = rec._get_js_number()
         let b = args[0]._get_js_number()
