@@ -146,7 +146,7 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
     if(call.type === 'binary-call') {
         let method = rec.lookup_slot(call.operator.name)
         if (isNil(method)) {
-            throw new Error(`method is nil! could not find '${call.operator.name}'`)
+            throw new Error(`could not find method '${call.operator.name}' on ${rec.print()}'`)
         }
         let arg = eval_ast(call.argument,scope)
         // console.log('method is',method)

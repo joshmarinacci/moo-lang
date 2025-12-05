@@ -127,11 +127,14 @@ next to fix
 * [x] fully recursive with group
 * [x] block literal
 * [x] statement is expr followed by a period
-* return is exp prefixed by a caret. non-local return tests
+* [x] return is exp prefixed by a caret. non-local return tests
 * [x] assignment can have any expression on the right hand side but only id on the right side
-* block literal eval isn't working
-* list and dict literals
-* comments again
+* [ ] block literal eval args aren't working
+* [ ] list api
+* [ ] dict api
+* [ ] list literal
+* [ ] dict literals
+* [ ] comments again
 
 
 

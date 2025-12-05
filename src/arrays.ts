@@ -99,7 +99,7 @@ export const ListProto = new Obj("ListProto",ObjectProto, {
         let index = args[0]._get_js_number()
         return arr[index]
     },
-    'setAt:':(rec:Obj, args:Array<Obj>):Obj => {
+    'at:set:':(rec:Obj, args:Array<Obj>):Obj => {
         let arr = rec._get_js_array()
         let index = args[0]._get_js_number()
         arr[index] = args[1]

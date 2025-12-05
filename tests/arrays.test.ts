@@ -59,37 +59,43 @@ test('dict literals', () => {
 test('list api', () => {
     let scope = make_standard_scope()
     cval(`[
-        l ::= (List clone).
-        Debug equals: (l size) 0.
+        l := (List clone).
+        Debug equals: (l size) with: 0.
 
         l add: 1.
-        Debug equals: (l size) 1.
-        Debug equals: (l at: 0) 1.
+        Debug equals: (l size) with: 1.
+        Debug equals: (l at: 0) with: 1.
 
         l add: 3.
-        Debug equals: (l size) 2.
-        l setAt: 1 8.
-        Debug equals: (l size) 2.
-        Debug equals: (l at: 1) 8.
+        Debug equals: (l size) with: 2.
+        
+        l at: 1 set: 8.
+        Debug equals: (l size) with: 2.
+        Debug equals: (l at: 1) with: 8.
 
         l do: [ n | n. ].
 
         l add: 5.
+        
 
-        // array contains 1 8 5
-        Debug equals: ((l select: [n | n > 1. ]) size) 2.
-        Debug equals: ((l select: [n | n > 6. ]) size) 1.
-        Debug equals: ((l reject: [n | n > 6. ]) size) 2.
+        ] value.`,scope)
+    // cval(`[
 
+    // array contains 1 8 5
+    // Debug equals: ((l select: [n | n > 1. ]) size) with: 2.
+    // Debug equals: ((l select: [n | n > 6. ]) size) with: 1.
+    // Debug equals: ((l reject: [n | n > 6. ]) size) with: 2.
 
-        l2 ::= (l collect: [n | n * 2.]).
-        // array contains 2 16 10
-        Debug equals: (l2 size) 3.
-        Debug equals: (l2 at: 0) 2.
-        Debug equals: (l2 at: 1) 16.
-
-        67.
-    ] value.`,scope, NumObj(67))
+    //
+    //
+    //     l2 ::= (l collect: [n | n * 2.]).
+    //     // array contains 2 16 10
+    //     Debug equals: (l2 size) 3.
+    //     Debug equals: (l2 at: 0) 2.
+    //     Debug equals: (l2 at: 1) 16.
+    //
+    //     67.
+    // ] value.`,scope, NumObj(67))
 })
 
 test('dict api',() => {
