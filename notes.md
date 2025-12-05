@@ -84,24 +84,48 @@ Page loads JS source to set up the entire env.  There is a plain JS button. Clic
   ObjectBrowserDemo render: dom.
 ] value. 
 
+[ 
 dom clear.
-(Global listSlotNames) do:  [ v |
-  Debug print: v.
-  button ::= (dom makeButton: v).
-  button onClick: [
-     Debug print: ("this object is " + v) .
-  ].
-  dom append: button.
+Global listSlotNames do: [name |
+   Debug print: name.
+   button := dom makeButton: name.
+   button onClick: [
+       Debug print: ("this object is " + name).
+   ].
+   dom append: button.
 ].
+] value.
 
-(Global getSlotNames) do: [k v |
-  button ::= (dom makeButton: k).
+
+[
+// dump the slots of each class when clicking on it's button
+dom clear.
+Global getSlotNames do: [k v |
+  button := (dom makeButton: k).
   button onClick: [
      Debug print: ("this object is " + k) .
-     Debug print: v.
+     v listSlotNames do: [name |
+           Debug print: name.
+     ].
   ].
   dom append: button.
 ].
+] value.
+
+
+// create an hbox div
+[
+ dom clear.
+ hbox := dom make: "hbox".
+ dom append: hbox.
+
+ button := dom makeButton: 'inside of an hbox'.
+ hbox append: button.
+
+ button := dom makeButton: 'inside of an hbox2'.
+ hbox append: button.
+
+] value. 
 
 ```
 
@@ -137,6 +161,9 @@ next to fix
 * [x] list literal
 * [x] dict literals
 * [x] images
+* [ ] parse list of statements / block body content
+* [ ] fix precedence so `Debug print: "foo" + "bar"` will print 'foobar' by evaluating the binary expression first.
+* 
 
 
 

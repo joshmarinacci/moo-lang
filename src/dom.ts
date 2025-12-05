@@ -13,7 +13,13 @@ export function setup_dom(scope: Obj) {
                 let ret = eval_block_obj(block,[]) as Obj
             })
             return NilObj()
-        }
+        },
+        'append:':(rec:Obj, args:Array<Obj>):Obj => {
+            let element = rec._get_js_unknown() as Element
+            let child = args[0]._get_js_unknown() as Element
+            element.append(child)
+            return NilObj()
+        },
     })
 
     const DomProxyProto = new Obj("DomProxyProto",ObjectProto,{
@@ -39,6 +45,13 @@ export function setup_dom(scope: Obj) {
         'makeButton:': (rec:Obj, args:Array<Obj>):Obj => {
             let element = document.createElement("button")
             element.innerText = args[0]._get_js_string()
+            let object = new Obj("DomElement",ElementProto,{})
+            object._make_js_slot('jsvalue',element)
+            return object
+        },
+        'makeDiv:': (rec:Obj, args:Array<Obj>):Obj => {
+            let element = document.createElement("div")
+            element.className = args[0]._get_js_string()
             let object = new Obj("DomElement",ElementProto,{})
             object._make_js_slot('jsvalue',element)
             return object

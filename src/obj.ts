@@ -149,7 +149,7 @@ export class Obj {
         if (name === 'self') {
             return this
         }
-        return this.safe_lookup_slot(name, 7);
+        return this.safe_lookup_slot(name, 20);
     }
     safe_lookup_slot(name: string, depth: number): Obj {
         // d.p("safe lookup slot",depth ,name,'on',this.name)
