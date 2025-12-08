@@ -118,12 +118,21 @@ Global getSlotNames do: [k v |
  dom clear.
  hbox := dom make: "div" class:"hbox".
  dom append: hbox.
-
- button := dom makeButton: 'inside of an hbox'.
- hbox append: button.
-
- button := dom makeButton: 'inside of an hbox2'.
- hbox append: button.
+ 
+ column := dom make: "div" class: "vbox".
+ column addClass: "scroll".
+ hbox append: column.
+ 
+ ul := dom make:"ul".
+ column append: ul.
+  
+ Global getSlotNames do: [k v |
+    li := dom make: "li".
+    li onClick: [
+       Debug print: "clicked here".
+    ].
+    ul append li.
+ ].
 
 ] value. 
 
@@ -133,7 +142,7 @@ Global getSlotNames do: [k v |
 ## impl plan
 * [ ] Smalltalk class browser:
 * [ ] Vbox and hbox have mirror dom elements and forward commands to their delegate
-* [ ] Dom element: toggle classname on any dom element, append element to self
+* [x] Dom element: toggle classname on any dom element, append element to self
 * [ ] Dom proxy: create element with name, id, and classes
 * [ ] HTML List Item has text and command and delegate. Click sends command to delegate.
 * [ ] HTML List has list items and delegate. Forwards commands to delegate.

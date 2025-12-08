@@ -5,8 +5,9 @@ const $ = (sel:string):Element => document.querySelector(sel)
 const on = (el:Element,type:string,cb:unknown) => el.addEventListener(type,cb)
 
 export function setup_dom(scope: Obj, document: Document) {
+    console.log("dom proxy setup with ",document)
     const ElementProto = new Obj("DomElement",ObjectProto,{
-        'onClick:':(rec:Obj,args:Array<Obj>)=>{
+        'onClick:':(rec:Obj,args:Array<Obj>):Obj=>{
             let element = rec._get_js_unknown() as Element
             let block = args[0]
             element.addEventListener('click',() => {
@@ -20,11 +21,23 @@ export function setup_dom(scope: Obj, document: Document) {
             element.append(child)
             return NilObj()
         },
+        'addClass:':(rec:Obj, args:Array<Obj>):Obj=>{
+            let element = rec._get_js_unknown() as Element
+            let classname = args[0]._get_js_string()
+            element.classList.add(classname)
+            return NilObj()
+        },
+        'innerHtml:':(rec:Obj, args:Array<Obj>):Obj=>{
+            let element = rec._get_js_unknown() as Element
+            let text = args[0]._get_js_string()
+            element.innerHTML = text
+            return NilObj()
+        }
     })
 
     const DomProxyProto = new Obj("DomProxyProto",ObjectProto,{
         'init':(rec:Obj, args:Array<Obj>):Obj => {
-            console.log("setting up the dom proxy")
+            console.log("DomProxy.init: setting up the dom proxy")
             const editorRoot = document.createElement('div')
             editorRoot.id = "editor-root";
             document.body.appendChild(editorRoot);
@@ -56,7 +69,7 @@ export function setup_dom(scope: Obj, document: Document) {
             object._make_js_slot('jsvalue',element)
             return object
         },
-        'make:class':(rec:Obj, args:Array<Obj>):Obj => {
+        'make:class:':(rec:Obj, args:Array<Obj>):Obj => {
             let tag = args[0]._get_js_string();
             let element = document.createElement(tag)
             element.className = args[1]._get_js_string()
@@ -91,7 +104,6 @@ export function setup_dom(scope: Obj, document: Document) {
     if(typeof document != "undefined") {
         DomProxyProto._make_js_slot("jsvalue",document)
     }
-
     scope._make_method_slot("DomProxy",DomProxyProto)
 
 }

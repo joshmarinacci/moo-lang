@@ -10,7 +10,7 @@
         }
         #repl {
             width: 40rem;
-            height: 10rem;
+            height: 20rem;
         }
         #editor-console {
             font-family: monospace;
@@ -25,6 +25,10 @@
             }
             overflow: auto;
             max-height: 20rem;
+            height: 15rem;
+        }
+        #editor-content {
+            height: 15rem;
         }
         .hbox, .vbox {
             border: 1px solid red;
@@ -35,6 +39,11 @@
         }
         .vbox {
             flex-direction: column;
+            max-height: 10rem;
+            min-width: 10rem;
+        }
+        .scroll {
+            overflow: scroll;
         }
     </style>
 </head>
@@ -51,7 +60,7 @@
     import {make_browser_scope} from "./src/browser.ts";
     import {parse} from "./src/parser3.ts";
 
-    let scope = make_browser_scope()
+    let scope = make_browser_scope(document);
 
     const $ = (sel) => document.querySelector(sel)
     const on = (el,type,cb) => el.addEventListener(type,cb)
@@ -105,13 +114,13 @@
     }
 
     cval(`[
-            dom := (DomProxy clone).
-            dom init.
-            button := (dom makeButton: "hi there").
-            Debug print: 'here'.
-            dom append: button.
-            Global makeSlot: "dom" with: dom.
-        ] value.`,scope)
+        dom := DomProxy clone.
+        dom init.
+        button := (dom makeButton: "hi there").
+        Debug print: 'here'.
+        dom append: button.
+        Global makeSlot: "dom" with: dom.
+    ] value.`,scope)
 
     on($("#repl"),'change',() => {
         // console.log("repl changed")
