@@ -1,4 +1,4 @@
-import {make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
+import {JS_VALUE, make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
 import {NumObj} from "./number.ts";
 import {eval_block_obj} from "./eval.ts";
 import {StrObj} from "./string.ts";
@@ -86,7 +86,7 @@ class JSSet {
 export const ListProto = make_native_obj("ListProto",ObjectProto, {
     'clone':(rec:Obj) => {
         let copy = rec.clone()
-        copy._make_js_slot('jsvalue',[])
+        copy._make_js_slot(JS_VALUE,[])
         return copy
     },
     'add:':(rec:Obj, args:Array<Obj>):Obj=>{
@@ -142,13 +142,13 @@ export const ListProto = make_native_obj("ListProto",ObjectProto, {
         return ListObj(...res)
     },
 })
-ListProto._make_js_slot('jsvalue',[])
-export const ListObj = (...args:Array<Obj>)=> new Obj("List", ListProto, {'jsvalue': args})
+ListProto._make_js_slot(JS_VALUE,[])
+export const ListObj = (...args:Array<Obj>)=> new Obj("List", ListProto, {'_jsvalue': args})
 
 export const DictProto = make_native_obj('DictProto',ObjectProto, {
     'clone':(rec:Obj) => {
         let copy = rec.clone()
-        copy._make_js_slot('jsvalue',{})
+        copy._make_js_slot(JS_VALUE,{})
         return copy
     },
     'get:':(rec:Obj, args:Array<Obj>):Obj => {
@@ -185,48 +185,48 @@ export const DictProto = make_native_obj('DictProto',ObjectProto, {
         return NilObj()
     },
 })
-DictProto._make_js_slot("jsvalue",{})
-export const DictObj = (obj:Record<string, Obj>) => new Obj("Dict",DictProto,{"jsvalue": obj})
+DictProto._make_js_slot(JS_VALUE,{})
+export const DictObj = (obj:Record<string, Obj>) => new Obj("Dict",DictProto,{"_jsvalue": obj})
 
 const SetProto = make_native_obj("SetProto",ObjectProto,{
     'clone':(rec:Obj) => {
         let copy = rec.clone()
-        copy._make_js_slot('jsvalue',new JSSet())
+        copy._make_js_slot(JS_VALUE,new JSSet())
         return copy
     },
     'add:':(rec:Obj, args:Array<Obj>):Obj => {
-        let set = rec.get_js_slot('jsvalue') as JSSet
+        let set = rec.get_js_slot(JS_VALUE) as JSSet
         set.add(args[0])
         return NilObj()
     },
     'size':(rec:Obj, args:Array<Obj>):Obj => {
-        let set = rec.get_js_slot('jsvalue') as JSSet
+        let set = rec.get_js_slot(JS_VALUE) as JSSet
         return NumObj(set.size())
     },
     'withAll:':(rec:Obj, args:Array<Obj>):Obj => {
         let set2 = new JSSet()
-        set2.addAll(rec.get_js_slot('jsvalue'))
-        set2.addAll(args[0].get_js_slot('jsvalue'))
+        set2.addAll(rec.get_js_slot(JS_VALUE) as JSSet)
+        set2.addAll(args[0].get_js_slot(JS_VALUE) as JSSet)
         return SetObj(set2)
     },
     '+':(rec:Obj, args:Array<Obj>):Obj => {
-        let A = rec.get_js_slot('jsvalue') as JSSet
-        let B = args[0].get_js_slot('jsvalue') as JSSet
+        let A = rec.get_js_slot(JS_VALUE) as JSSet
+        let B = args[0].get_js_slot(JS_VALUE) as JSSet
         return SetObj(A.union(B))
     },
     '-':(rec:Obj, args:Array<Obj>):Obj => {
-        let A = rec.get_js_slot('jsvalue') as JSSet
-        let B = args[0].get_js_slot('jsvalue') as JSSet
+        let A = rec.get_js_slot(JS_VALUE) as JSSet
+        let B = args[0].get_js_slot(JS_VALUE) as JSSet
         return SetObj(A.difference(B))
     },
     'intersect:':(rec:Obj, args:Array<Obj>):Obj => {
-        let A = rec.get_js_slot('jsvalue') as JSSet
-        let B = args[0].get_js_slot('jsvalue') as JSSet
+        let A = rec.get_js_slot(JS_VALUE) as JSSet
+        let B = args[0].get_js_slot(JS_VALUE) as JSSet
         return SetObj(A.intersect(B))
     },
 })
-SetProto._make_js_slot("jsvalue",new JSSet())
-export const SetObj = (obj:JSSet) => new Obj('Set',SetProto,{"jsvalue":obj})
+SetProto._make_js_slot(JS_VALUE,new JSSet())
+export const SetObj = (obj:JSSet) => new Obj('Set',SetProto,{"_jsvalue":obj})
 
 
 export function setup_arrays(scope:Obj) {

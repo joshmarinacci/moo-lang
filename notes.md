@@ -180,8 +180,9 @@ next to fix
 
 ## Blocks
 * [x] delete dead cod
-* [ ] make sure all native methods are extending a common Block class
-* [ ] Remove the direct call to method function. Instead call something on the Block which calls the method function. Maybe a new JS base class of Block? Also overrides the lookup_method() to customize self.
+* [x] make sure all native methods are extending a common Block class
+* [ ] Remove the direct call to method function. Instead call something on the Block which calls the method function. Maybe a new JS base class of Block? 
+* [ ] ActivationObj overrides the lookup_method() to customize self.
 * [ ] Use a constant for the name _jsvalue and make sure all native wrapper methods are using it.
 * [ ] Create a generic JS invoker so the DOM can do  
 * [ ] self doNativeCall: ‘append’ target: self _jsvalue with: child _jsvalue.

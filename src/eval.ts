@@ -1,6 +1,6 @@
 import {JoshLogger} from "./util.ts";
 
-import {isNil, NilObj, Obj} from "./obj.ts";
+import {isNil, JS_VALUE, NilObj, Obj} from "./obj.ts";
 import {NumObj} from "./number.ts";
 import {StrObj} from "./string.ts";
 import {objsEqual} from "./debug.ts";
@@ -9,11 +9,8 @@ import type {
     Ast,
     BinaryCall,
     BlockLiteral,
-    Group,
     KeywordCall,
-    MessageCall,
     NumberLiteral,
-    Statement,
     StringLiteral,
     UnaryCall
 } from "./ast.ts";
@@ -41,7 +38,7 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
             return method(rec,[])
         }
         if (method.is_kind_of("NativeMethod")) {
-            return (method.get_js_slot('jsvalue') as Function)(rec,[])
+            return (method.get_js_slot(JS_VALUE) as Function)(rec,[])
         }
         if (method.name === 'Block') {
             method.parent = rec
@@ -64,7 +61,7 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
             return method(rec,[arg])
         }
         if (method.is_kind_of("NativeMethod")) {
-            return (method.get_js_slot('jsvalue') as Function)(rec,[arg])
+            return (method.get_js_slot(JS_VALUE) as Function)(rec,[arg])
         }
     }
     if(call.type === 'keyword-call') {
@@ -78,7 +75,7 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
             return method(rec,args)
         }
         if (method.is_kind_of("NativeMethod")) {
-            return (method.get_js_slot('jsvalue') as Function)(rec,args)
+            return (method.get_js_slot(JS_VALUE) as Function)(rec,args)
         }
         if (method.name === 'Block') {
             method.parent = rec

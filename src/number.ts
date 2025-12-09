@@ -55,7 +55,7 @@ const NumberProto = make_native_obj("NumberProto", ObjectProto, {
     'print':(rec:Obj):Obj => StrObj(rec._get_js_number() + ''),
     'negate':(rec:Obj):Obj => NumObj(-rec._get_js_number())
 });
-export const NumObj = (value:number):Obj => new Obj("NumberLiteral", NumberProto, { 'jsvalue': value,})
+export const NumObj = (value:number):Obj => new Obj("NumberLiteral", NumberProto, { '_jsvalue': value,})
 
 export function setup_number(scope: Obj) {
     scope._make_method_slot("Number", NumberProto)

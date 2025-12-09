@@ -54,7 +54,7 @@ const BooleanProto = make_native_obj("BooleanProto",ObjectProto,{
         return BoolObj(false)
     },
 });
-export const BoolObj = (value:boolean) => new Obj("BooleanLiteral", BooleanProto, {'jsvalue':value})
+export const BoolObj = (value:boolean) => new Obj("BooleanLiteral", BooleanProto, {'_jsvalue':value})
 
 export function setup_boolean(scope: Obj) {
     scope._make_method_slot("Boolean", BooleanProto)

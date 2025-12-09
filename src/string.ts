@@ -18,5 +18,5 @@ export const StringProto = make_native_obj("StringProto",ObjectProto,{
         return StrObj(rec._get_js_string())
     }
 });
-export const StrObj = (value:string):Obj => new Obj("StringLiteral", StringProto, {'jsvalue': value})
+export const StrObj = (value:string):Obj => new Obj("StringLiteral", StringProto, {'_jsvalue': value})
 

@@ -9,6 +9,7 @@ export function isNil(method: Obj) {
 const d = new JoshLogger()
 d.disable()
 
+export const JS_VALUE = "_jsvalue"
 
 export class Obj {
     name: string;
@@ -176,22 +177,22 @@ export class Obj {
         return this._method_slots.get(name)
     }
     _get_js_number():number {
-        return this.get_js_slot('jsvalue') as number
+        return this.get_js_slot(JS_VALUE) as number
     }
     _get_js_string():string {
-        return this.get_js_slot('jsvalue') as string
+        return this.get_js_slot(JS_VALUE) as string
     }
     _get_js_boolean():boolean {
-        return this.get_js_slot('jsvalue') as boolean
+        return this.get_js_slot(JS_VALUE) as boolean
     }
     _get_js_array():Array<Obj> {
-        return this.get_js_slot('jsvalue') as Array<Obj>
+        return this.get_js_slot(JS_VALUE) as Array<Obj>
     }
     _get_js_record():Record<string,Obj> {
-        return this.get_js_slot('jsvalue') as Record<string,Obj>
+        return this.get_js_slot(JS_VALUE) as Record<string,Obj>
     }
     _get_js_unknown():unknown {
-        return this.get_js_slot('jsvalue') as unknown
+        return this.get_js_slot(JS_VALUE) as unknown
     }
 
     clone() {
@@ -221,8 +222,8 @@ export class Obj {
         for(let key of this._method_slots.keys()) {
             let value = this._method_slots.get(key)
             if (value instanceof Obj) {
-                if (value.has_slot('jsvalue')) {
-                    d.p("slot " + key, value.name, value.get_js_slot('jsvalue') + "")
+                if (value.has_slot(JS_VALUE)) {
+                    d.p("slot " + key, value.name, value.get_js_slot(JS_VALUE) + "")
                 } else {
                     d.p("slot " + key, value.name + "")
                 }
@@ -315,7 +316,7 @@ export const NativeMethodProto = new Obj("NativeMethodProto", ObjectProto, {})
 export type NativeMethodSigature = (rec:Obj, args:Array<Obj>) => Obj;
 export const NatMeth = (fun:NativeMethodSigature):Obj => {
     return new Obj("NativeMethod", NativeMethodProto, {
-        'jsvalue': fun,
+        '_jsvalue': fun,
     })
 }
 export function setup_object(scope: Obj) {
