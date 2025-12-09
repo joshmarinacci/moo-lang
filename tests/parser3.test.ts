@@ -17,10 +17,7 @@ import {
     Unary
 } from "../src/ast2.ts";
 import assert from "node:assert";
-import {cval} from "../src/eval.ts";
-import {NumObj} from "../src/number.ts";
-import {match} from "./common.ts";
-import {ArrayLiteral} from "../src/parser.ts";
+
 
 export function precedence(source:string, target:Ast2) {
     // console.log("====== " + source)

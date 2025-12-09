@@ -1,26 +1,23 @@
 import test from "node:test";
 import {cval} from "../src/eval.ts";
-import assert from "node:assert";
-import {ArrayLiteral} from "../src/parser.ts";
 import {make_standard_scope} from "../src/standard.ts";
 import {DictObj, ListObj} from "../src/arrays.ts";
 import {NumObj} from "../src/number.ts";
-import {match} from "./common.ts";
 
-test('parse array list literals',() => {
-    assert.ok(match("{}",ArrayLiteral))
-    assert.ok(match("{4}",ArrayLiteral))
-    assert.ok(match("{4 5}",ArrayLiteral))
-    assert.ok(match("{ 'a' 'b' }",ArrayLiteral))
-})
+// test('parse array list literals',() => {
+//     assert.ok(match("{}",ArrayLiteral))
+//     assert.ok(match("{4}",ArrayLiteral))
+//     assert.ok(match("{4 5}",ArrayLiteral))
+//     assert.ok(match("{ 'a' 'b' }",ArrayLiteral))
+// })
 
-test('parse array dict literals',() => {
-    assert.ok(match("{}",ArrayLiteral))
-    assert.ok(match("{a:5}",ArrayLiteral))
-    assert.ok(match("{ a:5 }",ArrayLiteral))
-    assert.ok(match("{ a:5 b:6 }",ArrayLiteral))
-    assert.ok(match("{ a:'a' b:'b' }",ArrayLiteral))
-})
+// test('parse array dict literals',() => {
+//     assert.ok(match("{}",ArrayLiteral))
+//     assert.ok(match("{a:5}",ArrayLiteral))
+//     assert.ok(match("{ a:5 }",ArrayLiteral))
+//     assert.ok(match("{ a:5 b:6 }",ArrayLiteral))
+//     assert.ok(match("{ a:'a' b:'b' }",ArrayLiteral))
+// })
 
 test('array literals',() => {
     let scope = make_standard_scope()

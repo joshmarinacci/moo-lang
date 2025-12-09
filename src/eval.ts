@@ -194,7 +194,6 @@ export function eval_ast(ast:Ast2, scope:Obj):Obj {
 }
 
 
-const SymRef = (value:string):Obj => new Obj("SymbolReference",ObjectProto,{'jsvalue':value})
 let BLOCK_COUNT = 0
 const BlockProto = new Obj("BlockProto",ObjectProto,{
     'print':(rec:Obj)=> {
@@ -300,40 +299,3 @@ export function sval(code:string, scope:Obj, expected?:Obj) {
         assert(objsEqual(last, expected))
     }
 }
-
-
-/*
-
-    match / switch / case statement
-
-
-    three := n mod 3 == 0.
-    five  := n mod 5 == 0.
-    result := case
-        when (three and five) "FizzBuzz"
-        when (three) "Fizz"
-        when (five)  "Buzz"
-        default "Error"
-    result print.
-
-    case is an object which
-    when is a method on the object which takes a boolean and an expression
-    when cond exp
-        if cond.ret == nil
-            if cond evaluates to true set case.ret := expr
-            if cond evaluates to false, set case.ret := nil
-            return self
-        else
-            eval nothing
-            return self
-    default exp
-        if cond.ret == nil
-            return exp
-        else
-            return cond.ret
-
-   All of the 'when' messages are evaluated, then the default expression returns the value of the successful 'when' expression
-   otherwise it returns the value of the default expression.
-
-
- */
