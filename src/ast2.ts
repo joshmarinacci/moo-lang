@@ -110,7 +110,7 @@ const tab = (inset:number)=> {
 export function a2s(ast: Ast2, inset:number):string {
     switch (ast.type) {
         case 'statement': return tab(inset) + a2s(ast.value,inset) + "."
-        case 'group': return `(${ast.body.map(a => a2s(a,inset)).join(' ')}))`
+        case 'group': return `(${ast.body.map(a => a2s(a,inset)).join(' ')})`
 
         case 'plain-identifier': return ast.name
         case 'symbol-identifier': return ast.name

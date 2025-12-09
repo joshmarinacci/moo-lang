@@ -151,12 +151,15 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
         }
     }
     if(call.type === 'binary-call') {
+        d.p("receiver is",rec)
+        d.p('operator name:',call.operator.name)
         let method = rec.lookup_slot(call.operator.name)
         if (isNil(method)) {
             throw new Error(`could not find method '${call.operator.name}' on ${rec.print()}'`)
         }
+        d.p('actual method is',method)
         let arg = eval_ast(call.argument,scope)
-        // console.log('method is',method)
+        d.p("arg is",arg)
         if (method instanceof Function) {
             return method(rec,[arg])
         }
@@ -295,6 +298,13 @@ const BlockProto = new Obj("BlockProto",ObjectProto,{
         let body = rec.get_js_slot('body') as Array<Statement>
         if(!Array.isArray(body)) throw new Error("block body isn't an array")
         let scope = new Obj(`block-activation-${++BLOCK_COUNT}`,rec,{})
+        let old_lookup = scope.lookup_slot
+        scope.lookup_slot = function(name:string):Obj {
+            if(name === 'self') {
+                return this.parent.parent
+            }
+            return old_lookup.call(scope,name)
+        }
         if(params.length !== args.length) {
             console.warn("parameters and args for block are different lengths")
             console.log(rec.print())

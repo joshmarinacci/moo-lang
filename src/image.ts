@@ -1,11 +1,11 @@
 import {cval, eval_block_obj} from "./eval.ts";
 import {Bitmap, encodePNGToStream, make} from "pureimage"
 import * as fs from "node:fs";
-import {NilObj, Obj, ObjectProto} from "./obj.ts";
+import {make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
 import {NumObj} from "./number.ts";
 
 export function setup_image(scope:Obj) {
-    const ImageProto = new Obj("ImageProto",ObjectProto,{
+    const ImageProto = make_native_obj("ImageProto",ObjectProto,{
         'makeWidth:height:':(rec:Obj, args:Array<Obj>):Obj => {
             let image = new Obj("Image",ImageProto,{});
             image._make_data_slot("width",args[0])
