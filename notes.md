@@ -184,10 +184,10 @@ next to fix
 * [ ] Remove the direct call to method function. Instead call something on the Block which calls the method function. Maybe a new JS base class of Block? 
 * [x] ActivationObj overrides the lookup_method() to customize self.
 * [x] Use a constant for the name _jsvalue and make sure all native wrapper methods are using it.
+* [x] Implement 55 square in pure ST code. `self value star self value`.
 
 * [ ] Create a generic JS invoker so the DOM can do  
-* [ ] self doNativeCall: ‘append’ target: self _jsvalue with: child _jsvalue.
-* [ ] Implement 55 square in pure ST code. `self value star self value`.
+* [ ] `self doNativeCall: ‘append’ target: self _jsvalue with: child _jsvalue`.
 * [ ] Implement pow in pure ST code. `self doNativeCall: pow target: Math with: self _jsvalue with: arg0 _jsvalue`.
 * [ ] change makeSlot to understands: ?
 
