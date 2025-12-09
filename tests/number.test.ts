@@ -4,7 +4,7 @@ import {NumObj} from "../src/number.ts";
 import {Obj} from "../src/obj.ts";
 import {StrObj} from "../src/string.ts";
 import {BoolObj} from "../src/boolean.ts";
-import {cval} from "./eval.test.ts";
+import {cval, mval} from "./eval.test.ts";
 import {sval} from "../src/eval.ts";
 
 test('arithmetic',() => {
@@ -39,7 +39,7 @@ test('common protocol',() => {
 
 test('units',() => {
     let scope = make_standard_scope()
-    cval(`[
+    mval(`
         Global makeSlot: "UnitNumberProto" with: (Object clone).
         UnitNumberProto makeSlot: "name" with: "UnitNumber".
         UnitNumberProto makeSlot: "+" with: [b |
@@ -78,12 +78,12 @@ test('units',() => {
         ].
         
         UnitNumber make: 10 unit: 'foo' dimension: 1.
-    ] value.`,scope)
-    cval(`[
+    `,scope)
+    mval(`
         A := (UnitNumber make: 10 unit: 'meter' dimension: 1).
         A dump.
         Debug equals: (A amount) with: 10.
-    ] value.`,scope)
+    `,scope)
     // cval(`[
     //     Debug equals: (A unit) 'meter'.
     //     Debug equals: (A dimension) 1.

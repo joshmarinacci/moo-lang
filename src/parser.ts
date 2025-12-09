@@ -26,6 +26,7 @@ export function parse(input:string, rule:string):Ast {
     const mooGrammar = ohm.grammar(String.raw`
 Moo {
   Exp         = Return | Assignment | Keyword | Binary | Unary | Group | Block | ArrayLiteral | String | ident | Number
+  BlockBody   = Statement* Exp?
   Block = "[" BlockArgs? Statement* Exp? "]"
   BlockArgs   = ident* "|"
   Statement   = (Assignment | Exp) "."
@@ -70,6 +71,11 @@ Moo {
             let bod = body.children.map(ch => ch.ast())
             if(exp.ast().length > 0) bod.push(Stmt(exp.ast()[0]))
             return BlkArgs(args.ast().flat(), bod)
+        },
+        BlockBody:(body,exp) => {
+            let bod = body.children.map(ch => ch.ast())
+            if(exp.ast().length > 0) bod.push(Stmt(exp.ast()[0]))
+            return bod
         },
         Statement:(value,_period) => Stmt(value.ast()),
         Unary:(receiver, method)=> Method(receiver.ast(), Unary(method.ast())),
