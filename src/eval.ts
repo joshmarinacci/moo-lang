@@ -5,7 +5,7 @@ import {NumObj} from "./number.ts";
 import {StrObj} from "./string.ts";
 import {objsEqual} from "./debug.ts";
 import {parse} from "./parser3.ts";
-import {AstToString} from "./ast2.ts"
+import {AstToSource, AstToString} from "./ast2.ts"
 import type {
     Ast2,
     BinaryCall,
@@ -285,6 +285,10 @@ export function eval_ast(ast:Ast2, scope:Obj):Obj {
 const SymRef = (value:string):Obj => new Obj("SymbolReference",ObjectProto,{'jsvalue':value})
 let BLOCK_COUNT = 0
 const BlockProto = new Obj("BlockProto",ObjectProto,{
+    'print':(rec:Obj)=> {
+        let body = rec.get_js_slot('body') as Array<Statement>
+        return StrObj(body.map(st => AstToSource(st)).join('\n'))
+    },
     'value':(rec:Obj,args:Array<Obj>) => {
         d.p("inside of the block")
         let params:Array<PlainId> = rec.get_slot('args') as unknown as Array<PlainId>

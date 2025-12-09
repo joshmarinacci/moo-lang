@@ -97,3 +97,39 @@ export function AstToString(ast: Ast2): string {
     str += ast.type + ' '
     return str
 }
+export function AstToSource(ast: Ast2):string {
+    return a2s(ast, 0)
+}
+const tab = (inset:number)=> {
+    let str = ""
+    for(let i=0; i<inset; i++) {
+        str += "  "
+    }
+    return str
+}
+export function a2s(ast: Ast2, inset:number):string {
+    switch (ast.type) {
+        case 'statement': return tab(inset) + a2s(ast.value,inset) + "."
+        case 'group': return `(${ast.body.map(a => a2s(a,inset)).join(' ')}))`
+
+        case 'plain-identifier': return ast.name
+        case 'symbol-identifier': return ast.name
+        case 'number-literal': return ast.value+''
+        case 'string-literal': return `'${ast.value}'`
+        case 'block-literal': return (
+            `[${ast.parameters.map(p => a2s(p,inset)).join(' ')}|`
+            + "\n"
+            + ast.body.map(a => a2s(a,inset+1)).join('\n')
+            +`\n${tab(inset)}]`
+        )
+
+        case "message-call": return `${a2s(ast.receiver,inset)} ${a2s(ast.call,inset)}`
+        case 'binary-call': return `${a2s(ast.operator,inset)} ${a2s(ast.argument,inset)}`
+        case 'unary-call': return `${a2s(ast.message,inset)}`
+        case 'keyword-call': return `${ast.args.map(a => a2s(a,inset)).join(' ')}`
+        case 'keyword-argument': return `${a2s(ast.name,inset)} ${a2s(ast.value,inset)}`
+        case 'keyword-id': return `${ast.name}`
+        case 'assignment': return `${a2s(ast.target,inset)} := ${a2s(ast.value,inset)}`
+    }
+    return `not implemented yet for type '${ast.type}'`
+}
