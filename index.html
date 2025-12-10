@@ -97,7 +97,7 @@ Point makeSlot: "x:y:" with: [x y |
    pt.
 ].
 
-Point makeSlot: "print" with: [ "Point (" + (self x) + "," + (self y) + ")" ].
+Point makeSlot: "print" with: [ "Point (" + self x + "," + self y + ")" ].
 
 Point makeSlot: "+" with: [pt |
    new := Point clone.

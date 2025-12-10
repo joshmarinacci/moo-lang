@@ -179,10 +179,18 @@ test('parse expression',() => {
     precedence("[foo.]",Blk(Stmt(PlnId("foo"))))
 })
 test('parse priority', () => {
+    // multiple binary calls
     precedence('4 + 5 + 6 ', Method(
         Method(Num(4),Binary(SymId('+'),Num(5))), // 4 + 5
         Binary(SymId('+'), Num(6)))) // + 6
 
+    // a unary inside of a binary
+    precedence(`a + b print`,Method(PlnId('a'),Binary(SymId('+'),Method(PlnId('b'),Unary(PlnId('print'))))))
+    precedence(`a print + b`,Method(
+        Method(PlnId('a'), Unary(PlnId('print'))),
+        Binary(SymId('+'),PlnId('b'))))
+
+    // unary inside of a keyword
     precedence('Debug print: self value', Method(PlnId('Debug'),Keyword(
         KeyArg(
             KeyId('print:'),
@@ -190,15 +198,20 @@ test('parse priority', () => {
         ))
     ))
 
+    // binary inside of a keyword
     precedence('Debug print: 4 + 5', Method(PlnId('Debug'),Keyword(
         KeyArg(
             KeyId('print:'),
             Method(Num(4),Binary(SymId('+'),Num(5)))
         ))
     ))
-
-    // unary inside of a binary call
-    precedence(`a + b print`,Method(PlnId('a'),Binary(SymId('+'),Method(PlnId('b'),Unary(PlnId('print'))))))
+    //   new x: self x + (pt x).
+    // precedence(`new x: self value + 5`,Method(PlnId('new'),Keyword(
+    //     KeyArg(KeyId('x:'),
+    //         Method(
+    //             Method(PlnId('self'),Unary(PlnId('value'))),
+    //             Binary(SymId('+'),Num(5))
+    // )))))
 })
 
 test('parse comments',() => {
