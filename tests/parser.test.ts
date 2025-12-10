@@ -53,6 +53,7 @@ test("parse identifier",() => {
     precedence("ABC",PlnId("ABC"))
     precedence("a2bc",PlnId("a2bc"))
     precedence("a_bc",PlnId("a_bc"))
+    precedence("_abc",PlnId("_abc"))
 })
 test("parse string literal",() => {
     precedence(`'abc'`,Str("abc"))

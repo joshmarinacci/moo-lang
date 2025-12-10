@@ -272,9 +272,22 @@ export const ROOT = new Obj("ROOT", null,{
         }
         return NilObj();
     },
+    'understands:with:':(rec:Obj, args:Array<Obj>):Obj => {
+        let slot_name = args[0]._get_js_string()
+        let slot_value = args[1]
+        rec._make_method_slot(slot_name,slot_value)
+        if (slot_value.name === 'Block') {
+            slot_value.parent = rec
+        }
+        return NilObj();
+    },
     'getSlot:':(rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()
         return rec.get_slot(slot_name)
+    },
+    'getJsSlot:':(rec:Obj, args:Array<Obj>):Obj => {
+        let slot_name = args[0]._get_js_string()
+        return rec.get_js_slot(slot_name)
     },
     'setObjectName:':(rec:Obj, args:Array<Obj>):Obj => {
         rec.name = args[0]._get_js_string()

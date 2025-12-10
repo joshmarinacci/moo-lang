@@ -22,6 +22,53 @@ function root_fixup(scope:Obj) {
         return StrObj('native-method')
     }))
     ROOT._make_method_slot('isNil',NatMeth((rec:Obj):Obj => BoolObj(false)))
+    ROOT._make_method_slot("jsCall:on:",NatMeth((rec:Obj,args:Array<Obj>):Obj => {
+        console.log("doing js call")
+        let method_name = args[0]._get_js_string()
+        let js_target = args[1]
+        console.log("method name is", method_name)
+        console.log("js target is", js_target)
+        try {
+            let result = js_target[method_name]()
+            console.log("result is",result)
+            return result
+        } catch (e) {
+            console.log("error",e)
+        }
+        return StrObj("this is a string")
+    }))
+    ROOT._make_method_slot("jsCall:on:with:",NatMeth((rec:Obj,args:Array<Obj>):Obj => {
+        let method_name = args[0]._get_js_string()
+        let js_target = args[1]
+        try {
+            let result = js_target[method_name](args[2])
+            console.log("result is",result)
+            return result
+        } catch (e) {
+            console.log("error",e)
+        }
+        return StrObj("this is a string")
+    }))
+    ROOT._make_method_slot("jsCall:on:with:with:",NatMeth((rec:Obj,args:Array<Obj>):Obj => {
+        let method_name = args[0]._get_js_string()
+        let js_target = args[1]
+        try {
+            let result = js_target[method_name](args[2],args[3])
+            console.log("result is",result)
+            return result
+        } catch (e) {
+            console.log("error",e)
+        }
+        return StrObj("this is a string")
+    }))
+    ROOT._make_method_slot('jsLookupGlobal:',NatMeth((rec:Obj, args:Array<Obj>)=> {
+        console.log("looking up JS global")
+        let name = args[0]._get_js_string()
+        console.log("looking up ", name)
+        let sym = global[name]
+        console.log("sym is",sym)
+        return sym
+    }))
 }
 
 export function make_common_scope():Obj {

@@ -12,6 +12,11 @@ export function make_browser_scope(document: Document):Obj {
         console.log("debug printing".toUpperCase())
         const cons = document.querySelector("#editor-console") as Element
         args.forEach(arg => {
+            if(arg instanceof Obj) {
+                console.log("DEBUG", arg.to_string())
+            } else {
+                console.log(`unknown object type '${typeof arg}' = `, arg)
+            }
             const li = document.createElement('li')
             li.innerText = arg.to_string()
             cons.append(li)

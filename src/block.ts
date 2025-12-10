@@ -34,7 +34,7 @@ export const BlockProto = new Obj("BlockProto", ObjectProto, {
         if (params.length !== args.length) {
             console.warn("parameters and args for block are different lengths")
             console.log(rec.print())
-            throw new Error(`block requires ${params.length} arguments\n ${rec.print()}`)
+            throw new Error(`block requires ${params.length} arguments. sending ${args.length}\n ${rec.print()}`)
         }
         d.p("params", params)
         for (let i = 0; i < params.length; i++) {

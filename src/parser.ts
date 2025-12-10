@@ -43,7 +43,7 @@ Moo {
   ArrayMap   = "{" MapPair * "}"
   
   Operator    = ("+" | "-" | "*" | "/" | "<" | ">" | "=" | "!")+
-  ident       = letter (letter|digit|"_")* 
+  ident       = (letter|"_") (letter|digit|"_")* 
   kident      = letter (letter|digit|"_")* ":"
   Number      = num2 | num16 | float | integer
   dig         = digit | "_"

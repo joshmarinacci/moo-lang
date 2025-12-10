@@ -33,8 +33,14 @@ const DebugProto = make_native_obj("DebugProto",ObjectProto,{
         return NilObj()
     },
     'print:':(rec:Obj, args:Array<Obj>) => {
-        // d.p("debug printing".toUpperCase())
-        args.forEach(arg => d.p("DEBUG", arg.to_string()))
+        d.p("debug printing".toUpperCase())
+        args.forEach(arg => {
+            if(arg instanceof Obj) {
+                d.p("DEBUG", arg.to_string())
+            } else {
+                d.p(`unknown object type '${typeof arg}' = `, arg)
+            }
+        })
         return NilObj()
     }
 })
