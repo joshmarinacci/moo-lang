@@ -3,28 +3,48 @@
 This is a minimal implementation of a Smalltalk / Self like language.  
 
 ## Features
-* It uses prototypes (like Self), with single inheritance and has no
-classes & metaclasses. To create a new class like thing (a prototype) clone an existing one.
-* Data slots are created with `make_data_slot:with:`. Methods are created with `understands:with:`. 
-* Moo currently has a subset of the standard number, string, boolean, and object APIs.
-* It has a minimal web-based REPL and a Dom wrapper api to create dom elements manually.
-* It has a minimal JS proxy api so you can manipulate JS objects from Smalltalk. 
+* Moo uses prototypes (like Self), with single inheritance and has no
+classes or metaclasses. To create a new object clone an existing one.
+* Data slots are created with `make_data_slot:with:`. 
+  When you create a data slot the getter and setter are automatically created for you.
+  Ex: `foo make_data_slot: "speed" with: "88"` creates the methods `speed` and `speed:`. 
+* Methods are created with `understands:with:`. 
+* Moo has a subset of the standard number, string, boolean, and collections APIs.
+* It has a minimal web-based REPL and a DOM wrapper api to create HTML elements manually.
+* It has a minimal JS proxy API so you can manipulate JS objects from pure Smalltalk code.
+
+## Limitations
+
+* Moo currently uses a tree-walk interpreter written in Typescript instead of byte code. It is not self-hosting yet and many of the 
+  built-in methods are implemented in TS, not Smalltalk.
+* It doesn't have a debugger and inspector (yet!).
 
 ## Syntax
-Moo uses mostly standard Smalltalk syntax. 
 
-* It adds a JSON like literal syntax for Lists and Dicts. 
-ex: `foo_dict := { x:0, y:55}` and `bar_list :=  {1,2,3}`. 
+Moo uses mostly standard Smalltalk syntax. Notable changes: 
+
 * Comments use `//` instead of double quotes. 
 * Strings can use double or single quotes.
+* Concatenate strings with `+`.
 * Identifiers can begin with `_`. ex: `_abc`. Generally used to indicate something is for internal use only.
 * Numbers can contain `_` within them for clarity. `1_000_000`.
+* It adds a JSON like literal syntax for Lists and Dicts.
+  ex: `foo_dict := { x:0, y:55}` and `bar_list :=  {1,2,3}`.
 
 ## Goals
 
 * to play around with turtle graphics and classic smalltalk algorithms.
 * to create an embedded version implemented in Rust for microcontrollers.
 * to create a web version with a Notion like notebook system that can seamlessly mixes prose and computation.
+* experiment with math like APIs and using Greek symbols for variables and operations.
+ 
+
+## Roadmap
+
+* implement proper debugging and inspection in the
+* implement `doesNotUnderstand:` and message resending.
+* add more APIs to access files, URLs, and manipulate images.
+* build a proper class browser and editor.
 
 ## Resources
 
