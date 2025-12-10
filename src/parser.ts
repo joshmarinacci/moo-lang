@@ -33,7 +33,8 @@ Moo {
   Assignment  = ident ":=" Exp
   Return      = "^" Exp
   Unary       = Exp ident
-  Binary      = Exp Operator Exp
+  Solo        = Group | String | ident | Number
+  Binary      = Exp Operator Solo
   KArg        = kident (ident|Number|String|Block|Group|ArrayLiteral)
   Keyword     = Exp KArg+
   Group       = "(" Exp ")"

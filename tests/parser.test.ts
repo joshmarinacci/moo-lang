@@ -30,6 +30,7 @@ export function parse_statement(source:string, target:Ast) {
 }
 
 test("parse integer",() => {
+    precedence("4",Num(4))
     precedence("67",Num(67))
     precedence("-67",Num(-67))
     precedence("6_7",Num(67))
@@ -40,7 +41,7 @@ test("parse float", () => {
     precedence("0.4_4",Num(0.44))
     precedence("0_0.44",Num(0.44))
 })
-test('parse alt base numbers',() => {
+test('parse base 2 and base 16 numbers',() => {
     precedence("2r0001",Num(1))
     precedence("2r1111",Num(15))
     precedence("16r8",Num(8))
@@ -141,9 +142,42 @@ test('parse expression',() => {
     precedence("4 ",Num(4))
     precedence("(4)",Grp(Num(4)))
     precedence("(add)",Grp(PlnId("add")))
+    precedence('4 + 5',Method(Num(4),Binary(SymId('+'),Num(5))))
     precedence("(4 + 5)",Grp( Method(Num(4), Binary(SymId("+"),Num(5)))))
+    precedence('foo + bar',Method(PlnId("foo"),Binary(SymId('+'),PlnId('bar'))))
+    precedence('foo',PlnId('foo'))
+    precedence('foo print',Method(PlnId("foo"),Unary(PlnId('print'))))
+    precedence('5 print',Method(Num(5),Unary(PlnId('print'))))
+    precedence('(5) print',Method(Grp(Num(5)),Unary(PlnId('print'))))
+    precedence('(foo) print',Method(Grp(PlnId("foo")),Unary(PlnId('print'))))
+
+    precedence('4 + bar ', Method(Num(4),Binary(SymId('+'),PlnId('bar'))))
+    precedence('4 + (5) ', Method(Num(4), Binary(SymId('+'), Grp(Num(5))) ))
+    precedence('(4) + (5) ', Method(Grp(Num(4)), Binary(SymId('+'), Grp(Num(5))) ))
+
+    precedence('foo do: bar ',Method(PlnId("foo"),Keyword(  KArg(KeyId('do:'),PlnId('bar')) )))
+    precedence('foo do: bar with: baz ',Method(PlnId("foo"),Keyword(  KArg(KeyId('do:'),PlnId('bar')), KArg(KeyId('with:'),PlnId('baz')) )))
+
+    precedence('4 do: 5 ', Method(Num(4),Keyword(KArg(KeyId('do:'),Num(5)))))
+    precedence('(4) do: 5 ', Method(Grp(Num(4)), Keyword( KArg(KeyId('do:'),Num(5)))))
+
+    precedence('foo := 4 ', Ass(PlnId('foo'), Num(4)))
+    precedence('foo := (4) ', Ass(PlnId('foo'), Grp(Num(4))))
+
+    precedence('foo := 4 do: 5 ', Ass(PlnId('foo'), Method(Num(4), Keyword( KArg(KeyId('do:'),Num(5))))))
+    precedence('foo := 4 do: 5 with: 6 ', Ass(PlnId('foo'), Method(Num(4), Keyword(
+        KArg(KeyId('do:'),Num(5)),
+        KArg(KeyId('with:'),Num(6))
+    ))))
+
     precedence("[foo.]",Blk(Stmt(PlnId("foo"))))
 })
+test('parse priority', () => {
+    precedence('4 + 5 + 6 ', Method(
+        Method(Num(4),Binary(SymId('+'),Num(5))), // 4 + 5
+        Binary(SymId('+'), Num(6)))) // + 6
+})
+
 test('parse comments',() => {
     // precedence('//foo\n',Cmnt('foo'))
 //     assert.ok(!match('//foo',Comment))
@@ -163,43 +197,6 @@ test('parse comments',() => {
 //     ])
 })
 
-test('parse precedence',() => {
-    precedence('foo',PlnId('foo'))
-    precedence('4',Num(4))
-    precedence("'4'",Str("4"))
-    precedence('foo print',Method(PlnId("foo"),Unary(PlnId('print'))))
-    precedence('5 print',Method(Num(5),Unary(PlnId('print'))))
-    precedence('(5) print',Method(Grp(Num(5)),Unary(PlnId('print'))))
-    precedence('(foo) print',Method(Grp(PlnId("foo")),Unary(PlnId('print'))))
-
-    precedence('4 + 5',Method(Num(4),Binary(SymId('+'),Num(5))))
-    precedence('4 * 5',Method(Num(4),Binary(SymId('*'),Num(5))))
-    precedence('foo + bar',Method(PlnId("foo"),Binary(SymId('+'),PlnId('bar'))))
-
-    precedence('4 + bar ', Method(Num(4),Binary(SymId('+'),PlnId('bar'))))
-    precedence('4 + (5) ', Method(Num(4), Binary(SymId('+'), Grp(Num(5))) ))
-    precedence('(4) + (5) ', Method(Grp(Num(4)), Binary(SymId('+'), Grp(Num(5))) ))
-
-    // precedence('4 + 5 + 6 ', Method(Method(Num(4),Binary(SymId('+'),Num(5))), Binary(SymId('+'), Num(6))))
-    precedence('foo do: bar ',Method(PlnId("foo"),Keyword(  KArg(KeyId('do:'),PlnId('bar')) )))
-    precedence('foo do: bar with: baz ',Method(PlnId("foo"),Keyword(  KArg(KeyId('do:'),PlnId('bar')), KArg(KeyId('with:'),PlnId('baz')) )))
-    precedence('4 do: 5 ', Method(Num(4),Keyword(KArg(KeyId('do:'),Num(5)))))
-    precedence('(4) do: 5 ', Method(Grp(Num(4)), Keyword( KArg(KeyId('do:'),Num(5)))))
-    precedence('foo := 4 ', Ass(PlnId('foo'), Num(4)))
-    precedence('foo := (4) ', Ass(PlnId('foo'), Grp(Num(4))))
-    precedence('foo := 4 do: 5 ', Ass(PlnId('foo'), Method(Num(4), Keyword( KArg(KeyId('do:'),Num(5))))))
-    precedence('foo := 4 do: 5 with: 6 ', Ass(PlnId('foo'), Method(Num(4), Keyword(
-        KArg(KeyId('do:'),Num(5)),
-        KArg(KeyId('with:'),Num(6))
-    ))))
-})
-test("parse integer",() => {
-    precedence("4",Num(4))
-    precedence("44",Num(44))
-    precedence("-44",Num(-44))
-    precedence("67",Num(67))
-    precedence("6_7",Num(67))
-})
 test("block statement",() => {
     precedence("[ ]",Blk())
     precedence("[ 4 ]",Blk(Stmt(Num(4))))
