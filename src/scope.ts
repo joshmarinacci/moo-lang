@@ -1,4 +1,4 @@
-import {NativeMethodProto, NatMeth, Obj, ObjectProto, ROOT, setup_object} from "./obj.ts";
+import {NativeMethodProto, NatMeth, NilObj, Obj, ObjectProto, ROOT, setup_object} from "./obj.ts";
 import {setup_number} from "./number.ts";
 import {BoolObj, setup_boolean} from "./boolean.ts";
 import {DictObj, ListObj, setup_arrays} from "./arrays.ts";
@@ -59,20 +59,12 @@ function root_fixup(scope:Obj) {
         } catch (e) {
             console.log("error",e)
         }
-        return StrObj("this is a string")
+        return NilObj()
     }))
-    ROOT._make_method_slot('jsLookupGlobal:',NatMeth((rec:Obj, args:Array<Obj>)=> {
-        console.log("looking up JS global")
-        let name = args[0]._get_js_string()
-        console.log("looking up ", name)
-        let sym = global[name]
-        console.log("sym is",sym)
-        return sym
-    }))
+    ROOT._make_method_slot('jsLookupGlobal:',NatMeth((rec:Obj, args:Array<Obj>)=> global[args[0]._get_js_string()]))
 }
 
 export function make_common_scope():Obj {
-    // console.log("doing setup common")
     let scope = new Obj("Global", ROOT, {});
     setup_object(scope)
     setup_number(scope)
