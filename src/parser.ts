@@ -32,9 +32,9 @@ Moo {
   Statement   = (Assignment | Exp) "."
   Assignment  = ident ":=" Exp
   Return      = "^" Exp
-  Unary       = Exp ~kident ident
   Solo        = Group | String | ident | Number | String | Block | ArrayLiteral
-  Binary      = Exp Operator Solo
+  Unary       = Exp ~kident ident
+  Binary      = Exp Operator (Unary | Solo)
   KeyArg        = kident (Unary | Binary | Solo)
   Keyword     = Exp KeyArg+
   Group       = "(" Exp ")"

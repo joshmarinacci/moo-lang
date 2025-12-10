@@ -196,6 +196,9 @@ test('parse priority', () => {
             Method(Num(4),Binary(SymId('+'),Num(5)))
         ))
     ))
+
+    // unary inside of a binary call
+    precedence(`a + b print`,Method(PlnId('a'),Binary(SymId('+'),Method(PlnId('b'),Unary(PlnId('print'))))))
 })
 
 test('parse comments',() => {

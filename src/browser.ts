@@ -18,7 +18,7 @@ export function make_browser_scope(document: Document):Obj {
                 console.log(`unknown object type '${typeof arg}' = `, arg)
             }
             const li = document.createElement('li')
-            li.innerText = arg.to_string()
+            li.innerText = "DEBUG: " + arg.to_string()
             cons.append(li)
         })
         cons.scrollTop = cons.scrollHeight

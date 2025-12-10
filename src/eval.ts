@@ -64,6 +64,13 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
         if (method.is_kind_of("NativeMethod")) {
             return (method.get_js_slot(JS_VALUE) as Function)(rec,[arg])
         }
+        if (method.name === 'Block') {
+            method.parent = rec
+            let meth = method.get_js_slot('value') as Function
+            if (meth instanceof Function) {
+                return meth(method,[arg])
+            }
+        }
     }
     if(call.type === 'keyword-call') {
         let method_name = call.args.map(arg => arg.name.name).join("")

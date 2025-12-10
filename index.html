@@ -78,18 +78,57 @@
 
 <h1>Smalltalk Browser Demo</h1>
 
+<nav>
+
+<script type="application/smalltalk" id="arithmetic-code">
+6+7
+</script>
+<button class="example" id="arithmetic">arithmetic</button>
+
+<script type="application/smalltalk" id="point-code">
+Point := (Object clone).
+Point make_data_slot: "x" with: 0.
+Point make_data_slot: "y" with: 0.
+
+Point makeSlot: "x:y:" with: [x y |
+   pt := Point clone.
+   pt x: x.
+   pt y: y.
+   pt.
+].
+
+Point makeSlot: "print" with: [ "Point (" + (self x) + "," + (self y) + ")" ].
+
+Point makeSlot: "+" with: [pt |
+   new := Point clone.
+   new x: (self x) + (pt x).
+   new y: (self y) + (pt y).
+   new.
+].
+
+pt := Point x: 1 y: 1.
+
+pt2 := Point x: 2 y: 2.
+
+pt3 := pt + pt2.
+Debug print: pt3 print.
+</script>
+<button class="example" id="point">point</button>
+
+</nav>
+
+<button id="execute">doit</button>
 <textarea id="repl"></textarea>
 
 <script type="module">
-    import {NilObj} from "./src/obj.ts";
     import {JoshLogger} from "./src/util.ts";
-    import {eval_ast, eval_statements} from "./src/eval.ts";
+    import {eval_statements} from "./src/eval.ts";
     import {make_browser_scope} from "./src/browser.ts";
-    import {parse} from "./src/parser.ts";
 
     let scope = make_browser_scope(document);
 
     const $ = (sel) => document.querySelector(sel)
+    const $$ = (sel) => document.querySelectorAll(sel)
     const on = (el,type,cb) => el.addEventListener(type,cb)
     const d = new JoshLogger()
 
@@ -132,9 +171,6 @@
     eval_statements(`
         dom := DomProxy clone.
         dom init.
-        button := (dom makeButton: "hi there").
-        Debug print: 'here'.
-        dom append: button.
         Global makeSlot: "dom" with: dom.
     `,scope)
 
@@ -153,6 +189,24 @@
             console.log("executing", selectedText)
             eval_it(selectedText, scope)
         }
+    })
+
+    $$(".example").forEach(ex => {
+        console.log("example",ex)
+        on(ex,'click',() => {
+            let code = $(`#${ex.id}-code`).innerText
+            console.log("using code",code)
+            $("#repl").value = code.trim()
+            $("#repl").select()
+        })
+    })
+    on($("#execute"),'click',() => {
+        const textArea = $("#repl")
+        const selectionStart = textArea.selectionStart;
+        const selectionEnd = textArea.selectionEnd;
+        const selectedText = textArea.value.substring(selectionStart, selectionEnd);
+        console.log("executing", selectedText)
+        eval_it(selectedText, scope)
     })
 </script>
 </body>
