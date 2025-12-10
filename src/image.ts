@@ -6,7 +6,7 @@ import {NumObj} from "./number.ts";
 
 export function setup_image(scope:Obj) {
     const ImageProto = make_native_obj("ImageProto",ObjectProto,{
-        'makeWidth:height:':(rec:Obj, args:Array<Obj>):Obj => {
+        'width:height:':(rec:Obj, args:Array<Obj>):Obj => {
             let image = new Obj("Image",ImageProto,{});
             image._make_data_slot("width",args[0])
             image._make_data_slot("height",args[1])

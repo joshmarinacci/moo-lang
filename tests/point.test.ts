@@ -11,12 +11,12 @@ test('Point class',() => {
         Global makeSlot: "PointProto" with: (Object clone).
         PointProto makeSlot: "name" with: "PointProto".
         PointProto makeSlot: "magnitude" with: [
-            self makeSlot: "xx" with: ((self x) * (self x)).
-            self makeSlot: "yy" with: ((self y) * (self y)).
-            ((self yy) + (self xx)) sqrt.
+            xx := self x * self x.
+            yy := self y * self y.
+            (yy + xx) sqrt.
         ].
         PointProto makeSlot: "+" with: [ a |
-            Point make: ((self x) + (a x)) with: ((self y) + (a y)).
+            Point x: (self x + a x) y: (self y + a y).
         ].
         PointProto makeSlot: "print" with: [ a |
             "Point" + self x + "," + self y + ")".
@@ -27,12 +27,25 @@ test('Point class',() => {
         Point make_data_slot: "y" with: 0.
         Point makeSlot: "name" with: "Point".
 
-        Point makeSlot: "make:with:" with: [ x y |
-            pp := (Point clone).
+        Point makeSlot: "x:y:" with: [ x y |
+            pp := Point clone.
             pp x: x.
             pp y: y.
             pp.
         ].
+        
+        pt1 := Point x: 5 y: 6.
+        Debug equals: pt1 x with: 5.
+        
+        pt2 := Point x: 5 y: 8.
+        Debug equals: pt2 y with: 8.
+        
+        pt3 := pt1 + pt2.
+        Debug equals: pt3 x with: 10.
+        
+        pt4 := Point x: 1 y: 1.
+        // Debug equals: pt4 magnitude with: 1.414213563730951.
+        
 
         88.
     ] value.

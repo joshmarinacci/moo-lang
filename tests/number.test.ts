@@ -41,7 +41,7 @@ test('common protocol',() => {
 test('units',() => {
     let scope = make_standard_scope()
     mval(`
-        Global makeSlot: "UnitNumberProto" with: (Object clone).
+        Global makeSlot: "UnitNumberProto" with: Object clone.
         UnitNumberProto makeSlot: "name" with: "UnitNumber".
         UnitNumberProto makeSlot: "+" with: [b |
             UnitNumber make: ((self amount) + (b amount))
@@ -71,7 +71,7 @@ test('units',() => {
         UnitNumber makeSlot: "name" with: "UnitNumber".
 
         UnitNumber makeSlot: "make:unit:dimension:" with: [a u d |
-            un := (UnitNumber clone).
+            un := UnitNumber clone.
             un amount: a.
             un unit: u.
             un dimension: d.
@@ -81,8 +81,8 @@ test('units',() => {
         UnitNumber make: 10 unit: 'foo' dimension: 1.
     `,scope)
     mval(`
-        A := (UnitNumber make: 10 unit: 'meter' dimension: 1).
-        Debug equals: (A amount) with: 10.
+        A := UnitNumber make: 10 unit: 'meter' dimension: 1.
+        Debug equals: A amount with: 10.
     `,scope)
     // cval(`[
     //     Debug equals: (A unit) 'meter'.

@@ -117,18 +117,18 @@ test('nil',() => {
 })
 test('conditions',() => {
     let scope = make_standard_scope()
-    cval(` (4 < 5) ifTrue: 88.`,scope,NumObj(88))
-    cval(` (4 > 5) ifTrue: 88.`,scope,NilObj())
-    cval(` (4 < 5) ifFalse: 88.`,scope,NilObj())
-    cval(` (4 > 5) ifFalse: 88.`,scope,NumObj(88))
+    cval(` 4 < 5 ifTrue: 88.`,scope,NumObj(88))
+    cval(` 4 > 5 ifTrue: 88.`,scope,NilObj())
+    cval(` 4 < 5 ifFalse: 88.`,scope,NilObj())
+    cval(` 4 > 5 ifFalse: 88.`,scope,NumObj(88))
 
-    cval(` (4 < 5) ifTrue: 88 ifFalse: 89.`,scope,NumObj(88))
-    cval(` (4 > 5) ifTrue: 88 ifFalse: 89.`,scope,NumObj(89))
-    cval(` (4 < 5) ifTrue: (44 + 44) ifFalse: 89.`,scope,NumObj(88))
-    cval(` (4 < 5) ifTrue: (44 - 44) ifFalse: 89.`,scope,NumObj(0))
+    cval(` 4 < 5 ifTrue: 88 ifFalse: 89.`,scope,NumObj(88))
+    cval(` 4 > 5 ifTrue: 88 ifFalse: 89.`,scope,NumObj(89))
+    cval(` 4 < 5 ifTrue: 44 + 44 ifFalse: 89.`,scope,NumObj(88))
+    cval(` 4 < 5 ifTrue: 44 - 44 ifFalse: 89.`,scope,NumObj(0))
 
-    cval(` (4 < 5) ifTrue: [88.] ifFalse: [89.].`,scope,NumObj(88))
-    cval(` (4 > 5) ifTrue: [88.] ifFalse: [89.].`,scope,NumObj(89))
+    cval(` 4 < 5 ifTrue: [88.] ifFalse: [89.].`,scope,NumObj(88))
+    cval(` 4 > 5 ifTrue: [88.] ifFalse: [89.].`,scope,NumObj(89))
 })
 test('Debug tests',() => {
     let scope = make_standard_scope()
@@ -224,9 +224,9 @@ test('fib recursion',() => {
         Global makeSlot: "Math" with: (Object clone).
         Math setObjectName: "Math".
         Math makeSlot: "fib:" with: [n|
-            (n == 0) ifTrue: [ ^ 0. ].
-            (n == 1) ifTrue: [ ^ 1. ].
-            (Math fib: ( n - 2 ) ) + (Math fib: (n - 1 ) ).
+            n == 0 ifTrue: [ ^ 0. ].
+            n == 1 ifTrue: [ ^ 1. ].
+            (Math fib:  n - 2  ) + (Math fib: n - 1 ).
         ].
         Math fib: 6.
      `,scope,NumObj(8))
@@ -238,9 +238,9 @@ test('simple return', () => {
 test('non local return', () => {
     let scope = make_standard_scope();
     cval(`[ 
-        T := (Object clone).
+        T := Object clone.
         T makeSlot: "nl" with: [ 
-          ( 4 > 5 ) cond: [ ^ 1. ] with: [ ^ 2. ].
+           4 > 5 cond: [ ^ 1. ] with: [ ^ 2. ].
         ].
         T nl. 
     ] value.`,scope,NumObj(2))
@@ -252,30 +252,30 @@ test('non local return 2', () => {
 test('eval vector class',() => {
     let scope = make_standard_scope()
     cval(`[
-        Global makeSlot: "Vector" with: (ObjectBase clone).
+        Global makeSlot: "Vector" with: ObjectBase clone.
         Vector setObjectName: "Vector".
         Vector make_data_slot: "x" with: 0.
         Vector make_data_slot: "y" with: 0.
         Vector make_data_slot: "z" with: 0.
-        Vector makeSlot: "makex:y:z:" with: [ xx yy zz |
-            self makeSlot: "v" with: (Vector clone).
+        Vector makeSlot: "x:y:z:" with: [ xx yy zz |
+            v := Vector clone.
             v x: xx.
             v y: yy.
             v z: zz.
             v.
         ].
         Vector makeSlot: "add:" with: [a |
-          Vector makex: ((a x) + (self x))
-                y: ((a y) + (self y))
-                z: ((a z) + (self z)).
+            Vector x: (a x + self x)
+                   y: (a y + self y)
+                   z: (a z + self z).
         ].
-        a := (Vector makex: 1 y: 1 z: 1).
+        a := Vector x: 1 y: 1 z: 1.
         
         a x: 55.
-        Debug equals: (a x) with: 55.
+        Debug equals: a x with: 55.
         
-        b := (Vector makex: 6 y: 7 z: 8).
-        c := (a add: b).
+        b := Vector x: 6 y: 7 z: 8.
+        c := a add: b.
         c z.
     ] value.`,scope,NumObj(9))
 })
@@ -285,8 +285,8 @@ test('fizzbuzz',() => {
     cval(`
     [
     1 range: 100 do: [ n |
-        three := ((n mod: 3) == 0).
-        five := ((n mod: 5) == 0).
+        three := (n mod: 3) == 0.
+        five := (n mod: 5) == 0.
         (three and: five) ifTrue: [ 
             ^ ("FizzBuzz" print).  
         ].

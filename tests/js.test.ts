@@ -21,7 +21,7 @@ test('native JS api',() => {
     
     Number understands: "pow:" with: [ arg |
         Math := self jsLookupGlobal: "Math".
-        value := (self jsCall: "pow" on:Math with: (self getJsSlot: "_jsvalue") with: (arg getJsSlot: "_jsvalue")).
+        value := self jsCall: "pow" on:Math with: (self getJsSlot: "_jsvalue") with: (arg getJsSlot: "_jsvalue").
         Debug print: value.
     ].
     3 pow: 5.

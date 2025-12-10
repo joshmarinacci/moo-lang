@@ -54,17 +54,17 @@ test('list api', () => {
     let scope = make_standard_scope()
     cval(`[
         l := (List clone).
-        Debug equals: (l size) with: 0.
+        Debug equals: l size with: 0.
 
         l add: 1.
-        Debug equals: (l size) with: 1.
+        Debug equals: l size with: 1.
         Debug equals: (l at: 0) with: 1.
 
         l add: 3.
-        Debug equals: (l size) with: 2.
+        Debug equals: l size with: 2.
         
         l at: 1 set: 8.
-        Debug equals: (l size) with: 2.
+        Debug equals: l size with: 2.
         Debug equals: (l at: 1) with: 8.
 
         l do: [ n | n. ].
@@ -72,14 +72,14 @@ test('list api', () => {
         l add: 5.
         
         // array contains 1 8 5
-        Debug equals: ((l select: [n | n > 1. ]) size) with: 2.
-        Debug equals: ((l select: [n | n > 6. ]) size) with: 1.
-        Debug equals: ((l reject: [n | n > 6. ]) size) with: 2.
+        Debug equals: (l select: [n | n > 1. ]) size with: 2.
+        Debug equals: (l select: [n | n > 6. ]) size with: 1.
+        Debug equals: (l reject: [n | n > 6. ]) size with: 2.
 
-        l2 := (l collect: [n | n * 2.]).
+        l2 := l collect: [n | n * 2.].
         
         // array contains 2 16 10
-        Debug equals: (l2 size) with: 3.
+        Debug equals: l2 size with: 3.
         Debug equals: (l2 at: 0) with: 2.
         Debug equals: (l2 at: 1) with: 16.
         
@@ -89,25 +89,25 @@ test('list api', () => {
 test('dict api',() => {
     let scope = make_standard_scope()
     cval(`[
-        dict := (Dict clone).
+        dict := Dict clone.
         dict at: "six" set: 6.
         dict at: "seven" set: 7.
         Debug equals: (dict get: "six") with: 6.
         Debug equals: (dict get: "seven") with: 7.
         dict size.
 
-        keys := (dict keys).
+        keys := dict keys.
         Debug equals: (keys size) with: 2.
         Debug equals: (keys at: 0) with: "six".
         Debug equals: (keys at: 1) with: "seven".
         
-        values := (dict values).
-        Debug equals: (values size) with: 2.
+        values := dict values.
+        Debug equals: values size with: 2.
         Debug equals: (values at: 0) with: 6.
         Debug equals: (values at: 1) with: 7.
 
         
-        values2 := ((dict values) collect: [n | n + 2.]).
+        values2 := (dict values collect: [n | n + 2.]).
         Debug equals: (values2 at: 0) with: 8.
         Debug equals: (values2 at: 1) with: 9.
         
@@ -117,31 +117,31 @@ test('dict api',() => {
 test('set api',() => {
     let scope = make_standard_scope()
     cval(`[
-        set := (Set clone).
+        set := Set clone.
         
         // size
         set add: 1.
-        Debug equals: (set size) with: 1.
+        Debug equals: set size with: 1.
 
         set add: 88.
-        Debug equals: (set size) with: 2.
+        Debug equals: set size with: 2.
 
         // duplicates don't increase the size
         set add: 88.
-        Debug equals: (set size) with: 2.
+        Debug equals: set size with: 2.
 
-        A := (Set withAll: ({ 1 2 3 })).
-        B := (Set withAll: ({ 3 4 5 })).
-        Debug equals: (A size) with: 3.
-        Debug equals: (B size) with: 3.
-        C := (A - B).
-        Debug equals: (C size) with: 2.
+        A := Set withAll: ({ 1 2 3 }).
+        B := Set withAll: ({ 3 4 5 }).
+        Debug equals: A size with: 3.
+        Debug equals: B size with: 3.
+        C := A - B.
+        Debug equals: C size with: 2.
 
-        D := (A + B).
-        Debug equals: (D size) with: 5.
+        D := A + B.
+        Debug equals: D size with: 5.
         
-        E := (A intersect: B).
-        Debug equals: (E size) with: 1.
+        E := A intersect: B.
+        Debug equals: E size with: 1.
 
         67.
         ] value.
