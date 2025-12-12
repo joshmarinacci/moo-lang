@@ -3,7 +3,7 @@ import {eval_block_obj, eval_statements} from "./eval.ts";
 
 
 export function setup_dom(scope: Obj, document: Document) {
-    console.log("dom proxy setup with ",document)
+    console.warn("dom proxy setup with ",document)
     const $ = (sel:string):Element => document.querySelector(sel)
     const on = (el:Element,type:string,cb:unknown) => el.addEventListener(type,cb)
     const DomElementProto = make_native_obj("DomElement",ObjectProto,{
@@ -25,7 +25,7 @@ export function setup_dom(scope: Obj, document: Document) {
 
     const DomProxyProto = make_native_obj("DomProxyProto",ObjectProto,{
         'init':(rec:Obj, args:Array<Obj>):Obj => {
-            console.log("DomProxy.init: setting up the dom proxy")
+            console.warn("DomProxy.init: setting up the dom proxy")
             const editorRoot = document.createElement('div')
             editorRoot.id = "editor-root";
             document.body.appendChild(editorRoot);

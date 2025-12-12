@@ -58,4 +58,10 @@ export class JoshLogger {
     warn(s: string) {
         console.log(this.generate_tab(), s)
     }
+
+    error(...args: any[]) {
+        if(this.enabled) {
+            console.log(this.generate_tab(), ...args)
+        }
+    }
 }

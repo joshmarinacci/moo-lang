@@ -48,9 +48,8 @@ function execute_op(op: ByteOp, stack: Obj[], scope: Obj):Obj {
         let message = op[1] as string
         let rec:Obj = stack.pop() as Obj
         let method = rec.lookup_slot(message)
-        // console.log("method is",method.print())
         if(method.isNil()) {
-            console.log("couldn't find the message")
+            d.p("couldn't find the message")
             return new Obj("Exception",ObjectProto,{"message":`Message not found: '${message}'`})
         }
         stack.push(rec)
@@ -66,9 +65,6 @@ function execute_op(op: ByteOp, stack: Obj[], scope: Obj):Obj {
         args.reverse()
         let method = stack.pop() as Obj
         let rec = stack.pop() as Obj
-        // console.log("method is", method.print())
-        // console.log("receiver is", rec.print())
-        // console.log("args are", args.map(a => a.print()))
         if (method.is_kind_of("NativeMethod")) {
             let ret = (method.get_js_slot(JS_VALUE) as Function)(rec,args)
             stack.push(ret)
@@ -83,8 +79,8 @@ function execute_op(op: ByteOp, stack: Obj[], scope: Obj):Obj {
                 return NilObj()
             }
         }
-        console.log(op)
-        console.log("method is", method)
+        d.error(op)
+        d.error("method is", method)
         throw new Error("shouldn't be here")
     }
     if(name === 'assign') {
@@ -97,6 +93,7 @@ function execute_op(op: ByteOp, stack: Obj[], scope: Obj):Obj {
 }
 
 let d = new JoshLogger()
+d.disable()
 export function execute(code: ByteCode, scope: Obj):Obj {
     let stack:Array<Obj> = []
     d.p("executing")
@@ -106,7 +103,7 @@ export function execute(code: ByteCode, scope: Obj):Obj {
         let ret = execute_op(op,stack,scope)
         d.green(`Stack (${stack.length}) : ` + stack.map(v => v.print()).join(", "))
         if (ret.is_kind_of("Exception")) {
-            console.log("returning exception")
+            d.error("returning exception")
             d.outdent()
             return ret
         }
@@ -127,12 +124,12 @@ function compare_execute(code:ByteCode, expected: Obj) {
         d.red(ret.print())
     }
     if(!objsEqual(ret, expected)) {
-        console.log("not equal")
-        console.log(ret.print())
-        console.log(expected.print())
+        d.p("not equal")
+        d.p(ret.print())
+        d.p(expected.print())
         throw new Error(`${ret.print()} !== ${expected.print()}`)
     } else {
-        console.log('same',ret.print())
+        d.p('same',ret.print())
     }
 }
 
