@@ -49,13 +49,13 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
         }
         if (method.name === 'Block') {
             method.parent = rec
-            let meth = method.get_js_slot('value') as Function
+            let meth = method.get_js_slot('value') as unknown
             if (meth instanceof Function) {
                 return meth(method,[])
             }
-        }
-        if (method instanceof Obj) {
-            return method
+            if (meth instanceof Obj && meth.is_kind_of("NativeMethod")) {
+                return (meth.get_js_slot(JS_VALUE) as Function)(method,[])
+            }
         }
     }
     if(call.type === 'binary-call') {
@@ -72,9 +72,12 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
         }
         if (method.name === 'Block') {
             method.parent = rec
-            let meth = method.get_js_slot('value') as Function
+            let meth = method.get_js_slot('value') as unknown
             if (meth instanceof Function) {
                 return meth(method,[arg])
+            }
+            if (meth instanceof Obj && meth.is_kind_of("NativeMethod")) {
+                return (meth.get_js_slot(JS_VALUE) as Function)(method,[arg])
             }
         }
     }
@@ -93,9 +96,12 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
         }
         if (method.name === 'Block') {
             method.parent = rec
-            let meth = method.get_js_slot('value') as Function
+            let meth = method.get_js_slot('value') as unknown
             if (meth instanceof Function) {
                 return meth(method,args)
+            }
+            if (meth instanceof Obj && meth.is_kind_of("NativeMethod")) {
+                return (meth.get_js_slot(JS_VALUE) as Function)(method,args)
             }
         }
     }

@@ -1,133 +1,16 @@
 import test from "node:test";
-import {JS_VALUE, NilObj, Obj, ObjectProto} from "../src/obj.ts";
+import {NilObj, Obj} from "../src/obj.ts";
 import {NumObj} from "../src/number.ts";
 import {objsEqual} from "../src/debug.ts";
-import {JoshLogger} from "../src/util.ts";
 import {make_standard_scope} from "../src/standard.ts";
 import {parse} from "../src/parser.ts";
-import {type Ast, type BlockLiteral} from "../src/ast.ts";
-import {StrObj} from "../src/string.ts";
-import {BlockProto} from "../src/block.ts";
-
-type OpType = 'lookup-message'
-            | 'send-message'
-            | 'return-value'
-            | 'load-literal-number'
-            | 'load-plain-id'
-            | 'load-literal-string'
-            | 'create-literal-block'
-            | 'assign'
-type ByteOp = [OpType,unknown]
-type ByteCode = Array<ByteOp>;
-
-let d = new JoshLogger()
-d.disable()
-
-function execute_op(op: ByteOp, stack: Obj[], scope: Obj):Obj {
-    let name = op[0]
-    if(name === 'load-literal-number') {
-        stack.push(NumObj(op[1] as number))
-        return NilObj()
-    }
-    if(name === 'load-literal-string') {
-        stack.push(StrObj(op[1] as string))
-        return NilObj()
-    }
-    if(name === 'create-literal-block') {
-        let blk = op[1] as BlockLiteral
-        let blk2 = BlockProto.clone()
-        blk2.name = 'Block'
-        blk2._make_js_slot('args',blk.parameters);
-        blk2._make_js_slot('body',blk.body);
-        blk2.parent = scope;
-        stack.push(blk2)
-        return NilObj()
-    }
-    if(name === 'load-plain-id') {
-        stack.push(scope.lookup_slot(op[1] as string))
-        return NilObj()
-    }
-    if(name === 'lookup-message') {
-        let message = op[1] as string
-        let rec:Obj = stack.pop() as Obj
-        let method = rec.lookup_slot(message)
-        if(method.isNil()) {
-            d.p("couldn't find the message")
-            return new Obj("Exception",ObjectProto,{"message":`Message not found: '${message}'`})
-        }
-        stack.push(rec)
-        stack.push(method)
-        return NilObj()
-    }
-    if(name === 'send-message') {
-        let arg_count = op[1] as number
-        let args = []
-        for(let i=0; i<arg_count; i++) {
-            args.push(stack.pop())
-        }
-        args.reverse()
-        let method = stack.pop() as Obj
-        let rec = stack.pop() as Obj
-        if (method.is_kind_of("NativeMethod")) {
-            let ret = (method.get_js_slot(JS_VALUE) as Function)(rec,args)
-            stack.push(ret)
-            return NilObj()
-        }
-        if (method.name === 'Block') {
-            method.parent = rec
-            let meth = method.get_js_slot('value') as unknown
-            if (meth instanceof Obj && meth.is_kind_of("NativeMethod")) {
-                let ret = (meth.get_js_slot(JS_VALUE) as Function)(method,args)
-                stack.push(ret)
-                return NilObj()
-            }
-            if (meth instanceof Function) {
-                let ret = meth(method,args)
-                stack.push(ret)
-                return NilObj()
-            }
-        }
-        d.error(op)
-        d.error("method is", method)
-        d.p("is native method?",method.is_kind_of('NativeMethod'))
-        d.p("is block method?",method.is_kind_of('Block'))
-        throw new Error("shouldn't be here")
-    }
-    if(name === 'assign') {
-        let value = stack.pop() as Obj
-        let name = stack.pop() as Obj
-        scope._make_method_slot(name._get_js_string(),value)
-        return NilObj()
-    }
-    throw new Error(`unknown bytecode operation '${name}'`)
-}
-
-export function execute(code: ByteCode, scope: Obj):Obj {
-    let stack:Array<Obj> = []
-    d.p("executing")
-    d.indent()
-    for(let op of code) {
-        d.red(`Op: ${op[0]} ${op[1]}`)
-        let ret = execute_op(op,stack,scope)
-        d.green(`Stack (${stack.length}) : ` + stack.map(v => v.print()).join(", "))
-        if (ret.is_kind_of("Exception")) {
-            d.error("returning exception")
-            d.outdent()
-            return ret
-        }
-    }
-    d.outdent()
-    if(stack.length > 0) {
-        return stack.pop() as Obj
-    } else {
-        return NilObj()
-    }
-}
+import {type ByteCode, compile_bytecode, execute_bytecode} from "../src/bytecode.ts";
+import {JoshLogger} from "../src/util.ts";
 
 function compare_execute(code:ByteCode, expected: Obj) {
     d.p("executing",code)
     let scope:Obj = make_standard_scope();
-    let ret = execute(code,scope)
+    let ret = execute_bytecode(code,scope)
     if(ret.is_kind_of("Exception")) {
         d.red(ret.print())
     }
@@ -141,76 +24,15 @@ function compare_execute(code:ByteCode, expected: Obj) {
     }
 }
 
-export function compile(ast: Ast):ByteCode {
-    d.p("compiling",ast)
-    if(Array.isArray(ast)) {
-        return ast.map(a => compile(a)).flat()
-    }
-    if(ast.type === 'statement') {
-        return compile(ast.value)
-    }
-    if(ast.type === 'group') {
-        return ast.body.map(v => compile(v)).flat() as ByteCode
-    }
-    if(ast.type === 'assignment') {
-        return [
-            [['load-literal-string',ast.target.name]],
-            compile(ast.value),
-            [['assign',null]]
-        ].flat() as ByteCode
-    }
-    if(ast.type === 'message-call') {
-        return [
-            compile(ast.receiver),
-            compile(ast.call),
-            // [['return-value',null]]
-        ].flat() as ByteCode
-    }
-    if(ast.type === 'keyword-call') {
-        let message_name = ast.args.map(arg => arg.name.name).join("")
-        d.p("keyword message is " + message_name)
-        let args = ast.args.map(arg => compile(arg.value))
-        return [
-            [['lookup-message',message_name]],
-            args.flat(),
-            [['send-message',args.length]],
-        ].flat() as ByteCode
-    }
-    if(ast.type === 'binary-call') {
-        return [
-            [['lookup-message',ast.operator.name]],
-            compile(ast.argument),
-            [['send-message',1]],
-        ].flat() as ByteCode
-    }
-    if(ast.type === 'unary-call') {
-        return [
-            [['lookup-message',ast.message.name]],
-            [['send-message',0]],
-        ].flat() as ByteCode
-    }
-    if(ast.type === 'number-literal') {
-        return [['load-literal-number',ast.value]]
-    }
-    if(ast.type === 'block-literal') {
-        return [['create-literal-block',ast]]
-    }
-    if(ast.type === 'string-literal') {
-        return [['load-literal-string',ast.value]]
-    }
-    if(ast.type === 'plain-identifier') {
-        return [['load-plain-id',ast.name]]
-    }
-    throw new Error(`unknown ast type ${ast.type}`)
-}
+let d = new JoshLogger()
 
 function cce(source:string,ans:Obj) {
     d.red(source)
-    compare_execute(compile(parse(source,'Exp')),ans)
+    compare_execute(compile_bytecode(parse(source,'Exp')),ans)
 }
 function ccem(source:string,ans:Obj) {
     d.red(source)
-    compare_execute(compile(parse(source,'BlockBody')),ans)
+    compare_execute(compile_bytecode(parse(source,'BlockBody')),ans)
 }
 test("1 + 2 = 3",() => {
     // 1 + 2 returns 3

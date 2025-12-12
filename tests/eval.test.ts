@@ -1,5 +1,5 @@
 import test from "node:test";
-import {eval_ast, sval} from "../src/eval.ts";
+import {eval_ast} from "../src/eval.ts";
 import {make_standard_scope} from "../src/standard.ts";
 import {NilObj, Obj, ObjectProto} from "../src/obj.ts";
 import {NumObj} from "../src/number.ts";
@@ -8,7 +8,7 @@ import {type Ast, type Statement} from "../src/ast.ts";
 import {objsEqual} from "../src/debug.ts";
 import assert from "node:assert";
 import {JoshLogger} from "../src/util.ts";
-import {compile, execute} from "./bytecode.test.ts";
+import {compile_bytecode, execute_bytecode} from "../src/bytecode.ts";
 
 const d = new JoshLogger()
 d.disable()
@@ -58,8 +58,8 @@ export function cval(source:string, scope:Obj, expected:Obj) {
     d.p('ast is',body)
     let ret_twalk = evalTreeWalk(body,scope)
     d.p("tree walk returned",ret_twalk.print())
-    let bytecode = compile(parse(source,'BlockBody'))
-    let ret_stack  =  execute(bytecode,scope)
+    let bytecode = compile_bytecode(parse(source,'BlockBody'))
+    let ret_stack  =  execute_bytecode(bytecode,scope)
 
     d.p("stack returned",ret_stack.print())
     if(!objsEqual(ret_twalk, ret_stack)) {
