@@ -30,12 +30,12 @@ export class Obj {
             throw new Error(`cannot make data slot ${name}. value is null`)
         }
         this._data_slots.set(name,obj)
-        this._make_method_slot(name,(rec:Obj,args:Array<Obj>):Obj =>{
+        this._make_method_slot(name,NatMeth((rec:Obj,args:Array<Obj>):Obj =>{
             return rec._get_data_slot(name)
-        })
-        this._make_method_slot(name+":",(rec:Obj,args:Array<Obj>):Obj =>{
+        }))
+        this._make_method_slot(name+":",NatMeth((rec:Obj,args:Array<Obj>):Obj =>{
             return rec._set_data_slot(name,args[0])
-        })
+        }))
     }
     _get_data_slot(name:string):Obj {
         // console.log(`getting data slot ${name}`)
@@ -271,10 +271,10 @@ export const FakeNatMeth = (fun:NativeMethodSigature):Obj => {
     })
 }
 export const ROOT = new Obj("ROOT", null,{
-    'make_data_slot:with:':(rec:Obj, args:Array<Obj>) => {
+    'make_data_slot:with:':FakeNatMeth((rec:Obj, args:Array<Obj>):Obj => {
         rec._make_data_slot(args[0]._get_js_string(), args[1])
         return NilObj()
-    },
+    }),
     'makeSlot:with:':FakeNatMeth((rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()
         let slot_value = args[1]

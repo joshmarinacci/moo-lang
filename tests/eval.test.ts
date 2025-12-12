@@ -101,7 +101,7 @@ test('scope tests',() => {
     cval(`[ 67. ] value.`,scope,NumObj(67))
     cval(`[ x:=67. x ] value.`,scope,NumObj(67))
     // make an object with one slot
-    mval(`
+    cval(`
         self makeSlot: "v" with: (Object clone).
         v make_data_slot: "w" with: 5.
         v w.
@@ -112,7 +112,7 @@ test('scope tests',() => {
     //     v w.
     // ] value.`,scope,NumObj(5))
 
-    mval(`
+    cval(`
         self makeSlot: "v" with: 5.
         [
           v.

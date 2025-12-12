@@ -51,11 +51,11 @@ export const BlockProto = new Obj("BlockProto", ObjectProto, {
             if (last._is_return) {
                 let target: Obj = last._method_slots.get('target')
                 if (target === scope) {
-                    // d.p("fast return found. returning",last.slots.get('value'))
+                    d.p("fast return found. returning",last._method_slots.get('value'))
                     return last._method_slots.get('value') as Obj
                 }
                 if (target && target.parent === scope) {
-                    // d.p("fast return through parent found. returning",last.slots.get('value'))
+                    d.p("fast return through parent found. returning",last._method_slots.get('value'))
                     return last._method_slots.get('value') as Obj
                 }
                 return last
