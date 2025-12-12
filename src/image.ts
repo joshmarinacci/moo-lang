@@ -56,10 +56,10 @@ export function setup_image(scope:Obj) {
     })
     scope._make_method_slot("Color",ColorProto)
     eval_statement(`[
-        Color makeSlot: "red"   with: 16rFF0000FF.
-        Color makeSlot: "green" with: 16r00FF00FF.
-        Color makeSlot: "blue"  with: 16r0000FFFF.
-        Color makeSlot: "white" with: 16rFFFFFFFF.
-        Color makeSlot: "black" with: 16r000000FF.
+        Color make_data_slot: "red"   with: 16rFF0000FF.
+        Color make_data_slot: "green" with: 16r00FF00FF.
+        Color make_data_slot: "blue"  with: 16r0000FFFF.
+        Color make_data_slot: "white" with: 16rFFFFFFFF.
+        Color make_data_slot: "black" with: 16r000000FF.
         ] value.`,scope)
 }

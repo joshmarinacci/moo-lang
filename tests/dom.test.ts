@@ -1,13 +1,14 @@
 import JSDOM from "jsdom"
 import test from "node:test";
-import {sval} from "../src/eval.ts";
 import {make_browser_scope} from "../src/browser.ts";
-import {mval} from "./eval.test.ts";
+import {cval} from "./eval.test.ts";
+import {NumObj} from "../src/number.ts";
+import {NilObj} from "../src/obj.ts";
 
 test('dom test',() => {
     const { document } = (new JSDOM.JSDOM()).window;
     let scope = make_browser_scope(document)
-    mval(`
+    cval(`
         Global makeSlot: "dom" with: DomProxy clone.
         dom init.
         
@@ -24,6 +25,7 @@ test('dom test',() => {
         
         d2 clear.
         Debug equals: d2 innerHtml with: "".
-     `,scope)
-    sval(`dom clear.`,scope)
+        88.
+     `,scope,NumObj(88))
+    cval(`dom clear.`,scope, NilObj())
 })

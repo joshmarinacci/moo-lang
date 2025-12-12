@@ -1,13 +1,14 @@
 import test from "node:test";
 import {make_standard_scope} from "../src/standard.ts";
-import {cval} from "./eval.test.ts";
+import {cval, mval} from "./eval.test.ts";
+import {NumObj} from "../src/number.ts";
 
 test('set pixels color',() => {
     const scope = make_standard_scope();
-    cval(`[
-        Color makeSlot: "teal" with: (Color from: { 0 255 255 }).
-        Color makeSlot: "yellow" with: (Color from: { 255 255 0 }).
-        Color makeSlot: "magenta" with: (Color from: { 255 0 255 }).
+    mval(`
+        Color make_data_slot: "teal" with: (Color from: { 0 255 255 }).
+        Color make_data_slot: "yellow" with: (Color from: { 255 255 0 }).
+        Color make_data_slot: "magenta" with: (Color from: { 255 0 255 }).
 
         image := Image width: 10 height: 10.
         Debug equals: image width with: 10.
@@ -24,7 +25,8 @@ test('set pixels color',() => {
         image setPixelAt: 6 y:0 color: Color yellow.
         image setPixelAt: 7 y:0 color: Color magenta.
         image save: "output/foo.png".
-    ] value.`,scope);
+        88.
+    `,scope,NumObj(88));
 })
 test('fill image',() => {
     const scope = make_standard_scope()
@@ -36,5 +38,6 @@ test('fill image',() => {
             Color black.
           ].
         image save: "output/bar.png".
-     ] value.`, scope)
+        88.
+     ] value.`, scope, NumObj(88))
 })
