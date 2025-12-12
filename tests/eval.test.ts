@@ -8,6 +8,7 @@ import {type Ast, type Statement} from "../src/ast.ts";
 import {objsEqual} from "../src/debug.ts";
 import assert from "node:assert";
 import {JoshLogger} from "../src/util.ts";
+import {compile, execute} from "./bytecode.test.ts";
 
 const d = new JoshLogger()
 d.disable()
@@ -62,6 +63,42 @@ export function mval(code:string, scope:Obj, expected?:Obj) {
     }
 }
 
+function evalTreeWalk(body:Ast, scope:Obj):Obj {
+    let last = NilObj()
+    if (Array.isArray(body)) {
+        for(let ast of body) {
+            last = eval_ast(ast,scope)
+            if (!last) last = NilObj()
+        }
+    } else {
+        last = eval_ast(body as Ast, scope);
+    }
+    if (last._is_return) last = last.get_slot('value') as Obj;
+    return last
+}
+function compareEval(source:string, scope:Obj, expected:Obj) {
+    d.p('=========')
+    d.p(`code is '${source}'`)
+    let body = parse(source,'BlockBody');
+    d.p('ast is',body)
+    let ret_twalk = evalTreeWalk(body,scope)
+    d.p("tree walk returned",ret_twalk.print())
+    let bytecode = compile(parse(source,'Exp'))
+    let ret_stack  =  execute(bytecode,scope)
+
+    d.p("stack returned",ret_stack.print())
+    if(!objsEqual(ret_twalk, ret_stack)) {
+        console.log("not equal")
+        console.log(ret_twalk.print())
+        console.log(ret_stack.print())
+        throw new Error(`${ret_twalk.print()} !== ${ret_stack.print()}`)
+    }
+}
+test("basic values", () => {
+    let scope:Obj = make_standard_scope();
+    // compareEval('6',scope, NumObj(5))
+    compareEval('5 + 5',scope, NumObj(10))
+})
 test('scope tests',() => {
     let scope:Obj = make_standard_scope();
     // evaluates a number literal

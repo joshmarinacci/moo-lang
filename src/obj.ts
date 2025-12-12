@@ -94,6 +94,13 @@ export class Obj {
         if (this.name === 'NilLiteral') {
             return `Nil`
         }
+        if (this.name === 'NativeMethod') {
+            return `NativeMethod`
+            // return `NativeMethod (${this._get_js_unknown()})`
+        }
+        if (this.name === 'Exception') {
+            return `Exception: ${this.get_slot('message')}`
+        }
         if (this.name === 'Block') {
             return `Block (${this.get_slot('args')}) ${this.get_slot('body')}`
         }
