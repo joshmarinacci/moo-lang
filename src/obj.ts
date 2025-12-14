@@ -121,7 +121,9 @@ export class Obj {
             }
             return key + ":" + val
         })
+        slots = []
         let parent = this.parent?this.parent._safe_print(1):'nil'
+        parent = ''
         return `${this.name} {${slots.join('\n')}}\n ${parent} `
     }
     has_slot(name: string) {

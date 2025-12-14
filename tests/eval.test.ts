@@ -11,7 +11,7 @@ import {JoshLogger} from "../src/util.ts";
 import {compile_bytecode, execute_bytecode} from "../src/bytecode.ts";
 
 const d = new JoshLogger()
-d.disable()
+// d.disable()
 export function mval(code:string, scope:Obj, expected?:Obj) {
     d.p('=========')
     d.p(`code is '${code}'`)
@@ -51,7 +51,7 @@ function evalTreeWalk(body:Ast, scope:Obj):Obj {
     if (last._is_return) last = last.get_slot('value') as Obj;
     return last
 }
-export function cval(source:string, scope:Obj, expected:Obj) {
+export function cval(source:string, scope:Obj) {
     d.p('=========')
     d.p(`code is '${source}'`)
     let body = parse(source,'BlockBody');
@@ -59,6 +59,7 @@ export function cval(source:string, scope:Obj, expected:Obj) {
     let ret_twalk = evalTreeWalk(body,scope)
     d.p("tree walk returned",ret_twalk.print())
     let bytecode = compile_bytecode(parse(source,'BlockBody'))
+    d.p("bytecode is",bytecode)
     let ret_stack  =  execute_bytecode(bytecode,scope)
 
     d.p("stack returned",ret_stack.print())

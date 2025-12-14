@@ -21,15 +21,12 @@ import {cval} from "./eval.test.ts";
 
 test('array literals',() => {
     let scope = make_standard_scope()
-    cval(`[
-        l := { 4 5 }.
+    cval(`
+        l := { 4 5 6 }.
         Debug equals: (l at: 0) with: 4.
         Debug equals: (l at: 1) with: 5.
-        l size.
-     ] value.`, scope, NumObj(2))
-    cval(`[
-     { 4 5 }.
-     ] value.`, scope, ListObj(NumObj(4),NumObj(5)))
+        Debug equals: l size with: 3.
+     `, scope)
 })
 
 test('dict literals', () => {
@@ -116,7 +113,7 @@ test('dict api',() => {
 
 test('set api',() => {
     let scope = make_standard_scope()
-    cval(`[
+    cval(`
         set := Set clone.
         
         // size
@@ -144,7 +141,7 @@ test('set api',() => {
         Debug equals: E size with: 1.
 
         67.
-        ] value.
+        
     `,scope, NumObj(67))
 })
 

@@ -18,7 +18,7 @@ type ByteOp = [OpType, unknown]
 export type ByteCode = Array<ByteOp>;
 
 let d = new JoshLogger()
-d.disable()
+// d.disable()
 
 function execute_op(op: ByteOp, stack: Obj[], scope: Obj): Obj {
     let name = op[0]
@@ -136,7 +136,7 @@ export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
 }
 
 export function compile_bytecode(ast: Ast): ByteCode {
-    d.p("compiling", ast)
+    // d.p("compiling", ast)
     if (Array.isArray(ast)) {
         return ast.map(a => compile_bytecode(a)).flat()
     }
@@ -188,6 +188,32 @@ export function compile_bytecode(ast: Ast): ByteCode {
     }
     if (ast.type === 'block-literal') {
         return [['create-literal-block', ast]]
+    }
+    if (ast.type === 'list-literal') {
+        // return [['create-literal-list', ast]]
+        const temp_var = 'temp-var-1'
+        let codes:Array<ByteOp> = [
+            ['load-literal-string',temp_var],
+            ['load-plain-id','List'],
+            ['lookup-message','clone'],
+            ['send-message',0],
+            ['assign',null],
+        ]
+        ast.body.map(value => {
+            let bt = compile_bytecode(value)
+            codes.push(['load-plain-id',temp_var])
+            codes.push(['lookup-message','add:'])
+            // d.p("making byte code",bt)
+            bt.forEach(code => codes.push(code))
+            codes.push(['send-message',1])
+        })
+        // console.log("ast ",ast)
+        // console.log("final codes",codes)
+        return codes
+    }
+    if (ast.type === 'map-literal') {
+        // return [['create-literal-list', ast]]
+        return []
     }
     if (ast.type === 'string-literal') {
         return [['load-literal-string', ast.value]]
