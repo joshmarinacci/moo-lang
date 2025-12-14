@@ -91,6 +91,11 @@ export class Obj {
         if (this.name === 'BooleanLiteral') {
             return `BooleanLiteral (${this._get_js_boolean()})`;
         }
+        if (this.name === 'Dict') {
+            let rec = this._get_js_record()
+            let contents = Object.keys(rec).map(k => k + ':' + rec[k].print())
+            return `Dict (${contents.join(', ')})`
+        }
         if (this.name === 'NilLiteral') {
             return `Nil`
         }
@@ -186,6 +191,9 @@ export class Obj {
     }
     _get_js_unknown():unknown {
         return this.get_js_slot(JS_VALUE) as unknown
+    }
+    _set_js_unknown(value:unknown) {
+        this._method_slots.set(JS_VALUE,value as Obj)
     }
 
     clone() {

@@ -186,7 +186,11 @@ export const DictProto = make_native_obj('DictProto',ObjectProto, {
     },
 })
 DictProto._make_js_slot(JS_VALUE,{})
-export const DictObj = (obj:Record<string, Obj>) => new Obj("Dict",DictProto,{"_jsvalue": obj})
+export const DictObj = (obj:Record<string, Obj>) => {
+    let dict = DictProto.clone()
+    dict._set_js_unknown(obj)
+    return dict
+}
 
 const SetProto = make_native_obj("SetProto",ObjectProto,{
     'clone':(rec:Obj) => {

@@ -190,8 +190,7 @@ export function compile_bytecode(ast: Ast): ByteCode {
         return [['create-literal-block', ast]]
     }
     if (ast.type === 'list-literal') {
-        // return [['create-literal-list', ast]]
-        const temp_var = 'temp-var-1'
+        const temp_var = 'temp-list-var'
         let codes:Array<ByteOp> = [
             ['load-literal-string',temp_var],
             ['load-plain-id','List'],
@@ -207,13 +206,28 @@ export function compile_bytecode(ast: Ast): ByteCode {
             bt.forEach(code => codes.push(code))
             codes.push(['send-message',1])
         })
-        // console.log("ast ",ast)
-        // console.log("final codes",codes)
         return codes
     }
     if (ast.type === 'map-literal') {
-        // return [['create-literal-list', ast]]
-        return []
+        const temp_var = 'temp-map-var'
+        let codes:Array<ByteOp> = [
+            ['load-literal-string',temp_var],
+            ['load-plain-id','Dict'],
+            ['lookup-message','clone'],
+            ['send-message',0],
+            ['assign',null],
+        ]
+        ast.body.map(pair => {
+            let bt = compile_bytecode(pair.value)
+            codes.push(['load-plain-id',temp_var])
+            codes.push(['lookup-message','at:set:'])
+            bt.forEach(code => {
+                codes.push(['load-literal-string',pair.name.name])
+                codes.push(code)
+            })
+            codes.push(['send-message',2])
+        })
+        return codes
     }
     if (ast.type === 'string-literal') {
         return [['load-literal-string', ast.value]]

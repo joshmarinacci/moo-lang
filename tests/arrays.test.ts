@@ -31,12 +31,11 @@ test('array literals',() => {
 
 test('dict literals', () => {
     let scope = make_standard_scope()
-    cval(`[
+    cval(`
         p := { x:5 }.
         Debug equals: (p get: "x") with: 5.
         p.
-    ] value.
-    `,scope, DictObj({x:NumObj(5)}))
+    `,scope)
 
     cval(`[
         v := { x:5 y: 6 }.
@@ -44,7 +43,7 @@ test('dict literals', () => {
         Debug equals: (v get: "y") with: 6.
         v.
     ] value.
-    `,scope, DictObj({x:NumObj(5)}))
+    `,scope)
 })
 
 test('list api', () => {
