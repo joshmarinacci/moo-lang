@@ -11,7 +11,8 @@ import {JoshLogger} from "../src/util.ts";
 import {compile_bytecode, execute_bytecode} from "../src/bytecode.ts";
 
 const d = new JoshLogger()
-// d.disable()
+d.disable()
+
 export function mval(code:string, scope:Obj, expected?:Obj) {
     d.p('=========')
     d.p(`code is '${code}'`)

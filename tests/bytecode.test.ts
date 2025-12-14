@@ -7,6 +7,9 @@ import {parse} from "../src/parser.ts";
 import {type ByteCode, compile_bytecode, execute_bytecode} from "../src/bytecode.ts";
 import {JoshLogger} from "../src/util.ts";
 
+let d = new JoshLogger()
+d.disable()
+
 function compare_execute(code:ByteCode, expected: Obj) {
     d.p("executing",code)
     let scope:Obj = make_standard_scope();
@@ -24,7 +27,6 @@ function compare_execute(code:ByteCode, expected: Obj) {
     }
 }
 
-let d = new JoshLogger()
 
 function cce(source:string,ans:Obj) {
     d.red(source)

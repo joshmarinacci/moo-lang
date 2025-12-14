@@ -18,7 +18,7 @@ type ByteOp = [OpType, unknown]
 export type ByteCode = Array<ByteOp>;
 
 let d = new JoshLogger()
-// d.disable()
+d.disable()
 
 function execute_op(op: ByteOp, stack: Obj[], scope: Obj): Obj {
     let name = op[0]
