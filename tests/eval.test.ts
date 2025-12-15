@@ -52,7 +52,7 @@ function evalTreeWalk(body:Ast, scope:Obj):Obj {
     if (last._is_return) last = last.get_slot('value') as Obj;
     return last
 }
-export function cval(source:string, scope:Obj) {
+export function cval(source:string, scope:Obj, expected?:Obj) {
     d.p('=========')
     d.p(`code is '${source}'`)
     let body = parse(source,'BlockBody');

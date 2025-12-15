@@ -20,6 +20,45 @@ export type ByteCode = Array<ByteOp>;
 let d = new JoshLogger()
 d.disable()
 
+function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[]):Obj {
+    d.p("perform dispatch",method.print())
+    if(method.name === 'MissingMethod') {
+        let handler = rec.lookup_slot('doesNotUnderstand:')
+        if(handler) {
+            d.p("the missing message name is",method.get_slot('name'))
+            let msg = new Obj("Message",ObjectProto,{})
+            msg._make_data_slot('selector',StrObj(method.get_slot('name')))
+            d.p("doing extra dispatch to handler")
+            return perform_dispatch(handler,rec,[msg],stack)
+        } else {
+            return new Obj("Exception", ObjectProto, {"message": `Message not found: '${method.name}'`})
+        }
+    }
+    if (method.is_kind_of("NativeMethod")) {
+        let ret = (method.get_js_slot(JS_VALUE) as Function)(rec, args)
+        stack.push(ret)
+        return NilObj()
+    }
+    if (method.name === 'Block') {
+        method.parent = rec
+        let meth = method.get_js_slot('value') as unknown
+        if (meth instanceof Obj && meth.is_kind_of("NativeMethod")) {
+            let ret = (meth.get_js_slot(JS_VALUE) as Function)(method, args)
+            stack.push(ret)
+            return NilObj()
+        }
+        if (meth instanceof Function) {
+            let ret = meth(method, args)
+            stack.push(ret)
+            return NilObj()
+        }
+    }
+    d.error("method is", method)
+    d.p("is native method?", method.is_kind_of('NativeMethod'))
+    d.p("is block method?", method.is_kind_of('Block'))
+    throw new Error("shouldn't be here")
+}
+
 function execute_op(op: ByteOp, stack: Obj[], scope: Obj): Obj {
     let name = op[0]
     if (name === 'load-literal-number') {
@@ -54,7 +93,7 @@ function execute_op(op: ByteOp, stack: Obj[], scope: Obj): Obj {
         }
         if (method.isNil()) {
             d.p("couldn't find the message")
-            return new Obj("Exception", ObjectProto, {"message": `Message not found: '${message}'`})
+            method = new Obj("MissingMethod",ObjectProto,{name:message})
         }
         stack.push(rec)
         stack.push(method)
@@ -69,30 +108,7 @@ function execute_op(op: ByteOp, stack: Obj[], scope: Obj): Obj {
         args.reverse()
         let method = stack.pop() as Obj
         let rec = stack.pop() as Obj
-        if (method.is_kind_of("NativeMethod")) {
-            let ret = (method.get_js_slot(JS_VALUE) as Function)(rec, args)
-            stack.push(ret)
-            return NilObj()
-        }
-        if (method.name === 'Block') {
-            method.parent = rec
-            let meth = method.get_js_slot('value') as unknown
-            if (meth instanceof Obj && meth.is_kind_of("NativeMethod")) {
-                let ret = (meth.get_js_slot(JS_VALUE) as Function)(method, args)
-                stack.push(ret)
-                return NilObj()
-            }
-            if (meth instanceof Function) {
-                let ret = meth(method, args)
-                stack.push(ret)
-                return NilObj()
-            }
-        }
-        d.error(op)
-        d.error("method is", method)
-        d.p("is native method?", method.is_kind_of('NativeMethod'))
-        d.p("is block method?", method.is_kind_of('Block'))
-        throw new Error("shouldn't be here")
+        return perform_dispatch(method,rec,args, stack)
     }
     if (name === 'assign') {
         let value = stack.pop() as Obj
@@ -113,7 +129,7 @@ function execute_op(op: ByteOp, stack: Obj[], scope: Obj): Obj {
 
 export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
     let stack: Array<Obj> = []
-    d.p("executing")
+    d.p("start executing", code)
     d.indent()
     for (let op of code) {
         d.red(`Op: ${op[0]} ${op[1]}`)
@@ -126,8 +142,11 @@ export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
         }
     }
     d.outdent()
+    d.p("done executing")
+    d.p("stack left " + stack.length)
     if (stack.length > 0) {
         let last = stack.pop() as Obj
+        d.p("returning",last.print())
         if (last && last._is_return) last = last.get_slot('value') as Obj;
         return last
     } else {

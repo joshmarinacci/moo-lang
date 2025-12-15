@@ -1,6 +1,6 @@
 import {JoshLogger} from "./util.ts";
 
-import {JS_VALUE, NilObj, Obj} from "./obj.ts";
+import {JS_VALUE, NilObj, Obj, ObjectProto} from "./obj.ts";
 import {NumObj} from "./number.ts";
 import {StrObj} from "./string.ts";
 import {objsEqual} from "./debug.ts";
@@ -37,6 +37,14 @@ export function eval_block_obj(method: Obj, args:Array<Obj>) {
 
 function really_perform_call(name:string, rec:Obj, method:unknown, args:Array<Obj>):Obj {
     if (method instanceof Obj && method.isNil()) {
+        let handler = rec.lookup_slot('doesNotUnderstand:')
+        if(handler) {
+            let msg = new Obj("Message",ObjectProto,{})
+            msg._make_data_slot('selector',StrObj(name))
+            msg._make_data_slot('arguments',ListObj(...args))
+            let ret = really_perform_call('doesNotUnderstand:',rec,handler,[msg])
+            return ret
+        }
         throw new Error(`method is nil! could not find method '${name}' on ${rec.print()}`)
     }
     if (method instanceof Function) {
