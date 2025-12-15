@@ -8,10 +8,6 @@
             border: 1px solid #ccc;
             padding: 1rem;
         }
-        #repl {
-            width: 40rem;
-            height: 20rem;
-        }
         #editor-console {
             font-family: monospace;
             border: 1px solid gold;
@@ -73,10 +69,27 @@
             max-height: 10rem;
         }
     </style>
+
+    <style>
+        .cm-scroller {
+            overflow: auto;
+        }
+        .cm-editor {
+            height: 10rem;
+            width: 30rem;
+            border: 1px solid black;
+        }
+    </style>
 </head>
 <body>
 
 <h1>Smalltalk Browser Demo</h1>
+
+<div id="editor-codemirror"></div>
+
+<script type="module">
+</script>
+
 
 <nav>
 
@@ -118,12 +131,14 @@ Debug print: pt3 print.
 </nav>
 
 <button id="execute">doit</button>
-<textarea id="repl"></textarea>
 
 <script type="module">
     import {JoshLogger} from "./src/util.ts";
     import {eval_statements} from "./src/eval.ts";
     import {make_browser_scope} from "./src/browser.ts";
+    import {basicSetup} from "codemirror"
+    import {EditorView, keymap} from "@codemirror/view"
+    import {javascript} from "@codemirror/lang-javascript"
 
     let scope = make_browser_scope(document);
 
@@ -175,42 +190,66 @@ Debug print: pt3 print.
     `,scope)
 
     fetch('./examples/classbrowser.st').then(r => r.text()).then(txt => {
-        console.log("loaded",txt)
+        // console.log("loaded",txt)
         eval_statements(txt,scope)
     })
 
-    on($("#repl"),'change',() => {
-        // console.log("repl changed")
-    })
-    on($("#repl"),'input',(e) => {
-        // console.log("repl input",e)
-    })
-    on($("#repl"),'keydown',(e) => {
-        if(e.key === 'Enter' && e.metaKey) {
-            const textArea = $("#repl")
-            const selectionStart = textArea.selectionStart;
-            const selectionEnd = textArea.selectionEnd;
-            const selectedText = textArea.value.substring(selectionStart, selectionEnd);
-            console.log("executing", selectedText)
-            eval_it(selectedText, scope)
+
+    const custom_keymap = keymap.of([
+        {
+            key: "Cmd-Shift-Enter",
+            run: view => {
+                const selectedText = view.state.selection.ranges
+                    .map(range =>
+                        view.state.doc.sliceString(range.from, range.to)
+                    )
+                    .join("\n");
+                eval_it(selectedText, scope)
+                return true
+            }
         }
+    ])
+
+    const view = new EditorView({
+        doc: "4+5",
+        parent: document.getElementById('editor-codemirror'),
+        extensions: [basicSetup,
+            javascript({typescript:true}),
+            custom_keymap,
+        ]
     })
+
 
     $$(".example").forEach(ex => {
         console.log("example",ex)
         on(ex,'click',() => {
             let code = $(`#${ex.id}-code`).innerText
             console.log("using code",code)
-            $("#repl").value = code.trim()
-            $("#repl").select()
+            // replace the contents of the document
+            view.dispatch({
+                changes: {
+                    from: 0,
+                    to: view.state.doc.length,
+                    insert: code.trim(),//"entirely new document"
+                }
+            });
+
+            // select the entire document
+            view.dispatch({
+                selection: {
+                    anchor: 0,
+                    head: view.state.doc.length
+                }
+            })
         })
     })
     on($("#execute"),'click',() => {
-        const textArea = $("#repl")
-        const selectionStart = textArea.selectionStart;
-        const selectionEnd = textArea.selectionEnd;
-        const selectedText = textArea.value.substring(selectionStart, selectionEnd);
-        console.log("executing", selectedText)
+        const selectedText = view.state.selection.ranges
+            .map(range =>
+                view.state.doc.sliceString(range.from, range.to)
+            )
+            .join("\n");
+        console.log("selectedText", selectedText);
         eval_it(selectedText, scope)
     })
 </script>

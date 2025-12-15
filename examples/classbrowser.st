@@ -9,7 +9,7 @@ logic make_data_slot: "selectedObject" with: "Number".
 logic make_data_slot: "selectedMethod" with: "+".
 
 logic makeSlot: "sendCommand:with:" with: [ cmd arg |
-    Debug print: ("logic got command " + cmd).
+//    Debug print: ("logic got command " + cmd).
     (cmd == "selectedObject") ifTrue: [
         self selectedObject: arg.
         self renderObjects.
@@ -60,16 +60,16 @@ logic makeSlot: "renderMethods" with: [
 
 
 logic makeSlot: "renderSource" with: [
-  Debug print: ("showing the source to " + self selectedObject + " " + self selectedMethod).
+//  Debug print: ("showing the source to " + self selectedObject + " " + self selectedMethod).
   obj := (Global getSlot: (self selectedObject)).
-  Debug print: "got the object".
-  Debug print: obj.
-  Debug print: "selected method is".
+//  Debug print: "got the object".
+//  Debug print: obj.
+//  Debug print: "selected method is".
   methName := self selectedMethod.
-  Debug print: methName.
+//  Debug print: methName.
   methObj := obj getSlot: methName.
-  Debug print: "method object is".
-  Debug print: methObj.
+//  Debug print: "method object is".
+//  Debug print: methObj.
   (logic source) innerHtml: (methObj print).
 ].
 
