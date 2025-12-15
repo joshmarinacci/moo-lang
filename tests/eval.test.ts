@@ -52,33 +52,77 @@ function evalTreeWalk(body:Ast, scope:Obj):Obj {
     if (last._is_return) last = last.get_slot('value') as Obj;
     return last
 }
-export function cval(source:string, scope:Obj, expected?:Obj) {
-    d.p('=========')
-    d.p(`code is '${source}'`)
+export type Options = {
+    expected?:Obj
+    evalOnly?: boolean
+    bytecodeOnly?:boolean
+}
+
+function compare(target: Obj, expected: Obj | undefined) {
+    if(!expected) return
+    if(!objsEqual(target, expected)) {
+        console.log("not equal")
+        console.log(target.print())
+        console.log(expected.print())
+        throw new Error(`${target.print()} !== ${expected.print()}`)
+    }
+}
+
+function do_treewalk(source:string, scope: Obj, opts:Options) {
     let body = parse(source,'BlockBody');
     d.p('ast is',body)
-    let ret_twalk = evalTreeWalk(body,scope)
-    d.p("tree walk returned",ret_twalk.print())
+    d.p("doing tree walk")
+    let ret = evalTreeWalk(body,scope)
+    d.p("tree walk returned",ret.print())
+    compare(ret,opts.expected)
+    return ret
+}
+
+function do_bytecode(source:string, scope: Obj, opts: Options) {
+    d.p("doing bytecode")
     let bytecode = compile_bytecode(parse(source,'BlockBody'))
     d.p("bytecode is",bytecode)
     let ret_bcode  =  execute_bytecode(bytecode,scope)
+    compare(ret_bcode,opts.expected)
+    return ret_bcode
+}
 
-    d.p("stack returned",ret_bcode.print())
-    if(expected) {
-        if(!objsEqual(ret_twalk,expected)) {
-            d.p("tree walk failed")
-            throw new Error(`${ret_twalk.print()} !== ${expected.print()}`)
-        }
-        if(!objsEqual(ret_bcode,expected)) {
-            d.p('bytecode failed')
-            throw new Error(`${ret_bcode.print()} !== ${expected.print()}`)
+export function cval(source:string, scope:Obj, options?:Obj|Options) {
+    let opts:Options = {
+        evalOnly:false,
+        bytecodeOnly:false,
+        expected:undefined,
+    }
+    if(options) {
+        if(options instanceof Obj) {
+            opts.expected = options;
+        } else {
+            options = options as Options
+            if (options.hasOwnProperty('evalOnly')) {
+                opts.evalOnly = options.evalOnly
+            }
+            if (options.hasOwnProperty('bytecodeOnly')) {
+                opts.bytecodeOnly = options.bytecodeOnly
+            }
+            if (options.hasOwnProperty('expected')) {
+                opts.expected = options.expected
+            }
         }
     }
-    if(!objsEqual(ret_twalk, ret_bcode)) {
-        console.log("not equal")
-        console.log(ret_twalk.print())
-        console.log(ret_bcode.print())
-        throw new Error(`${ret_twalk.print()} !== ${ret_bcode.print()}`)
+    d.p('=========')
+    d.p(`code is '${source}'`)
+    if(opts.evalOnly) {
+        return do_treewalk(source,scope, opts)
+    }
+    if(opts.bytecodeOnly) {
+        return do_bytecode(source,scope,opts)
+    }
+    {
+        d.p("doing both types")
+        let ret_twalk = do_treewalk(source,scope, opts)
+        let ret_bcode =  do_bytecode(source,scope,opts)
+        compare(ret_twalk, ret_bcode)
+        return ret_bcode
     }
 }
 test("compare basic values", () => {

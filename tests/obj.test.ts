@@ -39,7 +39,7 @@ test("redispatch message",() => {
         v := foo + 1.
         Debug equals: v with: 68.
         v
-    `,scope,NumObj(68))
+    `,scope,{expected:NumObj(68)})
 })
 // test("redispatch message 2",() => {
 //     let scope:Obj = make_standard_scope()

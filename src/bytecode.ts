@@ -4,6 +4,7 @@ import {JoshLogger} from "./util.ts";
 import {NumObj} from "./number.ts";
 import {StrObj} from "./string.ts";
 import {BlockProto} from "./block.ts";
+import {ListObj} from "./arrays.ts";
 
 type OpType = 'lookup-message'
     | 'send-message'
@@ -28,6 +29,7 @@ function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[]):Obj 
             d.p("the missing message name is",method.get_slot('name'))
             let msg = new Obj("Message",ObjectProto,{})
             msg._make_data_slot('selector',StrObj(method.get_slot('name')))
+            msg._make_data_slot('arguments',ListObj(...args))
             d.p("doing extra dispatch to handler")
             return perform_dispatch(handler,rec,[msg],stack)
         } else {
