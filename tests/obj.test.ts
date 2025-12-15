@@ -24,8 +24,8 @@ test("catch doesNotUnderstand",() => {
 })
 test("send message programmatically",() => {
     let scope:Obj = make_standard_scope()
-    cval(`67 perform: 'print'`,scope,StrObj("67"))
-    cval(`67 perform: '+' with: 1.`,scope,NumObj(68))
+    cval(`67 perform: 'print'`,scope,{expected:StrObj("67"), debug:false})
+    cval(`67 perform: '+' with: 1.`,scope,{expected:NumObj(68), debug:false})
 })
 test("redispatch message",() => {
     let scope:Obj = make_standard_scope()
@@ -33,7 +33,7 @@ test("redispatch message",() => {
         foo := Object clone.
         foo make_data_slot: "delegate" with: 67.
         foo makeSlot: "doesNotUnderstand:" with: [ msg |
-            self delegate perform: msg selector with: msg arguments.
+            self delegate perform: msg selector withArgs: msg arguments.
         ].
 
         v := foo + 1.

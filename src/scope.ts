@@ -29,19 +29,32 @@ function root_fixup(scope:Obj) {
         let method = rec.lookup_slot(method_name)
         // console.log("loaded the method",method)
         return eval_really_perform_call(method_name,rec,method,args2)
-    })),
+    }))
     ROOT._make_method_slot('perform:with:',NatMeth((rec:Obj, args:Array<Obj>):Obj => {
         // console.log("inside object perform:with:")
         // console.log("receiver",rec.print())
         // console.log("args",args.map(a => a.print()).join(", "))
         let method_name = args[0]._get_js_string()
         // console.log("method name is",method_name)
+        let args2:Array<Obj> = [args[1]]
+        let method = rec.lookup_slot(method_name)
+        // console.log("loaded the method",method)
+        // console.log("the first arg is", args2)
+        return eval_really_perform_call(method_name,rec,method,args2)
+    }))
+    ROOT._make_method_slot('perform:withArgs:',NatMeth((rec:Obj, args:Array<Obj>):Obj => {
+        // console.log("inside object perform:withArgs:")
+        // console.log("receiver",rec.print())
+        // console.log("args",args.map(a => a.print()).join(", "))
+        let method_name = args[0]._get_js_string()
+        // console.log("method name is",method_name)
+        // let args2:Array<Obj> = [args[1]]
         let args2:Array<Obj> = args[1]._get_js_array()
         let method = rec.lookup_slot(method_name)
         // console.log("loaded the method",method)
         // console.log("the first arg is", args2)
         return eval_really_perform_call(method_name,rec,method,args2)
-    })),
+    }))
 
     NativeMethodProto._make_method_slot('print', NatMeth((rec: Obj, args: Array<Obj>) => {
         return StrObj('native-method')

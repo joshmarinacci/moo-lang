@@ -56,6 +56,7 @@ export type Options = {
     expected?:Obj
     evalOnly?: boolean
     bytecodeOnly?:boolean
+    debug?:boolean
 }
 
 function compare(target: Obj, expected: Obj | undefined) {
@@ -107,8 +108,12 @@ export function cval(source:string, scope:Obj, options?:Obj|Options) {
             if (options.hasOwnProperty('expected')) {
                 opts.expected = options.expected
             }
+            if (options.hasOwnProperty('debug')) {
+                opts.debug = options.debug
+            }
         }
     }
+    if(opts.debug) d.enable()
     d.p('=========')
     d.p(`code is '${source}'`)
     if(opts.evalOnly) {
