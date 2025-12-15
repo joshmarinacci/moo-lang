@@ -7,8 +7,7 @@ import {StrObj} from "../src/string.ts";
 
 test("clone",() => {
     let scope:Obj = make_standard_scope()
-    cval('Object clone',scope,NumObj(4))
-    // cval('Object crazy',scope,NilObj())
+    cval('Object clone',scope)
 })
 test("catch doesNotUnderstand",() => {
     let scope:Obj = make_standard_scope()
@@ -23,25 +22,25 @@ test("catch doesNotUnderstand",() => {
         foo bar.
     `, scope, NumObj(67))
 })
-// test("send message programmatically",() => {
-//     let scope:Obj = make_standard_scope()
-//     cval(`67 perform: 'print'`,scope,StrObj("67"))
-//     cval(`67 perform: '+' with: 1.`,scope,NumObj(68))
-// })
-// test("redispatch message",() => {
-//     let scope:Obj = make_standard_scope()
-//     cval(`
-//         foo := Object clone.
-//         foo make_data_slot: "delegate" with: 67.
-//         foo makeSlot: "doesNotUnderstand:" with: [ msg |
-//             self delegate perform: msg selector with: msg arguments.
-//         ].
-//
-//         v := foo + 1.
-//         Debug equals: v with: 68.
-//         v
-//     `,scope,NumObj(68))
-// })
+test("send message programmatically",() => {
+    let scope:Obj = make_standard_scope()
+    cval(`67 perform: 'print'`,scope,StrObj("67"))
+    cval(`67 perform: '+' with: 1.`,scope,NumObj(68))
+})
+test("redispatch message",() => {
+    let scope:Obj = make_standard_scope()
+    cval(`
+        foo := Object clone.
+        foo make_data_slot: "delegate" with: 67.
+        foo makeSlot: "doesNotUnderstand:" with: [ msg |
+            self delegate perform: msg selector with: msg arguments.
+        ].
+
+        v := foo + 1.
+        Debug equals: v with: 68.
+        v
+    `,scope,NumObj(68))
+})
 // test("redispatch message 2",() => {
 //     let scope:Obj = make_standard_scope()
 //     cval(`

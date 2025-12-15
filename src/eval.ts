@@ -35,14 +35,14 @@ export function eval_block_obj(method: Obj, args:Array<Obj>) {
     throw new Error("bad failure on evaluating block object")
 }
 
-function really_perform_call(name:string, rec:Obj, method:unknown, args:Array<Obj>):Obj {
+export function eval_really_perform_call(name:string, rec:Obj, method:unknown, args:Array<Obj>):Obj {
     if (method instanceof Obj && method.isNil()) {
         let handler = rec.lookup_slot('doesNotUnderstand:')
         if(handler) {
             let msg = new Obj("Message",ObjectProto,{})
             msg._make_data_slot('selector',StrObj(name))
             msg._make_data_slot('arguments',ListObj(...args))
-            let ret = really_perform_call('doesNotUnderstand:',rec,handler,[msg])
+            let ret = eval_really_perform_call('doesNotUnderstand:',rec,handler,[msg])
             return ret
         }
         throw new Error(`method is nil! could not find method '${name}' on ${rec.print()}`)
@@ -64,18 +64,18 @@ function perform_call(rec: Obj, call: UnaryCall | BinaryCall | KeywordCall, scop
     if(call.type === 'unary-call') {
         let method = rec.lookup_slot(call.message.name)
         let args:Array<Obj> = []
-        return really_perform_call(call.message.name,rec,method,args)
+        return eval_really_perform_call(call.message.name,rec,method,args)
     }
     if(call.type === 'binary-call') {
         let method = rec.lookup_slot(call.operator.name)
         let arg = eval_ast(call.argument,scope)
-        return really_perform_call(call.operator.name, rec,method,[arg])
+        return eval_really_perform_call(call.operator.name, rec,method,[arg])
     }
     if(call.type === 'keyword-call') {
         let method_name = call.args.map(arg => arg.name.name).join("")
         let method = rec.lookup_slot(method_name)
         let args = call.args.map(arg => eval_ast(arg.value,scope))
-        return really_perform_call(method_name, rec,method,args)
+        return eval_really_perform_call(method_name, rec,method,args)
     }
 
     throw new Error("method call not performed properly.")

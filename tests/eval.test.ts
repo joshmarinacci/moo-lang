@@ -61,19 +61,29 @@ export function cval(source:string, scope:Obj, expected?:Obj) {
     d.p("tree walk returned",ret_twalk.print())
     let bytecode = compile_bytecode(parse(source,'BlockBody'))
     d.p("bytecode is",bytecode)
-    let ret_stack  =  execute_bytecode(bytecode,scope)
+    let ret_bcode  =  execute_bytecode(bytecode,scope)
 
-    d.p("stack returned",ret_stack.print())
-    if(!objsEqual(ret_twalk, ret_stack)) {
+    d.p("stack returned",ret_bcode.print())
+    if(expected) {
+        if(!objsEqual(ret_twalk,expected)) {
+            d.p("tree walk failed")
+            throw new Error(`${ret_twalk.print()} !== ${expected.print()}`)
+        }
+        if(!objsEqual(ret_bcode,expected)) {
+            d.p('bytecode failed')
+            throw new Error(`${ret_bcode.print()} !== ${expected.print()}`)
+        }
+    }
+    if(!objsEqual(ret_twalk, ret_bcode)) {
         console.log("not equal")
         console.log(ret_twalk.print())
-        console.log(ret_stack.print())
-        throw new Error(`${ret_twalk.print()} !== ${ret_stack.print()}`)
+        console.log(ret_bcode.print())
+        throw new Error(`${ret_twalk.print()} !== ${ret_bcode.print()}`)
     }
 }
 test("compare basic values", () => {
     let scope:Obj = make_standard_scope();
-    cval('6',scope, NumObj(5))
+    cval('6',scope, NumObj(6))
     cval('5 + 5',scope, NumObj(10))
     cval(` self .`,scope,scope)
     cval(' 5 value .',scope,NumObj(5))

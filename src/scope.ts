@@ -4,6 +4,7 @@ import {BoolObj, setup_boolean} from "./boolean.ts";
 import {DictObj, ListObj, setup_arrays} from "./arrays.ts";
 import {setup_debug} from "./debug.ts";
 import {StrObj} from "./string.ts";
+import {eval_really_perform_call} from "./eval.ts";
 
 function root_fixup(scope:Obj) {
     ROOT._make_method_slot('listSlotNames',NatMeth((rec:Obj, args:Array<Obj>):Obj => {
@@ -18,6 +19,31 @@ function root_fixup(scope:Obj) {
         return DictObj(slots)
     }))
     ROOT._make_method_slot('print',NatMeth((rec:Obj):Obj => StrObj(rec.print())))
+    ROOT._make_method_slot('perform:',NatMeth((rec:Obj, args:Array<Obj>):Obj => {
+        console.log("inside object perform")
+        console.log("receiver",rec.print())
+        console.log("args",args.map(a => a.print()).join(", "))
+        let method_name = args[0]._get_js_string()
+        console.log("method name is",method_name)
+        let args2:Array<Obj> = []
+        let method = rec.lookup_slot(method_name)
+        console.log("loaded the method",method)
+        return eval_really_perform_call(method_name,rec,method,args2)
+    })),
+    ROOT._make_method_slot('perform:with:',NatMeth((rec:Obj, args:Array<Obj>):Obj => {
+        console.log("inside object perform with")
+        console.log("receiver",rec.print())
+        console.log("args",args.map(a => a.print()).join(", "))
+        let method_name = args[0]._get_js_string()
+        console.log("method name is",method_name)
+        let args2:Array<Obj> = [
+            args[1]
+        ]
+        let method = rec.lookup_slot(method_name)
+        console.log("loaded the method",method)
+        return eval_really_perform_call(method_name,rec,method,args2)
+    })),
+
     NativeMethodProto._make_method_slot('print', NatMeth((rec: Obj, args: Array<Obj>) => {
         return StrObj('native-method')
     }))
