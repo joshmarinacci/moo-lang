@@ -76,7 +76,7 @@
         }
         .cm-editor {
             height: 10rem;
-            width: 30rem;
+            width: 100%;
             border: 1px solid black;
         }
     </style>
@@ -131,12 +131,12 @@ Debug print: pt3 print.
 </nav>
 
 <button id="execute">doit</button>
+<p>cmd-shift-enter to evaluate selection</p>
 
 <script type="module">
     import {JoshLogger} from "./src/util.ts";
     import {eval_statements} from "./src/eval.ts";
     import {make_browser_scope} from "./src/browser.ts";
-    // import {basicSetup} from "codemirror"
     import {
         crosshairCursor,
         drawSelection, dropCursor,
@@ -156,7 +156,7 @@ Debug print: pt3 print.
         syntaxHighlighting
     } from "@codemirror/language";
     import {autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap} from "@codemirror/autocomplete"
-    import {defaultKeymap} from "@codemirror/commands"
+    import {defaultKeymap, indentWithTab} from "@codemirror/commands"
 
     let scope = make_browser_scope(document);
 
@@ -208,24 +208,28 @@ Debug print: pt3 print.
     `,scope)
 
     fetch('./examples/classbrowser.st').then(r => r.text()).then(txt => {
-        // console.log("loaded",txt)
         eval_statements(txt,scope)
     })
 
 
+    const eval_selection = (view) => {
+        const selectedText = view.state.selection.ranges
+            .map(range =>
+                view.state.doc.sliceString(range.from, range.to)
+            )
+            .join("\n");
+        eval_it(selectedText, scope)
+        return true
+    }
     const custom_keymap = keymap.of([
         {
+            key: "Cmd-Enter",
+            run: eval_selection
+        },
+        {
             key: "Cmd-Shift-Enter",
-            run: view => {
-                const selectedText = view.state.selection.ranges
-                    .map(range =>
-                        view.state.doc.sliceString(range.from, range.to)
-                    )
-                    .join("\n");
-                eval_it(selectedText, scope)
-                return true
-            }
-        }
+            run: eval_selection
+        },
     ])
 
     const view = new EditorView({
@@ -246,6 +250,7 @@ Debug print: pt3 print.
             rectangularSelection(),
             crosshairCursor(),
             highlightActiveLine(),
+            custom_keymap,
             keymap.of([
                 ...closeBracketsKeymap,
                 ...defaultKeymap,
@@ -254,13 +259,13 @@ Debug print: pt3 print.
                 ...foldKeymap,
                 ...completionKeymap,
                 // ...lintKeymap
+                indentWithTab,
             ]),
             indentUnit.of('    '), // sent a really big indent
             // tie, dress, ski hat
             // basicSetup,
             Smalltalk(),
             // javascript({typescript:true}),
-            custom_keymap,
         ]
     })
 
