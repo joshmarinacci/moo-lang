@@ -22,6 +22,8 @@
     "@codemirror/language": "6.0.0",
     "@codemirror/view": "6.39.4",
     "@codemirror/state": "6.5.2",
+    "@codemirror/autocomplete": "^6.20.0",
+    "@codemirror/commands": "^6.10.1",
     "codemirror-lang-smalltalk": "file:../codemirror-lang-smalltalk",
     "pureimage": "^0.4.18"
   }
