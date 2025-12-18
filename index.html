@@ -136,9 +136,10 @@ Debug print: pt3 print.
     import {JoshLogger} from "./src/util.ts";
     import {eval_statements} from "./src/eval.ts";
     import {make_browser_scope} from "./src/browser.ts";
-    import {basicSetup} from "codemirror"
+    // import {basicSetup} from "codemirror"
     import {EditorView, keymap} from "@codemirror/view"
-    import {javascript} from "@codemirror/lang-javascript"
+    // import {javascript} from "@codemirror/lang-javascript"
+    import {Smalltalk} from "codemirror-lang-smalltalk"
 
     let scope = make_browser_scope(document);
 
@@ -213,9 +214,11 @@ Debug print: pt3 print.
     const view = new EditorView({
         doc: "4+5",
         parent: document.getElementById('editor-codemirror'),
-        extensions: [basicSetup,
-            javascript({typescript:true}),
-            custom_keymap,
+        extensions: [
+            // basicSetup,
+            Smalltalk(),
+            // javascript({typescript:true}),
+            // custom_keymap,
         ]
     })
 

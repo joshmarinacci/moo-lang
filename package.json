@@ -19,8 +19,10 @@
   },
   "private": true,
   "dependencies": {
-    "pureimage": "^0.4.18",
-    "codemirror": "^6.0.2",
-    "@codemirror/lang-javascript": "^6.2.4"
+    "@codemirror/language": "6.0.0",
+    "@codemirror/view": "6.39.4",
+    "@codemirror/state": "6.5.2",
+    "codemirror-lang-smalltalk": "file:../codemirror-lang-smalltalk",
+    "pureimage": "^0.4.18"
   }
 }
