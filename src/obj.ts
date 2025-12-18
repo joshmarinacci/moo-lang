@@ -109,27 +109,16 @@ export class Obj {
         if (this.name === 'Block') {
             return `Block (${this.get_slot('args')}) ${this.get_slot('body')}`
         }
-        let slots = Array.from(this._method_slots.keys()).map(key => {
-            let val:unknown = this._method_slots.get(key)
+        let slots = Array.from(this._data_slots.keys()).map(key => {
+            let val:unknown = this._data_slots.get(key)
             if (val instanceof Obj) {
-                if (val.name === 'Block') {
-                    val = 'Block'
-                } else {
-                    val = val._safe_print(depth - 1)
-                }
-            } else {
-                if (val instanceof Function) {
-                    val = "<function>"
-                } else {
-                    val = val.toString()
-                }
+                val = val._safe_print(depth - 1)
             }
             return key + ":" + val
         })
-        slots = []
         let parent = this.parent?this.parent._safe_print(1):'nil'
         parent = ''
-        return `${this.name} {${slots.join('\n')}}\n ${parent} `
+        return `${this.name} {${slots.join(' ')}}\n ${parent} `
     }
     has_slot(name: string) {
         return this._method_slots.has(name)
