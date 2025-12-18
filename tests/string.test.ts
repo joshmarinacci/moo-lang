@@ -8,6 +8,9 @@ test('strings',() => {
     let scope = make_standard_scope()
     cval('"foo" .', scope,StrObj("foo"))
     cval('"foo" + "bar" .', scope,StrObj("foobar"))
+    cval(`"foo" contains: "o"`,scope,BoolObj(true))
+    cval(`"foo" contains: "x"`,scope,BoolObj(false))
+    cval(`("foo" contains: "x") not`,scope,BoolObj(true))
 })
 
 test('common protocol',() => {

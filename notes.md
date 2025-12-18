@@ -108,3 +108,25 @@ next to fix
 * How can do worlds? be able to 'fork' the world, do crazy stuff, 
   then diff between the world and it's parent world. should be lazy copy on write.
 * more stuff
+
+
+## Advent of JS
+
+
+### 1 broken toys
+```smalltalk
+self makeSlot: "filterGifts:" with: [ gifts |
+  gifts select: [g | (g contains: "#") not ].
+].
+self filterGifts: { "car" "doll#arm" "ball" "#train" }.
+self filterGifts: {'#broken' '#rusty'}.
+self filterGifts: {}.
+```
+
+
+
+## next small fixes
+
+* support parsing list literals with and without commas between them
+* make syntax highlighting grammar do single and double quote strings
+* 

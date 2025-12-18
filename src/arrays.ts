@@ -120,9 +120,11 @@ export const ListProto = make_native_obj("ListProto",ObjectProto, {
     'select:':(rec:Obj, args:Array<Obj>):Obj=>{
         let arr = rec._get_js_array()
         let block = args[0]
-        let res = arr.map((v,i) => {
-            return eval_block_obj(block,[v]) as Obj
-        }).filter(b => b._get_js_boolean())
+        let res = arr.filter((v,i) => {
+            let vv = eval_block_obj(block,[v]) as Obj
+            return vv._get_js_boolean()
+        })
+        console.log("final strings are",res)
         return ListObj(...res)
     },
     'reject:':(rec:Obj, args:Array<Obj>):Obj=>{

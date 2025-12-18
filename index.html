@@ -25,7 +25,7 @@
             height: 15rem;
         }
         #editor-content {
-            height: 15rem;
+            /*height: 15rem;*/
         }
         .hbox, .vbox {
             border: 1px solid red;
@@ -75,7 +75,7 @@
             overflow: auto;
         }
         .cm-editor {
-            height: 10rem;
+            height: 15rem;
             width: 100%;
             border: 1px solid black;
         }
@@ -214,9 +214,7 @@ Debug print: pt3 print.
         Global makeSlot: "dom" with: dom.
     `,scope)
 
-    fetch('./examples/classbrowser.st').then(r => r.text()).then(txt => {
-        eval_statements(txt,scope)
-    })
+    // fetch('./examples/classbrowser.st').then(r => r.text()).then(txt => eval_statements(txt, scope))
 
 
     const eval_selection = (view) => {
@@ -240,7 +238,13 @@ Debug print: pt3 print.
     ])
 
     const view = new EditorView({
-        doc: "[  4+5   ]",
+        doc: `
+gifts1 := { "car" "doll#arm" "ball" "#train" }.
+self makeSlot: "filterGifts:" with: [ gifts |
+  (gifts select: [g | (g contains: "#") not ]).
+].
+self filterGifts: gifts1.
+`,
         parent: document.getElementById('editor-codemirror'),
         extensions: [
             lineNumbers(), // line numbers in the gutter

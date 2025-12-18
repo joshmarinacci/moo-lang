@@ -14,6 +14,11 @@ export const StringProto = make_native_obj("StringProto",ObjectProto,{
         }
         return BoolObj(false)
     },
+    'contains:':(rec:Obj,args:Array<Obj>) => {
+        let self_str = rec._get_js_string();
+        let comp_str = args[0]._get_js_string();
+        return BoolObj(self_str.includes(comp_str));
+    },
     'print':(rec:Obj):Obj => {
         return StrObj(rec._get_js_string())
     }

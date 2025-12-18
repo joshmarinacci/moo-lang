@@ -83,13 +83,13 @@ export class Obj {
             return `NumberLiteral (${this._get_js_number()})`;
         }
         if (this.name === 'StringLiteral') {
-            return `StringLiteral (${this._get_js_string()})`;
+            return `String(${this._get_js_string()})`;
         }
         if (this.name === 'SymbolReference') {
             return `SymbolReference (${this._get_js_string()})`;
         }
         if (this.name === 'BooleanLiteral') {
-            return `BooleanLiteral (${this._get_js_boolean()})`;
+            return `Boolean(${this._get_js_boolean()})`;
         }
         if (this.name === 'Dict') {
             let rec = this._get_js_record()
@@ -108,6 +108,9 @@ export class Obj {
         }
         if (this.name === 'Block') {
             return `Block (${this.get_slot('args')}) ${this.get_slot('body')}`
+        }
+        if (this.name === 'List') {
+            return `List: {${this._get_js_array().map(v => v._safe_print(depth-1)).join(', ')}}`
         }
         let slots = Array.from(this._data_slots.keys()).map(key => {
             let val:unknown = this._data_slots.get(key)
@@ -155,7 +158,8 @@ export class Obj {
             }
         }
         d.warn(`slot not found!: '${name}'`)
-        return NilObj()
+        throw new Error(`slot not found! "${name}"`)
+        // return NilObj()
     }
 
     get_js_slot(name: string):unknown {
