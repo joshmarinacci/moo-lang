@@ -112,7 +112,7 @@ next to fix
 
 ## next small fixes
 
-* [ ] support parsing list literals with and without commas between them
+* [x] support parsing list literals with and without commas between them
 * [x] make syntax highlighting grammar do single and double quote strings
 * [x] add command slash for toggling comments in the editor.
 * [x] dict at: as well as dict get:

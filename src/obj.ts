@@ -158,8 +158,8 @@ export class Obj {
             }
         }
         d.warn(`slot not found!: '${name}'`)
-        throw new Error(`slot not found! "${name}"`)
-        // return NilObj()
+        // throw new Error(`slot not found! "${name}"`)
+        return NilObj()
     }
 
     get_js_slot(name: string):unknown {
