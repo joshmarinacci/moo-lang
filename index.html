@@ -164,6 +164,27 @@ self manufactureGifts: production1.
 </script>
 <button class="example" id="advent2">advent 2</button>
 
+<script type="application/smalltalk" id="advent3-code">
+self makeSlot: "drawGift:symbol:" with: [size symbol |
+  (size < 1) ifTrue: [^""].
+  output := "".
+  output := output + (symbol repeat: size).
+  output := output + "\n".
+
+  1 range: size-1 do: [i |
+    output := output + symbol.
+    output := " " repeat: size-2.
+    output := output + symbol.
+    output := output + "\n".
+  ].
+
+  output := output + (symbol repeat: size).
+  ^ output.
+].
+
+self drawGift: 4 symbol: "*".
+</script>
+<button class="example" id="advent3">advent 3</button>
 </nav>
 
 <button id="execute">doit</button>
