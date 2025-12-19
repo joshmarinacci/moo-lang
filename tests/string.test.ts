@@ -11,6 +11,11 @@ test('strings',() => {
     cval(`"foo" contains: "o"`,scope,BoolObj(true))
     cval(`"foo" contains: "x"`,scope,BoolObj(false))
     cval(`("foo" contains: "x") not`,scope,BoolObj(true))
+    cval(`"foo" repeat: 2`,scope,StrObj("foofoo"))
+    cval(`
+     foo := "start".
+     foo := foo + "bar".
+     foo. `,scope,StrObj("startbar"))
 })
 
 test('common protocol',() => {

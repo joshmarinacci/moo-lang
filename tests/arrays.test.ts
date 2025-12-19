@@ -88,7 +88,7 @@ test('dict api',() => {
         dict := Dict clone.
         dict at: "six" set: 6.
         dict at: "seven" set: 7.
-        Debug equals: (dict get: "six") with: 6.
+        Debug equals: (dict at: "six") with: 6.
         Debug equals: (dict get: "seven") with: 7.
         dict size.
 

@@ -158,6 +158,11 @@ export const DictProto = make_native_obj('DictProto',ObjectProto, {
         let key = args[0]._get_js_string()
         return arr[key]
     },
+    'at:':(rec:Obj, args:Array<Obj>):Obj => {
+        let arr = rec._get_js_record()
+        let key = args[0]._get_js_string()
+        return arr[key]
+    },
     'at:set:':(rec:Obj, args:Array<Obj>):Obj => {
         let arr = rec._get_js_record()
         let key = args[0]._get_js_string()

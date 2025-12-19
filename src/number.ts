@@ -69,6 +69,10 @@ export function setup_number(scope: Obj) {
          true
       ].
     `,scope)
+    sval(`Number makeSlot: 'times:' with: [ block |
+         0 range: self do: block. 
+      ].
+    `,scope)
 
 
 }

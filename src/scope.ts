@@ -3,7 +3,7 @@ import {setup_number} from "./number.ts";
 import {BoolObj, setup_boolean} from "./boolean.ts";
 import {DictObj, ListObj, setup_arrays} from "./arrays.ts";
 import {setup_debug} from "./debug.ts";
-import {StrObj} from "./string.ts";
+import {setup_string, StrObj} from "./string.ts";
 import {eval_really_perform_call} from "./eval.ts";
 
 function root_fixup(scope:Obj) {
@@ -121,6 +121,7 @@ export function make_common_scope():Obj {
     let scope = new Obj("Global", ROOT, {});
     setup_object(scope)
     setup_number(scope)
+    setup_string(scope)
     setup_boolean(scope)
     setup_debug(scope)
     setup_arrays(scope)

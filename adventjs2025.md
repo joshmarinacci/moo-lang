@@ -18,8 +18,8 @@ self filterGifts: {}.
 self makeSlot: "manufactureGifts:" with: [ gifts |
    output := List clone.
    gifts do: [ gift |
-      0 range: (gift get: "quantity") do: [ q |
-         output add: (gift get: "toy").
+      (gift at: "quantity") times: [ q |
+         output add: (gift at: "toy").
       ].
    ].
    output.
@@ -45,4 +45,29 @@ self manufactureGifts: production3.
 
 
 
+
+## 3: Help the Intern
+
+
+self makeSlot: "drawGift:symbol:" with: [size symbol |
+  (size < 1) ifTrue: [^""].
+  output := "".
+  output := output + (symbol repeat: size).
+  output := output + "\n".
+  
+  1 range: size-1 do: [i |
+    output := output + symbol.
+    output := " " repeat: size-2.
+    output := output + symbol.
+    output := output + "\n".
+  ].
+  
+  output := output + (symbol repeat: size).
+  ^ output.
+].
+
+self drawGift: 4 symbol: "*".
+self drawGift: 3 symbol: "#".
+self drawGift: 2 symbol: "-".
+self drawGift: 1 symbol: "+".
 

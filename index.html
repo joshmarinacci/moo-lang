@@ -75,7 +75,7 @@
             overflow: auto;
         }
         .cm-editor {
-            height: 15rem;
+            height: 25rem;
             width: 100%;
             border: 1px solid black;
         }
@@ -134,6 +134,35 @@ pt3 := pt + pt2.
 Debug print: pt3 print.
 </script>
 <button class="example" id="point">point</button>
+
+<script type="application/smalltalk" id="advent1-code">
+self makeSlot: "filterGifts:" with: [ gifts |
+    gifts select: [g | (g contains: "#") not ].
+].
+self filterGifts: { "car" "doll#arm" "ball" "#train" }.
+</script>
+<button class="example" id="advent1">advent 1</button>
+
+<script type="application/smalltalk" id="advent2-code">
+self makeSlot: "manufactureGifts:" with: [ gifts |
+   output := List clone.
+   gifts do: [ gift |
+      (gift at: "quantity") times: [ q |
+         output add: (gift at: "toy").
+      ].
+   ].
+   output.
+].
+
+
+production1 := {
+  { toy: 'car' quantity: 3 }
+  { toy: 'doll' quantity: 1 }
+  { toy: 'ball' quantity: 2 }
+}.
+self manufactureGifts: production1.
+</script>
+<button class="example" id="advent2">advent 2</button>
 
 </nav>
 

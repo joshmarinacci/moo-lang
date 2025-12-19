@@ -38,6 +38,11 @@ test('common protocol',() => {
     cval(`8 isNil.`,scope,BoolObj(false))
 })
 
+test('times',() => {
+    let scope = make_standard_scope()
+    cval(`6 times: [n| Debug print: n. ]`,scope)
+})
+
 test('units',() => {
     let scope = make_standard_scope()
     mval(`

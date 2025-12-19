@@ -21,7 +21,14 @@ export const StringProto = make_native_obj("StringProto",ObjectProto,{
     },
     'print':(rec:Obj):Obj => {
         return StrObj(rec._get_js_string())
-    }
+    },
+    'repeat:':(rec:Obj, args:Array<Obj>):Obj => {
+        let self_str = rec._get_js_string();
+        let count_num = args[0]._get_js_number();
+        return StrObj(self_str.repeat(count_num));
+    },
 });
 export const StrObj = (value:string):Obj => new Obj("StringLiteral", StringProto, {'_jsvalue': value})
-
+export function setup_string(scope: Obj) {
+    scope._make_method_slot("String", StringProto)
+}
