@@ -18,6 +18,19 @@ test('strings',() => {
      foo. `,scope,StrObj("startbar"))
 })
 
+// str startsWith: "foo".
+// str endsWith: "foo".
+// str contains: "foo".
+// foo == bar
+// foo compare: bar
+// foo > bara
+// foo < bar
+// str do: [ ch | Debug print "char " + ch ].
+// str size.
+// str toUpper.
+// str toLower.
+// sort a list of strings
+// { "foo", "bar", "quxx" } sort.
 test('common protocol',() => {
     let scope = make_standard_scope()
     cval(`'foo' print.`,scope,StrObj('foo'))

@@ -70,6 +70,14 @@ test('list api', () => {
         Debug equals: (l select: [n | n > 1. ]) size with: 2.
         Debug equals: (l select: [n | n > 6. ]) size with: 1.
         Debug equals: (l reject: [n | n > 6. ]) size with: 2.
+        Debug equals: (l first) with: 1.
+        Debug equals: (l last) with: 5.
+        
+        Debug equals: l size with: 3.
+        l push: 88.
+        Debug equals: l size with: 4.
+        l pop.
+        Debug equals: l size with: 3.
 
         l2 := l collect: [n | n * 2.].
         
@@ -78,7 +86,29 @@ test('list api', () => {
         Debug equals: (l2 at: 0) with: 2.
         Debug equals: (l2 at: 1) with: 16.
         
+        
+        l3 := { 6, 7 }.
+        Debug equals: (l3 join: ",") with: "6,7".
+        
         ] value.`,scope)
+})
+
+// list removeAt: 1
+// list removeFirst.
+// list removeLast.
+
+// list map: [v | v*2]. // alias for collect
+// list reduce: [ v acc | acc + v].
+
+// move list selection and filtering and collect/map here
+test('list selection',() => {
+
+})
+test("list sorting",() => {
+    // l1 := { 1 8 3}. // unsorted
+    // by default uses compare:
+    // l2 := l1 sort. // returns new sorted list
+    // l3 := l1 sort: [a b| a compare: b]. // returns new list sorted highest to lowest
 })
 
 test('dict api',() => {
