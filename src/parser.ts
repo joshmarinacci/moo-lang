@@ -38,8 +38,9 @@ Moo {
   KeyArg        = kident (Unary | Binary | Solo)
   Keyword     = Exp KeyArg+
   Group       = "(" Exp ")"
-  ArrayLiteral = ArrayList | ArrayMap
-  ArrayList = "{" Exp * "}" 
+  ArrayLiteral    = ArrayListComma | ArrayList | ArrayMap
+  ArrayListComma  = "{" ListOf<Exp, ","> ","? "}" 
+  ArrayList       = "{" Exp * "}" 
   MapPair   = ident ":" (String | Number | ident)
   ArrayMap   = "{" MapPair * "}"
   
@@ -67,6 +68,9 @@ Moo {
     const semantics = mooGrammar.createSemantics()
     semantics.addOperation<Ast>("ast",{
         _iter: (...children) => children.map(ch => ch.ast()),
+        _terminal:function(){ return this.sourceString },
+        EmptyListOf:() => [],
+        NonemptyListOf:(a,b,c) => [a.ast(), c.ast()],
         BlockArgs:(args,_bar) => args.children.map(ch => ch.ast()),
         Block:(_a, args,body, exp,_b) => {
             let bod = body.children.map(ch => ch.ast())
@@ -99,7 +103,8 @@ Moo {
         qstr:(_a,name,_b) => Str(name.sourceString),
         qqstr:(_a,name,_b) => Str(name.sourceString),
         comment:(_a,name,_b) => Cmnt(name.sourceString),
-        ArrayList:(_a,body,_b) => ListLit(...body.children.map(ch => ch.ast())),
+        ArrayList:(_a,body,_b) => ListLit(...(body.ast().flat())),
+        ArrayListComma:(_a,body,_b,_c) => ListLit(...(body.ast().flat())),
         MapPair:(key, _colon, value) => MapPair(key.ast(), value.ast()),
         ArrayMap:(_a,body,_b) => MapLit(...body.children.map(ch => ch.ast()))
     })

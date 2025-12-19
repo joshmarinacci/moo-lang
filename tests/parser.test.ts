@@ -119,8 +119,13 @@ test("parse array list literals",() => {
     precedence("{}",ListLit())
     precedence("{1}",ListLit(Num(1)))
     precedence("{4 5}",ListLit(Num(4),Num(5)))
-    // precedence("{ 4 , 5}",ListLit(Num(4),Num(5)))
-    // precedence("{ 4 , 5, 6}",ListLit(Num(4),Num(5),Num(6)))
+    precedence("{ 4 , 5}",ListLit(Num(4),Num(5)))
+    precedence("{4,5}",ListLit(Num(4),Num(5)))
+    precedence("{4,5,}",ListLit(Num(4),Num(5)))
+
+    precedence("{ 4  5 6}",ListLit(Num(4),Num(5),Num(6)))
+    precedence("{ 4 , 5, 6}",ListLit(Num(4),Num(5),Num(6)))
+    // precedence("{ 4  5 6} .",Stmt(ListLit(Num(4),Num(5),Num(6))))
     // precedence("{ 4 , 5, 6} .",Stmt(ListLit(Num(4),Num(5),Num(6))))
 })
 test('parse array dict literals',() => {

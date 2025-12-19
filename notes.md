@@ -113,7 +113,7 @@ next to fix
 ## next small fixes
 
 * [ ] support parsing list literals with and without commas between them
-* [ ] make syntax highlighting grammar do single and double quote strings
+* [x] make syntax highlighting grammar do single and double quote strings
 * [x] add command slash for toggling comments in the editor.
 * [x] dict at: as well as dict get:
 * [x] `number times: [n| Debug print n. ]`
