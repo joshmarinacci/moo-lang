@@ -37,13 +37,12 @@ test('dict literals', () => {
         p.
     `,scope)
 
-    cval(`[
-        v := { x:5 y: 6 }.
+    cval(`
+        v := { x:5, y: 6 }.
         Debug equals: (v get: "x") with: 5.
         Debug equals: (v get: "y") with: 6.
         v.
-    ] value.
-    `,scope)
+     `,scope)
 })
 
 test('list api', () => {
