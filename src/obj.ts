@@ -91,7 +91,7 @@ export class Obj {
         if (this.name === 'BooleanLiteral') {
             return `Boolean(${this._get_js_boolean()})`;
         }
-        if (this.name === 'Dict') {
+        if (this.name === 'Dict' || this.name === 'DictProto') {
             let rec = this._get_js_record()
             let contents = Object.keys(rec).map(k => k + ':' + rec[k].print())
             return `Dict (${contents.join(', ')})`
@@ -109,7 +109,7 @@ export class Obj {
         if (this.name === 'Block') {
             return `Block (${this.get_slot('args')}) ${this.get_slot('body')}`
         }
-        if (this.name === 'List') {
+        if (this.name === 'List' || this.name === 'ListProto') {
             return `List: {${this._get_js_array().map(v => v._safe_print(depth-1)).join(', ')}}`
         }
         let slots = Array.from(this._data_slots.keys()).map(key => {

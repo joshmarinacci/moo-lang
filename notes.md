@@ -110,19 +110,7 @@ next to fix
 * more stuff
 
 
-## Advent of JS
-
-
-### 1 broken toys
-```smalltalk
-self makeSlot: "filterGifts:" with: [ gifts |
-  gifts select: [g | (g contains: "#") not ].
-].
-self filterGifts: { "car" "doll#arm" "ball" "#train" }.
-self filterGifts: {'#broken' '#rusty'}.
-self filterGifts: {}.
 ```
-
 
 
 ## next small fixes
