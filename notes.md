@@ -117,4 +117,5 @@ next to fix
 
 * support parsing list literals with and without commas between them
 * make syntax highlighting grammar do single and double quote strings
-* 
+* dict at: as well as dict get:
+* number times: [n| Debug print n. ]

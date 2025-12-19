@@ -18,13 +18,10 @@ self filterGifts: {}.
 self makeSlot: "manufactureGifts:" with: [ gifts |
    output := List clone.
    gifts do: [ gift |
-      Debug print: (gift get: "toy") + " " + (gift get: "quantity").
-      1 range: (gift get: "quantity") do: [ q |
-          Debug print: "adding".
+      0 range: (gift get: "quantity") do: [ q |
          output add: (gift get: "toy").
       ].
    ].
-   Debug print: "output is" + output.
    output.
 ].
 
