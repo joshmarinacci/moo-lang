@@ -145,20 +145,20 @@ self filterGifts: { "car" "doll#arm" "ball" "#train" }.
 
 <script type="application/smalltalk" id="advent2-code">
 self makeSlot: "manufactureGifts:" with: [ gifts |
-   output := List clone.
-   gifts do: [ gift |
-      (gift at: "quantity") times: [ q |
-         output add: (gift at: "toy").
-      ].
+    output := List clone.
+    gifts do: [ gift |
+        (gift at: "quantity") times: [ q |
+            output add: (gift at: "toy").
+        ].
    ].
    output.
 ].
 
 
 production1 := {
-  { toy: 'car' quantity: 3 }
-  { toy: 'doll' quantity: 1 }
-  { toy: 'ball' quantity: 2 }
+    { toy: 'car'   quantity: 3 }
+    { toy: 'doll'  quantity: 1 }
+    { toy: 'ball'  quantity: 2 }
 }.
 self manufactureGifts: production1.
 </script>
@@ -166,20 +166,20 @@ self manufactureGifts: production1.
 
 <script type="application/smalltalk" id="advent3-code">
 self makeSlot: "drawGift:symbol:" with: [size symbol |
-  (size < 1) ifTrue: [^""].
-  output := "".
-  output := output + (symbol repeat: size).
-  output := output + "\n".
-
-  1 range: size-1 do: [i |
-    output := output + symbol.
-    output := " " repeat: size-2.
-    output := output + symbol.
+    (size < 1) ifTrue: [^""].
+    output := "".
+    output := output + (symbol repeat: size).
     output := output + "\n".
-  ].
 
-  output := output + (symbol repeat: size).
-  ^ output.
+    1 range: size-1 do: [i |
+        output := output + symbol.
+        output := " " repeat: size-2.
+        output := output + symbol.
+        output := output + "\n".
+    ].
+
+    output := output + (symbol repeat: size).
+    ^ output.
 ].
 
 self drawGift: 4 symbol: "*".
@@ -224,8 +224,6 @@ self drawGift: 4 symbol: "*".
 
     function output(out) {
         const li = document.createElement('li')
-        console.log("typeof last is " + typeof out)
-        console.log("typeof last is " + out instanceof Error)
         if (Error.isError(out)) {
             li.innerText = out.message
             li.classList.add('error')
@@ -269,9 +267,7 @@ self drawGift: 4 symbol: "*".
 
     const eval_selection = (view) => {
         const selectedText = view.state.selection.ranges
-            .map(range =>
-                view.state.doc.sliceString(range.from, range.to)
-            )
+            .map(range => view.state.doc.sliceString(range.from, range.to))
             .join("\n");
         eval_it(selectedText, scope)
         return true
@@ -284,17 +280,11 @@ self drawGift: 4 symbol: "*".
         {
             key: "Cmd-Shift-Enter",
             run: eval_selection
-        },
+        }
     ])
 
     const view = new EditorView({
-        doc: `
-gifts1 := { "car" "doll#arm" "ball" "#train" }.
-self makeSlot: "filterGifts:" with: [ gifts |
-  (gifts select: [g | (g contains: "#") not ]).
-].
-self filterGifts: gifts1.
-`,
+        doc: `6 + 7`,
         parent: document.getElementById('editor-codemirror'),
         extensions: [
             lineNumbers(), // line numbers in the gutter
