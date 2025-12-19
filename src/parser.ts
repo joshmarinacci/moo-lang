@@ -38,10 +38,11 @@ Moo {
   KeyArg        = kident (Unary | Binary | Solo)
   Keyword     = Exp KeyArg+
   Group       = "(" Exp ")"
-  ArrayLiteral    = ArrayListComma | ArrayList | ArrayMap
+  ArrayLiteral    = ArrayListComma | ArrayList | ArrayMapComma | ArrayMap
   ArrayListComma  = "{" ListOf<Exp, ","> ","? "}" 
   ArrayList       = "{" Exp * "}" 
   MapPair   = ident ":" (String | Number | ident)
+  ArrayMapComma = "{" ListOf<MapPair, ","> ","? "}"
   ArrayMap   = "{" MapPair * "}"
   
   Operator    = ("+" | "-" | "*" | "/" | "<" | ">" | "=" | "!")+
@@ -106,7 +107,8 @@ Moo {
         ArrayList:(_a,body,_b) => ListLit(...(body.ast().flat())),
         ArrayListComma:(_a,body,_b,_c) => ListLit(...(body.ast().flat())),
         MapPair:(key, _colon, value) => MapPair(key.ast(), value.ast()),
-        ArrayMap:(_a,body,_b) => MapLit(...body.children.map(ch => ch.ast()))
+        ArrayMap:(_a,body,_b) => MapLit(...body.children.map(ch => ch.ast())),
+        ArrayMapComma:(_a,body,_b,_c) => MapLit(...body.ast().flat()),
     })
 
     const m = mooGrammar.match(input,rule);

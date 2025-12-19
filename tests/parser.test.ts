@@ -133,6 +133,7 @@ test('parse array dict literals',() => {
     precedence("{a:5}",MapLit(MapPair(PlnId('a'),Num(5))))
     precedence("{ a:5 }",MapLit(MapPair(PlnId('a'),Num(5))))
     precedence("{ a:5 b:5 }",MapLit(MapPair(PlnId('a'),Num(5)), MapPair(PlnId('b'),Num(5))))
+    precedence("{ a:5, b:5 }",MapLit(MapPair(PlnId('a'),Num(5)), MapPair(PlnId('b'),Num(5))))
     precedence("{ abc:5 def:8 }",MapLit(MapPair(PlnId('abc'),Num(5)), MapPair(PlnId('def'),Num(8))))
 })
 // test("parse block body", () => {

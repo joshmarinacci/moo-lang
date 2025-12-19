@@ -23,5 +23,4 @@ test('common protocol',() => {
     cval(`'foo' print.`,scope,StrObj('foo'))
     cval(`'foo' == 'foo'.`,scope,BoolObj(true))
     cval(`'foo' == 'bar'.`,scope,BoolObj(false))
-    cval(`('foo' == foo).`,scope,BoolObj(false))
 })

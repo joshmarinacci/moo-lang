@@ -120,3 +120,5 @@ next to fix
 * [x] string repeat: number.
 * [x] make editor taller vertically
 * [ ] assigning a variable inside a block that was declared outside a block isn't setting properly.
+* [ ] does not understand is broken becuase treewalk isn't calling when it doesn't find the slot
+* 
