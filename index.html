@@ -213,7 +213,7 @@ self drawGift: 4 symbol: "*".
         syntaxHighlighting
     } from "@codemirror/language";
     import {autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap} from "@codemirror/autocomplete"
-    import {defaultKeymap, indentWithTab} from "@codemirror/commands"
+    import {defaultKeymap, history, indentWithTab} from "@codemirror/commands"
 
     let scope = make_browser_scope(document);
 
@@ -301,6 +301,7 @@ self drawGift: 4 symbol: "*".
             rectangularSelection(),
             crosshairCursor(),
             highlightActiveLine(),
+            history(),
             custom_keymap,
             keymap.of([
                 ...closeBracketsKeymap,
@@ -319,7 +320,6 @@ self drawGift: 4 symbol: "*".
             // javascript({typescript:true}),
         ]
     })
-
 
     $$(".example").forEach(ex => {
         console.log("example",ex)
