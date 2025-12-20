@@ -304,6 +304,12 @@ export const ROOT = new Obj("ROOT", null,{
         let slot_name = args[0]._get_js_string()
         return rec.get_js_slot(slot_name) as Obj
     },
+    'setJsSlot:to:':(rec:Obj, args:Array<Obj>):Obj => {
+        let slot_name = args[0]._get_js_string()
+        let jsvalue = args[1]
+        rec._set_js_unknown(jsvalue)
+        return NilObj()
+    },
     'setObjectName:':FakeNatMeth((rec:Obj, args:Array<Obj>):Obj => {
         rec.name = args[0]._get_js_string()
         return NilObj()

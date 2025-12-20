@@ -27,4 +27,14 @@ test('native JS api',() => {
     3 pow: 5.
     
     `,scope)
+
+    mval(`
+        String understands: "foo:" with: [ arg |
+            Debug print:"executing ".
+            self setJsSlot:"_jsvalue" to: (arg getJsSlot: "_jsvalue").
+        ].
+        ret := "".
+        ret foo: "bar".
+        Debug equals: ret with: "bar"
+    `,scope)
 })
