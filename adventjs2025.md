@@ -47,21 +47,36 @@ self manufactureGifts: production3.
 ## 3: Help the Intern
 
 ```smalltalk
+self makeSlot: "StringBuilder" with: Object clone.
+StringBuilder setObjectName: "StringBuilder".
+StringBuilder make_data_slot: "v" with: "".
+StringBuilder makeSlot: "make:" with: [str |
+    s := StringBuilder clone.
+    s v: str.
+    s.
+].
+StringBuilder makeSlot: "append:" with: [str |
+    self v: (self v + str).
+    self.
+].
+foo := StringBuilder make: "foo".
+foo append: "blah".
+
 self makeSlot: "drawGift:symbol:" with: [size symbol |
-  (size < 1) ifTrue: [^""].
-  output := "".
-  output := output + (symbol repeat: size).
-  output := output + "\n".
-  
-  1 range: size-1 do: [i |
-    output := output + symbol.
-    output := " " repeat: size-2.
-    output := output + symbol.
-    output := output + "\n".
-  ].
-  
-  output := output + (symbol repeat: size).
-  ^ output.
+    (size < 1) ifTrue: [^""].
+    output := StringBuilder make:"".
+    output append: (symbol repeat: size).
+    output append: "\n".
+
+    1 range: size-1 do: [i |
+        output append: symbol.
+        output append: (" " repeat: size-2).
+        output append: symbol.
+        output append: "\n".
+    ].
+
+    output append: (symbol repeat: size).
+    ^ output v.
 ].
 
 self drawGift: 4 symbol: "*".
