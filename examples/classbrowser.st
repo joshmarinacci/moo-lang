@@ -1,7 +1,6 @@
 
 dom clear.
 
-
 logic := Object clone.
 Global makeSlot: "logic" with: logic.
 

@@ -53,7 +53,16 @@ const NumberProto = make_native_obj("NumberProto", ObjectProto, {
         return NilObj()
     },
     'print':(rec:Obj):Obj => StrObj(rec._get_js_number() + ''),
-    'negate':(rec:Obj):Obj => NumObj(-rec._get_js_number())
+    'negate':(rec:Obj):Obj => NumObj(-rec._get_js_number()),
+    'compare:':((rec:Obj, args:Array<Obj>) => {
+        function compare(a:number,b:number) {
+            if(a<b) return -1
+            if(a>b) return 1
+            return 0
+        }
+        return NumObj(compare(rec._get_js_number(),args[0]._get_js_number()))
+    }),
+
 });
 export const NumObj = (value:number):Obj => new Obj("NumberLiteral", NumberProto, { '_jsvalue': value,})
 

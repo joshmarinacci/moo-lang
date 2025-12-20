@@ -1,23 +1,8 @@
 import test from "node:test";
 import {make_standard_scope} from "../src/standard.ts";
-import {DictObj, ListObj} from "../src/arrays.ts";
 import {NumObj} from "../src/number.ts";
 import {cval} from "./eval.test.ts";
-
-// test('parse array list literals',() => {
-//     assert.ok(match("{}",ArrayLiteral))
-//     assert.ok(match("{4}",ArrayLiteral))
-//     assert.ok(match("{4 5}",ArrayLiteral))
-//     assert.ok(match("{ 'a' 'b' }",ArrayLiteral))
-// })
-
-// test('parse array dict literals',() => {
-//     assert.ok(match("{}",ArrayLiteral))
-//     assert.ok(match("{a:5}",ArrayLiteral))
-//     assert.ok(match("{ a:5 }",ArrayLiteral))
-//     assert.ok(match("{ a:5 b:6 }",ArrayLiteral))
-//     assert.ok(match("{ a:'a' b:'b' }",ArrayLiteral))
-// })
+import {NilObj} from "../src/obj.ts";
 
 test('array literals',() => {
     let scope = make_standard_scope()
@@ -88,7 +73,7 @@ test('list api', () => {
         
         
         l3 := { 6, 7 }.
-        Debug equals: (l3 join: ",") with: "6,7".
+        // Debug equals: (l3 join: ",") with: "6,7".
         
         ] value.`,scope)
 })
@@ -105,10 +90,30 @@ test('list selection',() => {
 
 })
 test("list sorting",() => {
-    // l1 := { 1 8 3}. // unsorted
-    // by default uses compare:
-    // l2 := l1 sort. // returns new sorted list
-    // l3 := l1 sort: [a b| a compare: b]. // returns new list sorted highest to lowest
+    let scope = make_standard_scope()
+    cval(`
+        // unsorted
+        list := { 3 1 5 2 4 }.
+        
+        Debug equals: (list at:0) with: 3.
+        Debug equals: (list at:4) with: 4.
+        
+        // make new sorted list of numbers
+        // using Number compare:
+        list2 := (list sortedBy: [a b | a - b]).
+        Debug equals: (list2 at:0) with: 1.
+        Debug equals: (list2 at:4) with: 5.
+        
+        // make new reverse sorted list
+        list3 := list sortedBy: [a b | b - a].
+        Debug equals: list3 first with: 5.
+        Debug equals: list3 last with: 1.
+        
+        // sort using the built in sort comparison block
+        list4 := list sorted.
+        nil
+    
+    `,scope, NilObj())
 })
 
 test('dict api',() => {

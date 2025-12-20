@@ -1,6 +1,6 @@
 import {JS_VALUE, make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
 import {NumObj} from "./number.ts";
-import {eval_block_obj} from "./eval.ts";
+import {eval_block_obj, sval} from "./eval.ts";
 import {StrObj} from "./string.ts";
 
 class JSSet {
@@ -94,6 +94,21 @@ export const ListProto = make_native_obj("ListProto",ObjectProto, {
         arr.push(args[0]);
         return NilObj()
     },
+    'push:':(rec:Obj, args:Array<Obj>):Obj=>{
+        let arr = rec._get_js_array()
+        arr.push(args[0]);
+        return NilObj()
+    },
+    'pop':(rec:Obj, args:Array<Obj>):Obj=>{
+        let arr = rec._get_js_array()
+        let ret = arr.pop()
+        if(ret instanceof Obj) {
+            return ret
+        } else {
+            return NilObj()
+        }
+    },
+
     'at:':(rec:Obj,args:Array<Obj>):Obj => {
         let arr = rec._get_js_array()
         let index = args[0]._get_js_number()
@@ -124,7 +139,6 @@ export const ListProto = make_native_obj("ListProto",ObjectProto, {
             let vv = eval_block_obj(block,[v]) as Obj
             return vv._get_js_boolean()
         })
-        console.log("final strings are",res)
         return ListObj(...res)
     },
     'reject:':(rec:Obj, args:Array<Obj>):Obj=>{
@@ -142,6 +156,20 @@ export const ListProto = make_native_obj("ListProto",ObjectProto, {
             return eval_block_obj(block,[v]) as Obj
         });
         return ListObj(...res)
+    },
+    'sortedBy:':(rec:Obj, args:Array<Obj>):Obj=>{
+        let arr = rec._get_js_array()
+        arr = arr.slice();
+        let block = args[0]
+        arr.sort((a,b)=>{
+            // console.log("comparing",a.print(),b.print())
+            let num = eval_block_obj(block,[a,b]) as Obj
+            // console.log("got",num.print())
+            return num._get_js_number()
+        })
+        let list = ListObj(...arr)
+        // console.log("final list is", list.print());
+        return list
     },
 })
 ListProto._make_js_slot(JS_VALUE,[])
@@ -244,6 +272,16 @@ export function setup_arrays(scope:Obj) {
     scope._make_method_slot("List",ListProto)
     scope._make_method_slot("Dict",DictProto)
     scope._make_method_slot("Set",SetProto)
+
+    sval(`List makeSlot: 'first' with: [
+         self at:0
+    ].`,scope);
+    sval(`List makeSlot: 'last' with: [
+         self at: (self size -1)
+    ].`,scope);
+    sval(`List makeSlot: 'sorted' with: [
+         self sortedBy: [a b | a - b ]
+    ].`,scope);
 
     // cval(`[
     //     List makeSlot 'print' [

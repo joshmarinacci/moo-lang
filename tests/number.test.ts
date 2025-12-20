@@ -6,6 +6,7 @@ import {StrObj} from "../src/string.ts";
 import {BoolObj} from "../src/boolean.ts";
 import {cval, mval} from "./eval.test.ts";
 import {sval} from "../src/eval.ts";
+import {ListObj} from "../src/arrays.ts";
 
 test('arithmetic',() => {
     let scope:Obj = make_standard_scope()
@@ -36,6 +37,17 @@ test('common protocol',() => {
     cval(`8 == 8.`,scope,BoolObj(true))
     cval(`8 == '8'.`,scope,BoolObj(false))
     cval(`8 isNil.`,scope,BoolObj(false))
+    cval('8 compare: 6', scope, NumObj(1))
+    cval('8 compare: 9', scope, NumObj(-1))
+    cval('8 compare: 8', scope, NumObj(0))
+    cval('8 < 6', scope, BoolObj(false))
+    cval('6 < 8', scope, BoolObj(true))
+    cval('8 > 6', scope, BoolObj(true))
+    // sort
+    cval(`foo := { 5 2 3 }.
+     foo sortedBy: [ a b | a compare: b ].`, scope,
+        ListObj(NumObj(2),NumObj(3), NumObj(5),))
+
 })
 
 test('times',() => {

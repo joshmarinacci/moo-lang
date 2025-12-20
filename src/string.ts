@@ -6,6 +6,16 @@ import {NumObj} from "./number.ts";
 export const StringProto = make_native_obj("StringProto",ObjectProto,{
     'value':(rec:Obj) => rec,
     '+':((rec:Obj, args:Array<Obj>) => StrObj(rec.to_string() + args[0].to_string())),
+    '<':((rec:Obj, args:Array<Obj>) => BoolObj(rec.to_string() < args[0].to_string())),
+    '>':((rec:Obj, args:Array<Obj>) => BoolObj(rec.to_string() > args[0].to_string())),
+    'compare:':((rec:Obj, args:Array<Obj>) => {
+        function compare(a:string,b:string) {
+            if(a<b) return -1
+            if(a>b) return 1
+            return 0
+        }
+        return NumObj(compare(rec._get_js_string(),args[0]._get_js_string()))
+    }),
     '==':(rec:Obj,args:Array<Obj>) => {
         if (!args[0].is_kind_of('StringProto')) {
             return BoolObj(false)

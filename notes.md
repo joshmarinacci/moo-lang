@@ -110,6 +110,65 @@ next to fix
 * more stuff
 
 
+## Sorting
+
+In the JS world we sort using a comparator which takes two objects and returns -1, 0, or 1 if the first object
+is less than, equal to, or greater than the second object [1]. I propose to reuse this system. Every object
+can respond to a `compare:` method which returns -1, 0, or 1 if the receiver is less than, equal to, or greater
+than the second object.  To make this work we pass a comparator block as arguments to the various sorting
+functions.  
+
+
+[1](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#description)
+
+I prefer objects to always return new objects instead of modifying themselves, so List will have
+a sorted function which returns a new sorted list. selfSorted sorts the object itself. sortedBy takes
+a comparator block. If there is no comparator block then it uses the default one which calls compare on
+the objects.
+
+Examples:
+
+```smalltalk
+
+// unsorted
+list := { 1 3 5 2 4 }.
+
+// make new sorted list of numbers
+// using Number compare:
+list2 := list sorted.
+
+// make new reverse sorted list
+list3 := list sortedBy: [a b | b - a].
+
+// sort strings
+list := { "foo" "bar" "qux" }.
+// sort strings using String compare:
+list2 := list sorted.
+
+people := {
+  { first:'Alice, last:'Smith'},
+  { first:'Bob', last:'Jones' },
+  { first:'Clair, last:'Martin'},
+}.
+
+// returns the same list because we don't know how to sort people 
+list2 := list sorted.
+// sort by first name
+list3 := list sortedBy: [a b | (a at:first) - (b at: first)].
+// sort by last name
+list4 := list sortedBy: [a b | (a at:last) - (b at: last)].
+
+```
+
+
+Number compare: subtracts self from argument.
+String compare: subtracts self from argument.
+Boolean compare: returns 0 if same otherwise -1.
+
+Points could be sorted by magnitude
+Dates could be sorted by before or after
+
+
 ## next small fixes
 
 * [x] support parsing list literals with and without commas between them
@@ -120,5 +179,5 @@ next to fix
 * [x] string repeat: number.
 * [x] make editor taller vertically
 * [ ] assigning a variable inside a block that was declared outside a block isn't setting properly.
-* [ ] does not understand is broken becuase treewalk isn't calling when it doesn't find the slot
+* [ ] doesNotUnderstand is broken becuase treewalk isn't calling when it doesn't find the slot
 * 
