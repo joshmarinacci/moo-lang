@@ -108,7 +108,6 @@ export const ListProto = make_native_obj("ListProto",ObjectProto, {
             return NilObj()
         }
     },
-
     'at:':(rec:Obj,args:Array<Obj>):Obj => {
         let arr = rec._get_js_array()
         let index = args[0]._get_js_number()
@@ -119,6 +118,12 @@ export const ListProto = make_native_obj("ListProto",ObjectProto, {
         let index = args[0]._get_js_number()
         arr[index] = args[1]
         return rec
+    },
+    'removeAt:':(rec:Obj, args:Array<Obj>):Obj => {
+        let arr = rec._get_js_array()
+        let index = args[0]._get_js_number()
+        let removed = arr.splice(index,1)
+        return removed[0]
     },
     'size':(rec:Obj, args:Array<Obj>):Obj=>{
         let arr = rec._get_js_array()
@@ -141,22 +146,15 @@ export const ListProto = make_native_obj("ListProto",ObjectProto, {
         })
         return ListObj(...res)
     },
+    'reduce:with:':(rec:Obj, args:Array<Obj>):Obj=> rec._get_js_array().reduce((a, b) => eval_block_obj(args[0], [a, b]) as Obj, args[1]),
+    'reduce:':(rec:Obj, args:Array<Obj>):Obj=> rec._get_js_array().reduce((a, b) => eval_block_obj(args[0], [a, b]) as Obj),
     'reject:':(rec:Obj, args:Array<Obj>):Obj=>{
-        let arr = rec._get_js_array()
-        let block = args[0]
-        let res = arr.map((v,i) => {
-            return eval_block_obj(block,[v]) as Obj
-        }).filter(b => !b._get_js_boolean())
+        let res = rec._get_js_array()
+            .map((v,i) => eval_block_obj(args[0], [v]) as Obj)
+            .filter(b => !b._get_js_boolean())
         return ListObj(...res)
     },
-    'collect:':(rec:Obj, args:Array<Obj>):Obj=>{
-        let arr = rec._get_js_array()
-        let block = args[0]
-        let res = arr.map((v,i) => {
-            return eval_block_obj(block,[v]) as Obj
-        });
-        return ListObj(...res)
-    },
+    'collect:':(rec:Obj, args:Array<Obj>):Obj=> ListObj(...rec._get_js_array().map((v, i) => eval_block_obj(args[0], [v]) as Obj)),
     'sortedBy:':(rec:Obj, args:Array<Obj>):Obj=>{
         let arr = rec._get_js_array()
         arr = arr.slice();

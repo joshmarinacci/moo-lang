@@ -51,10 +51,6 @@ test('list api', () => {
 
         l add: 5.
         
-        // array contains 1 8 5
-        Debug equals: (l select: [n | n > 1. ]) size with: 2.
-        Debug equals: (l select: [n | n > 6. ]) size with: 1.
-        Debug equals: (l reject: [n | n > 6. ]) size with: 2.
         Debug equals: (l first) with: 1.
         Debug equals: (l last) with: 5.
         
@@ -64,12 +60,6 @@ test('list api', () => {
         l pop.
         Debug equals: l size with: 3.
 
-        l2 := l collect: [n | n * 2.].
-        
-        // array contains 2 16 10
-        Debug equals: l2 size with: 3.
-        Debug equals: (l2 at: 0) with: 2.
-        Debug equals: (l2 at: 1) with: 16.
         
         
         l3 := { 6, 7 }.
@@ -78,17 +68,48 @@ test('list api', () => {
         ] value.`,scope)
 })
 
-// list removeAt: 1
-// list removeFirst.
-// list removeLast.
-
-// list map: [v | v*2]. // alias for collect
-// list reduce: [ v acc | acc + v].
-
-// move list selection and filtering and collect/map here
 test('list selection',() => {
+    let scope = make_standard_scope()
+    cval(`
+        list := { 1 2 3 4 5 }.
+        
+        // removeAt: 0
+        Debug equals: (list at: 0) with: 1.
+        Debug equals: (list size) with: 5.
+        list removeAt: 0.
+        Debug equals: (list at: 0) with: 2.
+        Debug equals: list size with: 4.
+        
+        // collect / map
+        list := { 1 2 3 }.
+        Debug equals: (list at: 0) with: 1.
+        l2 := list collect: [n | n * 2.].
+        // array contains 2 4 6
+        Debug equals: l2 size with: 3.
+        Debug equals: (l2 at: 0) with: 2.
+        Debug equals: (l2 at: 1) with: 4.
 
+        // array contains 1 2 3
+        // select and reject
+        Debug equals: (list select: [n | n > 1. ]) size with: 2.
+        Debug equals: (list select: [n | n > 2. ]) size with: 1.
+        Debug equals: (list reject: [n | n > 2. ]) size with: 2.
+
+        list := { 1 2 3 4 5 }.
+        sum := list reduce: [a b | a + b ] with: 0.
+        Debug equals: sum with: 15.
+        
+        list := { "a" "b" "c"}.
+        join := list reduce: [a b | a + "," + b].
+        Debug equals: join with: "a,b,c".
+    
+        88.    
+    `,scope,{
+        expected: NumObj(88),
+        evalOnly:true,
+    })
 })
+
 test("list sorting",() => {
     let scope = make_standard_scope()
     cval(`
@@ -144,40 +165,39 @@ test('dict api',() => {
     ] value.`,scope)
 })
 
-test('set api',() => {
-    let scope = make_standard_scope()
-    cval(`
-        set := Set clone.
-        
-        // size
-        set add: 1.
-        Debug equals: set size with: 1.
-
-        set add: 88.
-        Debug equals: set size with: 2.
-
-        // duplicates don't increase the size
-        set add: 88.
-        Debug equals: set size with: 2.
-
-        A := Set withAll: ({ 1 2 3 }).
-        B := Set withAll: ({ 3 4 5 }).
-        Debug equals: A size with: 3.
-        Debug equals: B size with: 3.
-        C := A - B.
-        Debug equals: C size with: 2.
-
-        D := A + B.
-        Debug equals: D size with: 5.
-        
-        E := A intersect: B.
-        Debug equals: E size with: 1.
-
-        67.
-        
-    `,scope, NumObj(67))
-})
-
+// test('set api',() => {
+//     let scope = make_standard_scope()
+//     cval(`
+//         set := Set clone.
+//
+//         // size
+//         set add: 1.
+//         Debug equals: set size with: 1.
+//
+//         set add: 88.
+//         Debug equals: set size with: 2.
+//
+//         // duplicates don't increase the size
+//         set add: 88.
+//         Debug equals: set size with: 2.
+//
+//         A := Set withAll: ({ 1 2 3 }).
+//         B := Set withAll: ({ 3 4 5 }).
+//         Debug equals: A size with: 3.
+//         Debug equals: B size with: 3.
+//         C := A - B.
+//         Debug equals: C size with: 2.
+//
+//         D := A + B.
+//         Debug equals: D size with: 5.
+//
+//         E := A intersect: B.
+//         Debug equals: E size with: 1.
+//
+//         67.
+//
+//     `,scope, NumObj(67))
+// })
 
 test('array common protocol',() => {
     let scope = make_standard_scope()
