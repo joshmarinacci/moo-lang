@@ -55,7 +55,6 @@ export const StringProto = make_native_obj("StringProto",ObjectProto,{
         }
         return NilObj()
     },
-
 });
 
 export const StrObj = (value:string):Obj => new Obj("StringLiteral", StringProto, {'_jsvalue': value})
@@ -77,5 +76,8 @@ export function setup_string(scope: Obj) {
         String makeSlot: 'toLower' with: [|
             String fromJs: (self jsCall: "toLowerCase" on: (self getJsSlot: "_jsvalue")).
         ].
+        String makeSlot: 'isEmpty' with: [|
+            self size == 0
+        ]
     `,scope)
 }
