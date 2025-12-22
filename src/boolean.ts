@@ -22,31 +22,12 @@ const BooleanProto = make_native_obj("BooleanProto",ObjectProto,{
             return eval_block_obj(args[1],[])
         }
     },
-    'fromJs:':(rec:Obj, args:Array<Obj>):Obj => {
-        let val = args[0] as boolean
-        return BoolObj(val)
-    },
-    'and:':(rec:Obj, args:Array<Obj>):Obj => {
-        let A = rec._get_js_boolean()
-        let B = args[0]._get_js_boolean()
-        return BoolObj(A && B)
-    },
-    'or:':(rec:Obj, args:Array<Obj>):Obj => {
-        let A = rec._get_js_boolean()
-        let B = args[0]._get_js_boolean()
-        return BoolObj(A || B)
-    },
-    'not':(rec:Obj, args:Array<Obj>):Obj => {
-        let A = rec._get_js_boolean()
-        return BoolObj(!A)
-    },
-    'cond:with:':(rec:Obj, args:Array<Obj>):Obj => {
-        let val = rec._get_js_boolean()
-        return eval_block_obj(val?args[0]:args[1],[])
-    },
-    'print':(rec:Obj):Obj => {
-        return StrObj(rec._get_js_boolean()+'')
-    },
+    'fromJs:':(rec:Obj, args:Array<Obj>):Obj => BoolObj(args[0] as unknown as boolean),
+    'and:':(rec:Obj, args:Array<Obj>):Obj => BoolObj(rec._get_js_boolean() && args[0]._get_js_boolean()),
+    'or:':(rec:Obj, args:Array<Obj>):Obj => BoolObj(rec._get_js_boolean() || args[0]._get_js_boolean()),
+    'not':(rec:Obj, args:Array<Obj>):Obj => BoolObj(!rec._get_js_boolean()),
+    'cond:with:':(rec:Obj, args:Array<Obj>):Obj => eval_block_obj(rec._get_js_boolean() ? args[0] : args[1], []),
+    'print':(rec:Obj):Obj => StrObj(rec._get_js_boolean() + ''),
     '==':(rec:Obj,args:Array<Obj>) => {
         if (!args[0].is_kind_of('BooleanProto')) {
             return BoolObj(false)

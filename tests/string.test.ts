@@ -20,6 +20,8 @@ test('strings',() => {
      foo. `,scope,StrObj("startbar"))
     cval(`"foo" isEmpty`, scope, BoolObj(false))
     cval(`"" isEmpty`, scope, BoolObj(true))
+    cval(`"foo" at: 0`, scope, StrObj('f'))
+    cval(`"foo" at: 1`, scope, StrObj('o'))
 })
 test('structure',() => {
     let scope = make_standard_scope()

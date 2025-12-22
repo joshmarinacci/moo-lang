@@ -5,10 +5,7 @@ import {NumObj} from "./number.ts";
 
 export const StringProto = make_native_obj("StringProto",ObjectProto,{
     'value':(rec:Obj) => rec,
-    'fromJs:':(rec:Obj, args:Array<Obj>):Obj => {
-        let val = args[0] as string
-        return StrObj(val)
-    },
+    'fromJs:':(rec:Obj, args:Array<Obj>):Obj => StrObj(args[0] as unknown as string),
     '+':((rec:Obj, args:Array<Obj>) => StrObj(rec.to_string() + args[0].to_string())),
     '<':((rec:Obj, args:Array<Obj>) => BoolObj(rec.to_string() < args[0].to_string())),
     '>':((rec:Obj, args:Array<Obj>) => BoolObj(rec.to_string() > args[0].to_string())),
@@ -20,6 +17,7 @@ export const StringProto = make_native_obj("StringProto",ObjectProto,{
         }
         return NumObj(compare(rec._get_js_string(),args[0]._get_js_string()))
     }),
+    'at:':((rec:Obj, args:Array<Obj>) => StrObj(rec._get_js_string()[args[0]._get_js_number()])),
     '==':(rec:Obj,args:Array<Obj>) => {
         if (!args[0].is_kind_of('StringProto')) {
             return BoolObj(false)
@@ -30,23 +28,10 @@ export const StringProto = make_native_obj("StringProto",ObjectProto,{
         }
         return BoolObj(false)
     },
-    'size':(rec:Obj,args:Array<Obj>) => {
-        let self_str = rec._get_js_string();
-        return NumObj(self_str.length)
-    },
-    'contains:':(rec:Obj,args:Array<Obj>) => {
-        let self_str = rec._get_js_string();
-        let comp_str = args[0]._get_js_string();
-        return BoolObj(self_str.includes(comp_str));
-    },
-    'print':(rec:Obj):Obj => {
-        return StrObj(rec._get_js_string())
-    },
-    'repeat:':(rec:Obj, args:Array<Obj>):Obj => {
-        let self_str = rec._get_js_string();
-        let count_num = args[0]._get_js_number();
-        return StrObj(self_str.repeat(count_num));
-    },
+    'size':(rec:Obj,args:Array<Obj>) => NumObj(rec._get_js_string().length),
+    'contains:':(rec:Obj,args:Array<Obj>) => BoolObj(rec._get_js_string().includes(args[0]._get_js_string())),
+    'print':(rec:Obj):Obj => StrObj(rec._get_js_string()),
+    'repeat:':(rec:Obj, args:Array<Obj>):Obj => StrObj(rec._get_js_string().repeat(args[0]._get_js_number())),
     'do:':(rec:Obj, args:Array<Obj>):Obj=>{
         let str = rec._get_js_string()
         let block = args[0]
