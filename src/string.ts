@@ -1,6 +1,6 @@
 import {make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
 import {BoolObj} from "./boolean.ts";
-import {eval_statements, sval} from "./eval.ts";
+import {eval_block_obj, eval_statements} from "./eval.ts";
 import {NumObj} from "./number.ts";
 
 export const StringProto = make_native_obj("StringProto",ObjectProto,{
@@ -47,6 +47,15 @@ export const StringProto = make_native_obj("StringProto",ObjectProto,{
         let count_num = args[0]._get_js_number();
         return StrObj(self_str.repeat(count_num));
     },
+    'do:':(rec:Obj, args:Array<Obj>):Obj=>{
+        let str = rec._get_js_string()
+        let block = args[0]
+        for(let i =0; i<str.length; i++) {
+            eval_block_obj(block,[StrObj(str[i])])
+        }
+        return NilObj()
+    },
+
 });
 
 export const StrObj = (value:string):Obj => new Obj("StringLiteral", StringProto, {'_jsvalue': value})

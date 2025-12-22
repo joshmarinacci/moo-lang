@@ -19,7 +19,6 @@ test('strings',() => {
      foo := foo + "bar".
      foo. `,scope,StrObj("startbar"))
 })
-
 test('structure',() => {
     let scope = make_standard_scope()
     cval('"foobar" contains: "foo"', scope,BoolObj(true))
@@ -33,19 +32,34 @@ test('structure',() => {
 })
 test('common protocol',() => {
     let scope = make_standard_scope()
+    // print
     cval(`'foo' print.`,scope,StrObj('foo'))
+    // equality
     cval(`'foo' == 'foo'.`,scope,BoolObj(true))
     cval(`'foo' == 'bar'.`,scope,BoolObj(false))
+    // is nil
     cval(`'foo' isNil`,scope,BoolObj(false))
+    // boolean comparison
+    cval('"foo" < "bar"', scope,BoolObj(false))
+    cval('"bar" < "foo"', scope,BoolObj(true))
+    cval('"foo" > "bar"', scope,BoolObj(true))
+    // compare for sorting
     cval('"foo" compare: "bar"', scope, NumObj(1))
     cval('"foo" compare: "qux"', scope, NumObj(-1))
     cval('"foo" compare: "foo"', scope, NumObj(0))
     cval('"foobar" compare: "foobar"', scope,NumObj(0))
-    cval('"foo" < "bar"', scope,BoolObj(false))
-    cval('"bar" < "foo"', scope,BoolObj(true))
-    cval('"foo" > "bar"', scope,BoolObj(true))
-    // sort
+    // sort using compare
     cval(`foo := { "foo" "bar" "quxx" }.
      foo sortedBy: [ a b | a compare: b ].`, scope,
         ListObj(StrObj("foo"),StrObj("bar"),StrObj("quxx")))
+    // loop over characters
+    cval(`
+     "foo" do: [ch |
+       ch print.
+     ].
+     88.
+    `,scope, {
+        expected: NumObj(88),
+        bytecodeOnly:true,
+    })
 })
