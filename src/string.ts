@@ -1,10 +1,14 @@
 import {make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
 import {BoolObj} from "./boolean.ts";
-import {sval} from "./eval.ts";
+import {eval_statements, sval} from "./eval.ts";
 import {NumObj} from "./number.ts";
 
 export const StringProto = make_native_obj("StringProto",ObjectProto,{
     'value':(rec:Obj) => rec,
+    'fromJs:':(rec:Obj, args:Array<Obj>):Obj => {
+        let val = args[0] as string
+        return StrObj(val)
+    },
     '+':((rec:Obj, args:Array<Obj>) => StrObj(rec.to_string() + args[0].to_string())),
     '<':((rec:Obj, args:Array<Obj>) => BoolObj(rec.to_string() < args[0].to_string())),
     '>':((rec:Obj, args:Array<Obj>) => BoolObj(rec.to_string() > args[0].to_string())),
@@ -44,28 +48,25 @@ export const StringProto = make_native_obj("StringProto",ObjectProto,{
         return StrObj(self_str.repeat(count_num));
     },
 });
+
 export const StrObj = (value:string):Obj => new Obj("StringLiteral", StringProto, {'_jsvalue': value})
 export function setup_string(scope: Obj) {
     scope._make_method_slot("String", StringProto)
-    sval(`String makeSlot: 'startsWith:' with: [str |
-         st := true.
-         st setJsSlot: "_jsvalue" to: (self jsCall: "startsWith" on: (self getJsSlot: "_jsvalue") with: (str getJsSlot: "_jsvalue")).
-         st.
-    ].`,scope);
-    sval(`String makeSlot: 'endsWith:' with: [str |
-         st := true.
-         st setJsSlot: "_jsvalue" to: (self jsCall: "endsWith" on: (self getJsSlot: "_jsvalue") with: (str getJsSlot: "_jsvalue")).
-         st.
-    ].`,scope);
-    sval(`String makeSlot: 'toUpper' with: [|
-         st := "".
-         st setJsSlot: "_jsvalue" to: (self jsCall: "toUpperCase" on: (self getJsSlot: "_jsvalue")).
-         st.
-    ].`,scope);
-    sval(`String makeSlot: 'toLower' with: [|
-         st := "".
-         st setJsSlot: "_jsvalue" to: (self jsCall: "toLowerCase" on: (self getJsSlot: "_jsvalue")).
-         st.
-    ].`,scope);
-
+    eval_statements(`
+        String makeSlot: '_js' with: [
+            self getJsSlot: '_jsvalue'.
+        ].
+        String makeSlot: 'startsWith:' with: [str | 
+            Boolean fromJs: (self jsCall: "startsWith" on: self _js with: str _js) 
+        ].
+        String makeSlot: 'endsWith:' with: [str | 
+            Boolean fromJs: (self jsCall: "endsWith" on: self _js with: str _js) 
+        ].
+        String makeSlot: 'toUpper' with: [|
+            String fromJs: (self jsCall: "toUpperCase" on: (self getJsSlot: "_jsvalue")).
+        ].
+        String makeSlot: 'toLower' with: [|
+            String fromJs: (self jsCall: "toLowerCase" on: (self getJsSlot: "_jsvalue")).
+        ].
+    `,scope)
 }

@@ -22,6 +22,10 @@ const BooleanProto = make_native_obj("BooleanProto",ObjectProto,{
             return eval_block_obj(args[1],[])
         }
     },
+    'fromJs:':(rec:Obj, args:Array<Obj>):Obj => {
+        let val = args[0] as boolean
+        return BoolObj(val)
+    },
     'and:':(rec:Obj, args:Array<Obj>):Obj => {
         let A = rec._get_js_boolean()
         let B = args[0]._get_js_boolean()
