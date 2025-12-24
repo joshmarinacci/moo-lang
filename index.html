@@ -203,7 +203,8 @@ self drawGift: 4 symbol: "*".
         keymap,
         lineNumbers, rectangularSelection
     } from "@codemirror/view"
-        import {Smalltalk} from "codemirror-lang-smalltalk"
+    import {basicSetup} from "codemirror"
+    import {Smalltalk, SmalltalkLanguage} from "codemirror-lang-smalltalk"
     import {
         bracketMatching, defaultHighlightStyle,
         foldGutter,
@@ -283,6 +284,31 @@ self drawGift: 4 symbol: "*".
         }
     ])
 
+    const common_methods = [
+        "print",
+        "make_data_slot:",
+        "makeSlot:",
+        "clone",
+        "Debug",
+    ]
+    function myCompletions(context) {
+        let word = context.matchBefore(/\w*/)
+        if (word.from == word.to && !context.explicit) {
+            return null
+        }
+        console.log(word)
+        let opts = common_methods.map(m => {
+            return {label:m, type:"keyword", info: "Method"}
+        })
+        return {
+            from: word.from,
+            options:opts,
+        }
+    }
+
+    const fooCompletions = SmalltalkLanguage.data.of({
+        autocomplete:myCompletions
+    })
     const view = new EditorView({
         doc: `6 + 7`,
         parent: document.getElementById('editor-codemirror'),
@@ -302,6 +328,7 @@ self drawGift: 4 symbol: "*".
             crosshairCursor(),
             highlightActiveLine(),
             history(),
+            fooCompletions,
             custom_keymap,
             keymap.of([
                 ...closeBracketsKeymap,
