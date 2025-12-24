@@ -47,7 +47,7 @@ Moo {
   
   Operator    = ("+" | "-" | "*" | "/" | "<" | ">" | "=" | "!")+
   ident       = (letter|"_") (letter|digit|"_")*
-  kident      = letter (letter|digit|"_")* ":"
+  kident      = (letter|"_") (letter|digit|"_")* ":"
   Number      = num2 | num16 | float | integer
   dig         = digit | "_"
   num2        = "2r" ("0" | "1")+

@@ -171,6 +171,7 @@ test('parse expression',() => {
 
     precedence('foo do: bar ',Method(PlnId("foo"),Keyword(  KeyArg(KeyId('do:'),PlnId('bar')) )))
     precedence('foo do: bar with: baz ',Method(PlnId("foo"),Keyword(  KeyArg(KeyId('do:'),PlnId('bar')), KeyArg(KeyId('with:'),PlnId('baz')) )))
+    precedence('foo _do: bar with: baz ',Method(PlnId("foo"),Keyword(  KeyArg(KeyId('_do:'),PlnId('bar')), KeyArg(KeyId('with:'),PlnId('baz')) )))
 
     precedence('4 do: 5 ', Method(Num(4),Keyword(KeyArg(KeyId('do:'),Num(5)))))
     precedence('(4) do: 5 ', Method(Grp(Num(4)), Keyword( KeyArg(KeyId('do:'),Num(5)))))
