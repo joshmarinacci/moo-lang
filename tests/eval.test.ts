@@ -372,4 +372,14 @@ test('fizzbuzz',() => {
     ] value .`,scope,NumObj(88))
 })
 test('loops',() => {
+    let scope = make_standard_scope()
+    cval(`
+    self _let: "counter" with: 0.
+    0 to: 5 do: [n |
+        self _set: "counter" with: counter + 1.
+    ].
+    Debug equals: counter with: 5.
+    `,scope, {
+        evalOnly:true
+    })
 })

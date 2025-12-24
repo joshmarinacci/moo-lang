@@ -132,7 +132,6 @@ export class Obj {
     _list_slot_names():string[] {
         return Array.from(this._method_slots.keys())
     }
-
     lookup_slot(name: string):Obj {
         d.p(`looking up name '${name}' on`, this.name)//,this.print(2))
         if (name === 'self') {
@@ -161,7 +160,6 @@ export class Obj {
         // throw new Error(`slot not found! "${name}"`)
         return NilObj()
     }
-
     get_js_slot(name: string):unknown {
         // d.p("getting js slot",name)
         // d.p("this is",this)
@@ -187,6 +185,20 @@ export class Obj {
     }
     _set_js_unknown(value:unknown) {
         this._method_slots.set(JS_VALUE,value as Obj)
+    }
+
+    _let_field(name:string, obj:Obj):void{
+        if(!obj) throw new Error(`cannot make method slot ${name}. value is null`)
+        this._method_slots.set(name,obj)
+    }
+    _set_field(name:string, obj:Obj):void {
+        if(this._method_slots.has(name)) {
+            this._method_slots.set(name,obj)
+        } else {
+            if(this.parent) {
+                this.parent._set_field(name,obj)
+            }
+        }
     }
 
     clone() {
@@ -327,6 +339,14 @@ export const ROOT = new Obj("ROOT", null,{
         rec.dump();
         d.outdent()
         return NilObj()
+    },
+    '_let:with:':(rec:Obj, args:Array<Obj>):Obj => {
+        rec._let_field(args[0]._get_js_string(), args[1])
+        return args[1]
+    },
+    '_set:with:':(rec:Obj, args:Array<Obj>):Obj => {
+        rec._set_field(args[0]._get_js_string(), args[1])
+        return args[1]
     },
 });
 export const ObjectProto = new Obj("ObjectProto", ROOT, {})
