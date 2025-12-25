@@ -6,7 +6,7 @@ import {StrObj} from "./string.ts";
 import {BlockProto} from "./block.ts";
 import {ListObj} from "./arrays.ts";
 
-type OpType = 'lookup-message'
+export type OpType = 'lookup-message'
     | 'send-message'
     | 'return-value'
     | 'load-literal-number'
@@ -15,7 +15,7 @@ type OpType = 'lookup-message'
     | 'create-literal-block'
     | 'assign'
     | 'return'
-type ByteOp = [OpType, unknown]
+export type ByteOp = [OpType, unknown]
 export type ByteCode = Array<ByteOp>;
 
 let d = new JoshLogger()
@@ -61,7 +61,7 @@ function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[]):Obj 
     throw new Error("shouldn't be here")
 }
 
-function execute_op(op: ByteOp, stack: Obj[], scope: Obj): Obj {
+export function execute_op(op: ByteOp, stack: Obj[], scope: Obj): Obj {
     let name = op[0]
     if (name === 'load-literal-number') {
         stack.push(NumObj(op[1] as number))
@@ -110,6 +110,11 @@ function execute_op(op: ByteOp, stack: Obj[], scope: Obj): Obj {
         args.reverse()
         let method = stack.pop() as Obj
         let rec = stack.pop() as Obj
+        console.log('send message\n',
+            `   receiver: ${rec.print()}\n`,
+            `   method: ${method.print()}`,
+            `   args: ${args.map(a => a.print()).join(',')}\n`,
+        )
         return perform_dispatch(method,rec,args, stack)
     }
     if (name === 'assign') {

@@ -7,6 +7,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite dev",
+    "debugger": "node src/debugger.ts",
     "test": "node --test"
   },
   "devDependencies": {
