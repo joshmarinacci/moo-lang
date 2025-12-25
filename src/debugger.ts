@@ -78,24 +78,10 @@ async function do_loop(opts: Options) {
         pc: 0,
         stack: [],
     }
-
-    // d.p("stack left " + stack.length)
-    // if (stack.length > 0) {
-    //     let last = stack.pop() as Obj
-    //     d.p("returning",last.print())
-    //     if (last && last._is_return) last = last.get_slot('value') as Obj;
-    //     return last
-    // } else {
-    //     return NilObj()
-    // }
-
     while (true) {
         inter.write('\n\n--------------------------------------\n')
         print_menu(inter, opts)
         print_state(inter,opts,ctx)
-
-        // inter.prompt(true)
-        // inter.write("doing stuff\n")
         let answer = await inter.question("step...")
         if(answer === 'step' || answer === undefined || answer.trim().length === 0) {
             step(inter,opts,ctx)
