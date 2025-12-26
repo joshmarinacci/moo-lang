@@ -21,7 +21,7 @@ export type ByteCode = Array<ByteOp>;
 let d = new JoshLogger()
 d.disable()
 
-function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[]):Obj {
+export function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[]):Obj {
     d.p("perform dispatch",method.print())
     if(method.name === 'MissingMethod') {
         let handler = rec.lookup_slot('doesNotUnderstand:')
@@ -77,7 +77,9 @@ export function execute_op(op: ByteOp, stack: Obj[], scope: Obj): Obj {
         blk2.name = 'Block'
         blk2._make_js_slot('args', blk.parameters);
         blk2._make_js_slot('body', blk.body);
-        blk2._make_js_slot('bytecode', blk.body.map(a => compile_bytecode(a)).flat())
+        let bytecode = blk.body.map(a => compile_bytecode(a)).flat()
+        bytecode.push(['return',null])
+        blk2._make_js_slot('bytecode', bytecode)
         blk2.parent = scope;
         stack.push(blk2)
         return NilObj()

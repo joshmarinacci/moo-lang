@@ -10,7 +10,7 @@ const d = new JoshLogger()
 d.disable()
 
 let BLOCK_COUNT = 0
-class ActivationObj extends Obj {
+export class ActivationObj extends Obj {
     constructor(name:string, parent:Obj, props:Record<string,unknown>) {
         super(name,parent,props)
     }

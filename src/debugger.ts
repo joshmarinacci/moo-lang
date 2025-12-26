@@ -1,9 +1,11 @@
 import readline, {Interface} from "node:readline/promises"
 import util from "node:util"
-import {type ByteOp, compile_bytecode, execute_op} from "./bytecode.ts";
+import {type ByteCode, type ByteOp, compile_bytecode, execute_op, perform_dispatch} from "./bytecode.ts";
 import {parse} from "./parser.ts";
-import {Obj} from "./obj.ts";
+import {Obj, ObjectProto} from "./obj.ts";
 import {make_standard_scope} from "./standard.ts";
+import {NumObj} from "./number.ts";
+import {ActivationObj} from "./block.ts";
 
 type Options = {
     code:string
@@ -53,17 +55,63 @@ type Context = {
     stack:Array<Obj>
 }
 function step(inter: Interface, opts: Options, ctx:Context) {
+    if(ctx.pc >= ctx.bytecode.length) {
+        console.log("we are done")
+    }
     let op = ctx.bytecode[ctx.pc]
     inter.write("executing " + util.inspect(op) +"\n")
-    let ret = execute_op(op, ctx.stack, ctx.scope)
-    ctx.pc ++
-    inter.write("returned " +ret.print() + "\n")
-        // d.green(`Stack (${stack.length}) : ` + stack.map(v => v.print()).join(", "))
-        // if (ret.is_kind_of("Exception")) {
-            // d.error("returning exception")
-            // d.outdent()
-            // return ret
-        // }
+    if(op[0] === 'return') {
+        let value = ctx.stack.pop() // get the value
+        ctx.stack.pop() // pop the method off
+        ctx.stack.pop() // pop off the receiver
+        ctx.scope = ctx.stack.pop() as Obj // restore the cope
+        let pc = ctx.stack.pop() as Obj
+        ctx.pc = pc._get_js_number()
+        let bytecode = ctx.stack.pop() as Obj
+        ctx.bytecode = bytecode.get_js_slot('bytecode')
+        // push the return value back on
+        ctx.stack.push(value)
+        return
+    }
+    if(op[0] === 'send-message') {
+        let arg_count = op[1] as number
+        let args = []
+        for (let i = 0; i < arg_count; i++) {
+            args.push(ctx.stack.pop())
+        }
+        args.reverse()
+        let method = ctx.stack.pop() as Obj
+        let rec = ctx.stack.pop() as Obj
+        method.parent = rec
+        console.log('send message\n',
+            `   receiver: ${rec.print()}\n`,
+            `   method: ${method.print()}`,
+            `   args: ${args.map(a => a.print()).join(',')}\n`,
+        )
+        if (method.name === 'Block') {
+            if (method.name === 'Block' && method.get_js_slot("bytecode") !== null) {
+                console.log("doing bytecode method")
+                ctx.stack.push(new Obj("bytecode",ObjectProto,{bytecode:ctx.bytecode}))
+                ctx.stack.push(NumObj(ctx.pc+1))
+                ctx.bytecode = method.get_js_slot('bytecode') as ByteCode
+                ctx.stack.push(ctx.scope)
+                ctx.stack.push(rec)
+                ctx.stack.push(method)
+                let scope = new ActivationObj(`block-activation`, method, {})
+                ctx.scope = scope
+                // set pc
+                ctx.pc = 0
+                //  setup args
+                return
+            }
+        }
+        ctx.pc++
+        return perform_dispatch(method,rec,args, ctx.stack)
+    } else {
+        let ret = execute_op(op, ctx.stack, ctx.scope)
+        ctx.pc++
+        inter.write("returned " + ret.print() + "\n")
+    }
 }
 
 async function do_loop(opts: Options) {
