@@ -9,6 +9,7 @@ import {ActivationObj} from "./block.ts";
 
 type Options = {
     code:string
+    step:boolean
 }
 
 
@@ -18,6 +19,10 @@ function handle_args():Options {
         options: {
             code: {
                 type: 'string'
+            },
+            step: {
+                type:'boolean',
+                default: false,
             }
         }
     })
@@ -32,7 +37,7 @@ const log = (...args:unknown[]) => console.log('LOG',...args)
 
 function print_menu(inter: Interface, opts: Options) {
     inter.write("input is: " + opts.code+'\n')
-    inter.write('commands: quit, step\n')
+    inter.write('commands: quit, step, run\n')
 }
 
 function print_state(inter: Interface, opts: Options, ctx:Context) {
@@ -52,14 +57,22 @@ type Context = {
     scope:Obj,
     bytecode:Array<ByteOp>,
     pc:number,
-    stack:Array<Obj>
+    stack:Array<Obj>,
+    running: boolean
 }
-function step(inter: Interface, opts: Options, ctx:Context) {
+function step(inter: Interface, opts: Options, ctx:Context):void {
     if(ctx.pc >= ctx.bytecode.length) {
         console.log("we are done")
+        ctx.running = false
     }
     let op = ctx.bytecode[ctx.pc]
     inter.write("executing " + util.inspect(op) +"\n")
+    if(op[0] === 'halt') {
+        inter.write('halting')
+        ctx.running = false
+        ctx.pc++
+        return
+    }
     if(op[0] === 'return') {
         let value = ctx.stack.pop() // get the value
         ctx.stack.pop() // pop the method off
@@ -106,7 +119,8 @@ function step(inter: Interface, opts: Options, ctx:Context) {
             }
         }
         ctx.pc++
-        return perform_dispatch(method,rec,args, ctx.stack)
+        let ret = perform_dispatch(method,rec,args, ctx.stack)
+        inter.write(`dispatch returned ${ret.print()}\n`)
     } else {
         let ret = execute_op(op, ctx.stack, ctx.scope)
         ctx.pc++
@@ -125,18 +139,29 @@ async function do_loop(opts: Options) {
         bytecode: compile_bytecode(parse(opts.code,'BlockBody')),
         pc: 0,
         stack: [],
+        running:true
+    }
+    if(opts.step) {
+        ctx.running = false
     }
     while (true) {
         inter.write('\n\n--------------------------------------\n')
-        print_menu(inter, opts)
         print_state(inter,opts,ctx)
-        let answer = await inter.question("step...")
-        if(answer === 'step' || answer === undefined || answer.trim().length === 0) {
+        print_menu(inter, opts)
+        if(ctx.running) {
             step(inter,opts,ctx)
-        }
-        if(answer === 'quit') {
-            inter.close()
-            break;
+        } else {
+            let answer = await inter.question("step...")
+            if(answer === 'step' || answer === undefined || answer.trim().length === 0) {
+                step(inter,opts,ctx)
+            }
+            if(answer === 'run') {
+                ctx.running = true
+            }
+            if(answer === 'quit') {
+                inter.close()
+                break;
+            }
         }
     }
 }

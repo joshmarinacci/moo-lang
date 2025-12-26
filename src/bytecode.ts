@@ -6,7 +6,8 @@ import {StrObj} from "./string.ts";
 import {BlockProto} from "./block.ts";
 import {ListObj} from "./arrays.ts";
 
-export type OpType = 'lookup-message'
+export type OpType
+    = 'lookup-message'
     | 'send-message'
     | 'return-value'
     | 'load-literal-number'
@@ -15,6 +16,7 @@ export type OpType = 'lookup-message'
     | 'create-literal-block'
     | 'assign'
     | 'return'
+    | 'halt'
 export type ByteOp = [OpType, unknown]
 export type ByteCode = Array<ByteOp>;
 
@@ -164,7 +166,7 @@ export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
 }
 
 export function compile_bytecode(ast: Ast): ByteCode {
-    // d.p("compiling", ast)
+    d.p("compiling", ast)
     if (Array.isArray(ast)) {
         return ast.map(a => compile_bytecode(a)).flat()
     }
@@ -206,6 +208,11 @@ export function compile_bytecode(ast: Ast): ByteCode {
         ].flat() as ByteCode
     }
     if (ast.type === 'unary-call') {
+        if(ast.message.name === 'halt') {
+            return [
+                ['halt',0]
+            ]
+        }
         return [
             [['lookup-message', ast.message.name]],
             [['send-message', 0]],
