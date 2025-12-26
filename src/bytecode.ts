@@ -5,7 +5,6 @@ import {NumObj} from "./number.ts";
 import {StrObj} from "./string.ts";
 import {ActivationObj, BlockProto} from "./block.ts";
 import {ListObj} from "./arrays.ts";
-import {Interface} from "node:readline/promises";
 
 export type OpType
     = 'lookup-message'
@@ -53,8 +52,7 @@ export function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[
             ctx.stack.push(ctx.scope)
             ctx.stack.push(rec)
             ctx.stack.push(method)
-            let scope = new ActivationObj(`block-activation`, method, {})
-            ctx.scope = scope
+            ctx.scope = new ActivationObj(`block-activation`, method, {})
             // set pc
             ctx.pc = 0
             //  setup args
@@ -156,12 +154,6 @@ export function execute_op(op: ByteOp, stack: Obj[], scope: Obj, ctx:Context): O
         args.reverse()
         let method = stack.pop() as Obj
         let rec = stack.pop() as Obj
-        // method.parent = rec
-        console.log('send message\n',
-            `   receiver: ${rec.print()}\n`,
-            `   method: ${method.print()}`,
-            `   args: ${args.map(a => a.print()).join(',')}\n`,
-        )
         return perform_dispatch(method,rec,args, stack, ctx)
     }
     if (name === 'assign') {
@@ -182,13 +174,29 @@ export function execute_op(op: ByteOp, stack: Obj[], scope: Obj, ctx:Context): O
 }
 
 export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
-    let stack: Array<Obj> = []
     d.p("start executing", code)
+    let ctx:Context = {
+        scope: scope,
+        bytecode: code,
+        pc: 0,
+        stack: [],
+        running:true
+    }
+
     d.indent()
-    for (let op of code) {
+    while(ctx.running) {
+        d.green(`==========  ${ctx.pc}`)
+        d.green(`Stack (${ctx.stack.length}) : ` + ctx.stack.map(v => v.print()).join(", "))
+        if(ctx.pc >= ctx.bytecode.length) {
+            console.log("we are done")
+            ctx.running = false
+            break;
+        }
+
+        let op = ctx.bytecode[ctx.pc]
         d.red(`Op: ${op[0]} ${op[1]}`)
-        let ret = execute_op(op, stack, scope)
-        d.green(`Stack (${stack.length}) : ` + stack.map(v => v.print()).join(", "))
+        let ret = execute_op(op, ctx.stack, scope, ctx)
+        d.green(`Stack (${ctx.stack.length}) : ` + ctx.stack.map(v => v.print()).join(", "))
         if (ret.is_kind_of("Exception")) {
             d.error("returning exception")
             d.outdent()
@@ -197,9 +205,10 @@ export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
     }
     d.outdent()
     d.p("done executing")
-    d.p("stack left " + stack.length)
-    if (stack.length > 0) {
-        let last = stack.pop() as Obj
+    d.p("stack left " + ctx.stack.length)
+
+    if (ctx.stack.length > 0) {
+        let last = ctx.stack.pop() as Obj
         d.p("returning",last.print())
         if (last && last._is_return) last = last.get_slot('value') as Obj;
         return last
