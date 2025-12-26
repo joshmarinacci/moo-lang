@@ -24,7 +24,7 @@ let d = new JoshLogger()
 d.disable()
 
 export function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[]):Obj {
-    d.p("perform dispatch",method.print())
+    d.p(`perform dispatch: ${method.name}`,method.print())
     if(method.name === 'MissingMethod') {
         let handler = rec.lookup_slot('doesNotUnderstand:')
         if(handler) {

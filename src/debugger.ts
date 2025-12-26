@@ -64,6 +64,7 @@ function step(inter: Interface, opts: Options, ctx:Context):void {
     if(ctx.pc >= ctx.bytecode.length) {
         console.log("we are done")
         ctx.running = false
+        return
     }
     let op = ctx.bytecode[ctx.pc]
     inter.write("executing " + util.inspect(op) +"\n")
@@ -102,8 +103,7 @@ function step(inter: Interface, opts: Options, ctx:Context):void {
             `   args: ${args.map(a => a.print()).join(',')}\n`,
         )
         if (method.name === 'Block') {
-            if (method.name === 'Block' && method.get_js_slot("bytecode") !== null) {
-                console.log("doing bytecode method")
+            if (method.name === 'Block' && method.get_js_slot("bytecode") !== undefined) {
                 ctx.stack.push(new Obj("bytecode",ObjectProto,{bytecode:ctx.bytecode}))
                 ctx.stack.push(NumObj(ctx.pc+1))
                 ctx.bytecode = method.get_js_slot('bytecode') as ByteCode
@@ -121,6 +121,11 @@ function step(inter: Interface, opts: Options, ctx:Context):void {
         ctx.pc++
         let ret = perform_dispatch(method,rec,args, ctx.stack)
         inter.write(`dispatch returned ${ret.print()}\n`)
+        let top = ctx.stack[ctx.stack.length-1];
+        inter.write(`top of the stack is ${top.print()}`)
+        if(top.name === 'Exception') {
+            ctx.running = false
+        }
     } else {
         let ret = execute_op(op, ctx.stack, ctx.scope)
         ctx.pc++
