@@ -1,6 +1,6 @@
 import readline, {Interface} from "node:readline/promises"
 import util from "node:util"
-import {type ByteCode, type ByteOp, compile_bytecode, execute_op, perform_dispatch} from "./bytecode.ts";
+import {type ByteCode, type ByteOp, type Context, compile_bytecode, execute_op, perform_dispatch} from "./bytecode.ts";
 import {parse} from "./parser.ts";
 import {Obj, ObjectProto} from "./obj.ts";
 import {make_standard_scope} from "./standard.ts";
@@ -53,13 +53,6 @@ function print_state(inter: Interface, opts: Options, ctx:Context) {
     inter.write("========\n")
 }
 
-type Context = {
-    scope:Obj,
-    bytecode:Array<ByteOp>,
-    pc:number,
-    stack:Array<Obj>,
-    running: boolean
-}
 function step(inter: Interface, opts: Options, ctx:Context):void {
     if(ctx.pc >= ctx.bytecode.length) {
         console.log("we are done")
@@ -68,69 +61,8 @@ function step(inter: Interface, opts: Options, ctx:Context):void {
     }
     let op = ctx.bytecode[ctx.pc]
     inter.write("executing " + util.inspect(op) +"\n")
-    if(op[0] === 'halt') {
-        inter.write('halting')
-        ctx.running = false
-        ctx.pc++
-        return
-    }
-    if(op[0] === 'return') {
-        let value = ctx.stack.pop() // get the value
-        ctx.stack.pop() // pop the method off
-        ctx.stack.pop() // pop off the receiver
-        ctx.scope = ctx.stack.pop() as Obj // restore the cope
-        let pc = ctx.stack.pop() as Obj
-        ctx.pc = pc._get_js_number()
-        let bytecode = ctx.stack.pop() as Obj
-        ctx.bytecode = bytecode.get_js_slot('bytecode')
-        // push the return value back on
-        ctx.stack.push(value)
-        return
-    }
-    if(op[0] === 'send-message') {
-        let arg_count = op[1] as number
-        let args = []
-        for (let i = 0; i < arg_count; i++) {
-            args.push(ctx.stack.pop())
-        }
-        args.reverse()
-        let method = ctx.stack.pop() as Obj
-        let rec = ctx.stack.pop() as Obj
-        method.parent = rec
-        console.log('send message\n',
-            `   receiver: ${rec.print()}\n`,
-            `   method: ${method.print()}`,
-            `   args: ${args.map(a => a.print()).join(',')}\n`,
-        )
-        if (method.name === 'Block') {
-            if (method.name === 'Block' && method.get_js_slot("bytecode") !== undefined) {
-                ctx.stack.push(new Obj("bytecode",ObjectProto,{bytecode:ctx.bytecode}))
-                ctx.stack.push(NumObj(ctx.pc+1))
-                ctx.bytecode = method.get_js_slot('bytecode') as ByteCode
-                ctx.stack.push(ctx.scope)
-                ctx.stack.push(rec)
-                ctx.stack.push(method)
-                let scope = new ActivationObj(`block-activation`, method, {})
-                ctx.scope = scope
-                // set pc
-                ctx.pc = 0
-                //  setup args
-                return
-            }
-        }
-        ctx.pc++
-        let ret = perform_dispatch(method,rec,args, ctx.stack)
-        inter.write(`dispatch returned ${ret.print()}\n`)
-        let top = ctx.stack[ctx.stack.length-1];
-        inter.write(`top of the stack is ${top.print()}`)
-        if(top.name === 'Exception') {
-            ctx.running = false
-        }
-    } else {
-        let ret = execute_op(op, ctx.stack, ctx.scope)
-        ctx.pc++
-        inter.write("returned " + ret.print() + "\n")
-    }
+    let ret = execute_op(op, ctx.stack, ctx.scope, ctx)
+    inter.write("returned " + ret.print() + "\n")
 }
 
 async function do_loop(opts: Options) {
@@ -138,7 +70,6 @@ async function do_loop(opts: Options) {
         input:process.stdin,
         output:process.stdout
     })
-    // inter.setPrompt("Debug")
     let ctx:Context = {
         scope: make_standard_scope(),
         bytecode: compile_bytecode(parse(opts.code,'BlockBody')),

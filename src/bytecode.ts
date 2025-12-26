@@ -3,8 +3,9 @@ import type {Ast, BlockLiteral} from "./ast.ts";
 import {JoshLogger} from "./util.ts";
 import {NumObj} from "./number.ts";
 import {StrObj} from "./string.ts";
-import {BlockProto} from "./block.ts";
+import {ActivationObj, BlockProto} from "./block.ts";
 import {ListObj} from "./arrays.ts";
+import {Interface} from "node:readline/promises";
 
 export type OpType
     = 'lookup-message'
@@ -23,7 +24,7 @@ export type ByteCode = Array<ByteOp>;
 let d = new JoshLogger()
 d.disable()
 
-export function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[]):Obj {
+export function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[], ctx: Context):Obj {
     d.p(`perform dispatch: ${method.name}`,method.print())
     if(method.name === 'MissingMethod') {
         let handler = rec.lookup_slot('doesNotUnderstand:')
@@ -45,6 +46,21 @@ export function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[
     }
     if (method.name === 'Block') {
         method.parent = rec
+        if (method.name === 'Block' && method.get_js_slot("bytecode") !== undefined) {
+            ctx.stack.push(new Obj("bytecode",ObjectProto,{bytecode:ctx.bytecode}))
+            ctx.stack.push(NumObj(ctx.pc+1))
+            ctx.bytecode = method.get_js_slot('bytecode') as ByteCode
+            ctx.stack.push(ctx.scope)
+            ctx.stack.push(rec)
+            ctx.stack.push(method)
+            let scope = new ActivationObj(`block-activation`, method, {})
+            ctx.scope = scope
+            // set pc
+            ctx.pc = 0
+            //  setup args
+            return NilObj()
+        }
+
         let meth = method.get_js_slot('value') as unknown
         if (meth instanceof Obj && meth.is_kind_of("NativeMethod")) {
             let ret = (meth.get_js_slot(JS_VALUE) as Function)(method, args)
@@ -63,8 +79,34 @@ export function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[
     throw new Error("shouldn't be here")
 }
 
-export function execute_op(op: ByteOp, stack: Obj[], scope: Obj): Obj {
+export type Context = {
+    scope:Obj,
+    bytecode:Array<ByteOp>,
+    pc:number,
+    stack:Array<Obj>,
+    running: boolean
+}
+
+export function execute_op(op: ByteOp, stack: Obj[], scope: Obj, ctx:Context): Obj {
     let name = op[0]
+    ctx.pc++
+    if(name === 'halt') {
+        ctx.running = false
+        return NilObj()
+    }
+    if(name === 'return') {
+        let value = ctx.stack.pop() // get the value
+        ctx.stack.pop() // pop the method off
+        ctx.stack.pop() // pop off the receiver
+        ctx.scope = ctx.stack.pop() as Obj // restore the cope
+        let pc = ctx.stack.pop() as Obj
+        ctx.pc = pc._get_js_number()
+        let bytecode = ctx.stack.pop() as Obj
+        ctx.bytecode = bytecode.get_js_slot('bytecode')
+        // push the return value back on
+        ctx.stack.push(value)
+        return NilObj()
+    }
     if (name === 'load-literal-number') {
         stack.push(NumObj(op[1] as number))
         return NilObj()
@@ -114,12 +156,13 @@ export function execute_op(op: ByteOp, stack: Obj[], scope: Obj): Obj {
         args.reverse()
         let method = stack.pop() as Obj
         let rec = stack.pop() as Obj
+        // method.parent = rec
         console.log('send message\n',
             `   receiver: ${rec.print()}\n`,
             `   method: ${method.print()}`,
             `   args: ${args.map(a => a.print()).join(',')}\n`,
         )
-        return perform_dispatch(method,rec,args, stack)
+        return perform_dispatch(method,rec,args, stack, ctx)
     }
     if (name === 'assign') {
         let value = stack.pop() as Obj
