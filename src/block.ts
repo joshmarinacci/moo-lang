@@ -1,4 +1,4 @@
-import {NatMeth, NilObj, Obj, ObjectProto} from "./obj.ts";
+import {BCMeth, NatMeth, NilObj, Obj, ObjectProto} from "./obj.ts";
 import {AstToSource, } from "./ast.ts";
 import type {Statement, PlainId} from "./ast.ts"
 import {StrObj} from "./string.ts";
@@ -76,5 +76,9 @@ export const BlockProto = new Obj("BlockProto", ObjectProto, {
             }
         }
         return last
-    })
+    }),
+    'whileTrue:': BCMeth([
+        ['halt',null],
+    ]),
+
 })

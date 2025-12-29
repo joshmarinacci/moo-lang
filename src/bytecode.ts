@@ -1,5 +1,5 @@
 import {JS_VALUE, NilObj, Obj, ObjectProto} from "./obj.ts";
-import type {Ast, BlockLiteral} from "./ast.ts";
+import {type Ast, AstToString, type BlockLiteral} from "./ast.ts";
 import {JoshLogger} from "./util.ts";
 import {NumObj} from "./number.ts";
 import {StrObj} from "./string.ts";
@@ -17,11 +17,12 @@ export type OpType
     | 'assign'
     | 'return'
     | 'halt'
+    | 'jump-if-true'
 export type ByteOp = [OpType, unknown]
 export type ByteCode = Array<ByteOp>;
 
 let d = new JoshLogger()
-d.disable()
+// d.disable()
 
 export function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[], ctx: Context):Obj {
     d.p(`perform dispatch: ${method.name}`,method.print())
@@ -41,6 +42,21 @@ export function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[
     if (method.is_kind_of("NativeMethod")) {
         let ret = (method.get_js_slot(JS_VALUE) as Function)(rec, args)
         stack.push(ret)
+        return NilObj()
+    }
+    if(method.is_kind_of("BytecodeMethod")) {
+        d.p("weve got a bytecode method")
+        d.p(method.get_js_slot('bytecode'))
+        ctx.stack.push(new Obj("bytecode",ObjectProto,{bytecode:ctx.bytecode}))
+        ctx.stack.push(NumObj(ctx.pc+1))
+        ctx.bytecode = method.get_js_slot('bytecode') as ByteCode
+        ctx.stack.push(ctx.scope)
+        ctx.stack.push(rec)
+        ctx.stack.push(method)
+        ctx.scope = new ActivationObj(`block-activation`, method, {})
+        // set pc
+        ctx.pc = 0
+        //  setup args
         return NilObj()
     }
     if (method.name === 'Block') {
@@ -170,6 +186,19 @@ export function execute_op(op: ByteOp, stack: Obj[], scope: Obj, ctx:Context): O
         ret._make_method_slot('target',scope.parent as Obj)
         return ret
     }
+    if (name === 'jump-if-true') {
+        let distance = op[1] as number
+        let value = stack.pop() as Obj
+        d.p("current value is",value.print())
+        if(value._get_js_boolean() === true) {
+            d.p("jumping by ", distance)
+            ctx.pc = 3;
+        } else {
+            d.p("not jumping")
+        }
+        return NilObj()
+        // return ret
+    }
     throw new Error(`unknown bytecode operation '${name}'`)
 }
 
@@ -218,7 +247,7 @@ export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
 }
 
 export function compile_bytecode(ast: Ast): ByteCode {
-    d.p("compiling", ast)
+    d.p("compiling", AstToString(ast))
     if (Array.isArray(ast)) {
         return ast.map(a => compile_bytecode(a)).flat()
     }

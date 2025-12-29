@@ -1,4 +1,5 @@
 import {JoshLogger} from "./util.ts";
+import {type ByteCode} from "./bytecode.ts";
 
 
 const d = new JoshLogger()
@@ -358,6 +359,13 @@ export type NativeMethodSigature = (rec:Obj, args:Array<Obj>) => Obj;
 export const NatMeth = (fun:NativeMethodSigature):Obj => {
     return new Obj("NativeMethod", NativeMethodProto, {
         '_jsvalue': fun,
+    })
+}
+export const BytecodeMethodProto = new Obj("BytecodeMethodProto", ObjectProto, {})
+export type BytecodeMethodSigature = (rec:Obj, args:Array<Obj>) => Obj;
+export const BCMeth = (bytecode:ByteCode):Obj => {
+    return new Obj("BytecodeMethod", BytecodeMethodProto, {
+        'bytecode': bytecode,
     })
 }
 export function setup_object(scope: Obj) {
