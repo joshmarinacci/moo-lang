@@ -1,10 +1,20 @@
-import {NativeMethodProto, NatMeth, NilObj, Obj, ObjectProto, ROOT, setup_object} from "./obj.ts";
+import {
+    NativeMethodProto,
+    NatMeth,
+    NilObj,
+    Obj,
+    ObjectProto,
+    ROOT,
+    setup_object
+} from "./obj.ts";
 import {setup_number} from "./number.ts";
 import {BoolObj, setup_boolean} from "./boolean.ts";
 import {DictObj, ListObj, setup_arrays} from "./arrays.ts";
 import {setup_debug} from "./debug.ts";
 import {setup_string, StrObj} from "./string.ts";
 import {eval_really_perform_call} from "./eval.ts";
+import {BlockProto} from "./block.ts";
+import {BytecodeMethod} from "./bytecode.ts";
 
 function root_fixup(scope:Obj) {
     ROOT._make_method_slot('listSlotNames',NatMeth((rec:Obj, args:Array<Obj>):Obj => {
@@ -115,6 +125,25 @@ function root_fixup(scope:Obj) {
         return NilObj()
     }))
     ROOT._make_method_slot('jsLookupGlobal:',NatMeth((rec:Obj, args:Array<Obj>)=> global[args[0]._get_js_string()]))
+
+    BlockProto._make_method_slot('whileTrue:', new BytecodeMethod(
+        ['block'],
+        [
+        ['load-plain-id','block'],
+        // execute the body block
+        ['lookup-message','value'],    // lookup value message on the block
+        ['send-message',0],            // call value message
+
+        // execute the conditional block
+        //     ['load-plain-id','self'],  // the block is the receiver
+            ['load-plain-id','receiver'],  // the block is the receiver
+        ['lookup-message','value'],    // lookup value message on the block
+        ['send-message',0],            // call value message
+        ['jump-if-true',0],            // if the condition was true, jump to start
+
+        ['halt',null],
+    ],BlockProto))
+
 }
 
 export function make_common_scope():Obj {

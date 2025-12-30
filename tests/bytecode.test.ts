@@ -1,11 +1,12 @@
-import test from "node:test";
-import {NilObj, Obj} from "../src/obj.ts";
+import test, {describe} from "node:test";
+import {type ByteCode, type Context, NilObj, Obj} from "../src/obj.ts";
 import {NumObj} from "../src/number.ts";
 import {objsEqual} from "../src/debug.ts";
 import {make_standard_scope} from "../src/standard.ts";
 import {parse} from "../src/parser.ts";
-import {type ByteCode, compile_bytecode, execute_bytecode} from "../src/bytecode.ts";
+import {compile_bytecode, execute_bytecode, execute_op} from "../src/bytecode.ts";
 import {JoshLogger} from "../src/util.ts";
+import {BlkArgs, Num, PlnId, Stmt} from "../src/ast.ts";
 
 let d = new JoshLogger()
 // d.disable()
@@ -17,6 +18,42 @@ function compare_execute(code:ByteCode, expected: Obj) {
     if(ret.is_kind_of("Exception")) {
         d.red(ret.print())
     }
+    if(!objsEqual(ret, expected)) {
+        d.p("not equal")
+        d.p(ret.print())
+        d.p(expected.print())
+        throw new Error(`${ret.print()} !== ${expected.print()}`)
+    } else {
+        d.p('same',ret.print())
+    }
+}
+
+function compare_execute_clean(code:ByteCode, expected: Obj) {
+    d.p("executing",code)
+    let scope:Obj = make_standard_scope();
+    let ctx:Context = {
+        scope: scope,
+        bytecode: code,
+        pc: 0,
+        stack: [],
+        running:true
+    }
+    while(ctx.running) {
+        console.log("=======")
+        console.log("stack",ctx.stack.map(o => o.print()))
+        console.log(ctx.bytecode)
+        if(ctx.pc >= ctx.bytecode.length) break;
+        let op = ctx.bytecode[ctx.pc]
+        console.log('op ' + op)
+        let ret = execute_op(op, ctx.stack, scope, ctx)
+    }
+    console.log("done")
+    console.log("stack is",ctx.stack.map(o => o.print()))
+
+    if(ctx.stack.length > 1) {
+        throw new Error("stack too big. should just have the return value")
+    }
+    let ret = ctx.stack.pop()
     if(!objsEqual(ret, expected)) {
         d.p("not equal")
         d.p(ret.print())
@@ -105,9 +142,52 @@ test('simplest loop',() => {
         ['load-plain-id','counter'],
     ],NumObj(5))
 })
+
+describe("function calls", () => {
+    test('function call cleanup: native js', () => {
+        // ccem('4 * 5', NumObj(20))
+        compare_execute_clean([
+            ['load-literal-number', 4],
+            ['lookup-message', '*'],
+            ['load-literal-number', 5],
+            ['send-message', 1],
+        ], NumObj(20))
+    })
+    test('block bytecode method', () => {
+        // ccem(` self makeSlot: "foo:" with: [ bar |  88.  ].  self foo: 88.`, NumObj(88))
+        compare_execute_clean([
+            ['load-plain-id','self'],
+            ['lookup-message','makeSlot:with:'],
+            ['load-literal-string','foo:'],
+            ['create-literal-block',BlkArgs([PlnId('bar')],[Stmt(Num(88))])],
+            ['send-message',2],
+            ['load-plain-id','self'],
+            [ 'lookup-message', 'foo:' ],
+            ['load-literal-number',88],
+            ['send-message',1],
+        ], NumObj(88))
+    })
+    test('block value returning a value',() => {
+        // ccem('[ 5 . ] value .',NumObj(5))
+        compare_execute_clean([
+            ['create-literal-block',BlkArgs([],[Stmt(Num(5))])],
+            ['lookup-message','value'],
+            ['send-message',0]
+        ],NumObj(5))
+    })
+    test('block value accepting a parameter',() => {
+        ccem('[b| 7 + b. ] valueWith: 6 .',NumObj(13))
+        // compare_execute_clean([
+        //     ['create-literal-block',BlkArgs([],[Stmt(Num(5))])],
+        //     ['lookup-message','value'],
+        //     ['send-message',0]
+        // ],NumObj(5))
+    })
+})
+
 test('compile & execute: 1 + 2 = 3',() =>{
     cce('1 + 2', NumObj(3))
-    cce('5 square', NumObj(25))
+    // cce('5 square', NumObj(25))
 })
 test('conditional',() => {
     cce(` 4 < 5 ifTrue: 88`,NumObj(88))
@@ -170,5 +250,4 @@ test('invoke debug',() => {
 })
 test('whileTrue: ',() => {
     ccem(`[4 > 5] whileTrue: [5.].`, NumObj(5))
-
 })

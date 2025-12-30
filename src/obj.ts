@@ -2,6 +2,32 @@ import {JoshLogger} from "./util.ts";
 import util from "node:util";
 
 
+export type OpType
+    = 'lookup-message'
+    | 'send-message'
+    | 'return-value'
+    | 'load-literal-number'
+    | 'load-plain-id'
+    | 'load-literal-string'
+    | 'create-literal-block'
+    | 'assign'
+    | 'return'
+    | 'halt'
+    | 'jump-if-true'
+    | 'return-from-bytecode-call'
+export type ByteOp = [OpType, unknown]
+export type ByteCode = Array<ByteOp>;
+
+export type Context = {
+    scope:Obj,
+    bytecode:Array<ByteOp>,
+    pc:number,
+    stack:Array<Obj>,
+    running: boolean
+}
+
+
+
 const d = new JoshLogger()
 d.disable()
 
@@ -281,6 +307,10 @@ export class Obj {
     }
 }
 
+export interface Method {
+    dispatch(ctx: Context, arg_count: number):void;
+}
+
 export const FakeNatMeth = (fun:NativeMethodSigature):Obj => {
     return new Obj("NativeMethod", null, {
         '_jsvalue': fun,
@@ -290,15 +320,6 @@ export const ROOT = new Obj("ROOT", null,{
     'make_data_slot:with:':FakeNatMeth((rec:Obj, args:Array<Obj>):Obj => {
         rec._make_data_slot(args[0]._get_js_string(), args[1])
         return NilObj()
-    }),
-    'makeSlot:with:':FakeNatMeth((rec:Obj, args:Array<Obj>):Obj => {
-        let slot_name = args[0]._get_js_string()
-        let slot_value = args[1]
-        rec._make_method_slot(slot_name,slot_value)
-        if (slot_value.name === 'Block') {
-            slot_value.parent = rec
-        }
-        return NilObj();
     }),
     'understands:with:':(rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()
@@ -356,11 +377,47 @@ export const NilObj = () => new Obj("NilLiteral", NilProto, {})
 
 export const NativeMethodProto = new Obj("NativeMethodProto", ObjectProto, {})
 export type NativeMethodSigature = (rec:Obj, args:Array<Obj>) => Obj;
+class NativeMethod extends Obj implements Method {
+    constructor(name:string, parent:Obj, props:Record<string,unknown>) {
+        super(name,parent,props);
+    }
+
+    dispatch(ctx: Context, arg_count: number): void {
+        console.log("executing", this.print())
+        console.log("real method is", this._get_js_unknown())
+        console.log('stak is',ctx.stack.map(o => o.print()))
+        console.log("the argument count is", arg_count)
+        let args = []
+        for (let i = 0; i < arg_count; i++) {
+            args.push(ctx.stack.pop())
+        }
+        args.reverse()
+        let meth = ctx.stack.pop()
+        let rec = ctx.stack.pop()
+        let ret = (this.get_js_slot(JS_VALUE) as Function)(rec, args)
+        console.log("got the return",ret.print())
+        if(ret instanceof Obj && !ret.isNil()) {
+            ctx.stack.push(ret)
+        }
+        // throw new Error("Method not implemented.");
+    }
+}
 export const NatMeth = (fun:NativeMethodSigature):Obj => {
-    return new Obj("NativeMethod", NativeMethodProto, {
+    return new NativeMethod("NativeMethod", NativeMethodProto, {
         '_jsvalue': fun,
     })
 }
+
+ROOT._make_method_slot('makeSlot:with:',NatMeth((rec:Obj, args:Array<Obj>):Obj => {
+    let slot_name = args[0]._get_js_string()
+    let slot_value = args[1]
+    rec._make_method_slot(slot_name,slot_value)
+    if (slot_value.name === 'Block') {
+        slot_value.parent = rec
+    }
+    return NilObj();
+}))
+
 export const BytecodeMethodProto = new Obj("BytecodeMethodProto", ObjectProto, {})
 export type BytecodeMethodSigature = (rec:Obj, args:Array<Obj>) => Obj;
 export const BCMeth = (bytecode:ByteCode):Obj => {
