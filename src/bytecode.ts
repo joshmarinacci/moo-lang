@@ -23,6 +23,15 @@ export type ByteCode = Array<ByteOp>;
 let d = new JoshLogger()
 d.disable()
 
+export function eval_block_obj(method:Obj, args:Array<Obj>) {
+    d.p(`bytecode eval block obj: ${method.print()}`)
+    d.p("bytecode is: " + method.get_js_slot("bytecode"))
+    if (method.name === 'Block' && method.get_js_slot("bytecode") !== undefined) {
+        let bytecode = method.get_js_slot('bytecode') as ByteCode;
+        let scope = new ActivationObj(`block-activation`, method, {})
+        execute_bytecode(bytecode, scope)
+    }
+}
 export function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[], ctx: Context):Obj {
     d.p(`perform dispatch: ${method.name}`,method.print())
     if(method.name === 'MissingMethod') {
