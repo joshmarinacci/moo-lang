@@ -45,6 +45,21 @@ function print_state(inter: Interface, opts: Options, ctx:Context) {
     for(let obj of ctx.stack) {
         inter.write(`stack: ${obj.print()}\n`)
     }
+    inter.write("===== scope =====\n")
+    let scope:Obj | null = ctx.scope
+    let indent = " "
+    while(scope !== null) {
+        inter.write(indent+" " + scope.print() + "\n")
+        inter.write(`${indent} - `)
+        for(let key of scope._method_slots.keys()) {
+            inter.write(key)
+            inter.write(' ')
+        }
+        inter.write('\n')
+        // scope = scope.parent
+        scope = null
+        indent += "  "
+    }
     inter.write('-- bytecode ---------\n')
     ctx.bytecode.forEach((op, i)=> {
         let cursor = i == ctx.pc ? '*':' '

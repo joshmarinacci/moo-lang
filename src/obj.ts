@@ -1,5 +1,5 @@
 import {JoshLogger} from "./util.ts";
-import {type ByteCode} from "./bytecode.ts";
+import util from "node:util";
 
 
 const d = new JoshLogger()
@@ -108,7 +108,7 @@ export class Obj {
             return `Exception: ${this.get_slot('message')}`
         }
         if (this.name === 'Block') {
-            return `Block (${this.get_slot('args')}) ${this.get_slot('body')}`
+            return `Block (${util.inspect(this.get_slot('bytecode'))}`
         }
         if (this.name === 'List' || this.name === 'ListProto') {
             return `List: {${this._get_js_array().map(v => v._safe_print(depth-1)).join(', ')}}`
@@ -122,7 +122,7 @@ export class Obj {
         })
         let parent = this.parent?this.parent._safe_print(1):'nil'
         parent = ''
-        return `${this.name} {${slots.join(' ')}}\n ${parent} `
+        return `${this.name} {${slots.join(' ')}} ${parent} `
     }
     has_slot(name: string) {
         return this._method_slots.has(name)

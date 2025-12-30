@@ -125,11 +125,19 @@ test('assignment operator', () => {
     `,NumObj(6))
 })
 test("block arg tests",() => {
+    // unary args
+    // ccem(`
+    //     self makeSlot: "foo" with: [
+    //         88.
+    //     ].
+    //     self foo.
+    //  `, NumObj(88))
+    //  keyword with one arg
     ccem(`
-        self makeSlot: "foo" with: [
+        self makeSlot: "foo:" with: [ bar |
             88.
         ].
-        self foo.
+        self foo: 88.
      `, NumObj(88))
     /*
         counter := 2.
@@ -144,12 +152,12 @@ test("block arg tests",() => {
         create literal block: []
         send-message 1.
      */
-    ccem(`
-        counter := 2.
-        [counter < 5] whileTrue: [ counter := counter + 1. ]. 
-    
-    `,
-    NumObj(88))
+    // ccem(`
+    //     counter := 2.
+    //     [counter < 5] whileTrue: [ counter := counter + 1. ].
+    //
+    // `,
+    // NumObj(88))
 })
 test('block eval',() => {
     ccem('[ 5 . ] value .',NumObj(5))
@@ -159,4 +167,8 @@ test('group eval',() => {
 })
 test('invoke debug',() => {
     ccem('Debug print: 67.',NilObj())
+})
+test('whileTrue: ',() => {
+    ccem(`[4 > 5] whileTrue: [5.].`, NumObj(5))
+
 })
