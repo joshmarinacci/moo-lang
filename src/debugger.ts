@@ -34,18 +34,21 @@ function handle_args():Options {
 
 const log = (...args:unknown[]) => console.log('LOG',...args)
 
+const RED = '\x1b[31m';
+const GREEN = '\x1b[32m';
+const GREEN_BOLD = '\x1b[1;32m'
+const BLUE_BOLD = '\x1b[1;34m'
+const RESET = '\x1b[0m'; // Resets all attributes
+
 
 function print_menu(inter: Interface, opts: Options) {
-    inter.write("input is: " + opts.code+'\n')
-    inter.write('commands: quit, step, run\n')
+    inter.write(`${RED}input is: ${RESET}` + opts.code+'\n')
+    inter.write(`commands: quit, step, run\n`)
 }
 
-function print_state(inter: Interface, opts: Options, ctx:Context) {
-    inter.write("===== stack =====\n")
-    for(let obj of ctx.stack) {
-        inter.write(`stack: ${obj.print()}\n`)
-    }
-    inter.write("===== scope =====\n")
+function print_state(inter: OutputWrapper, opts: Options, ctx:Context) {
+    // inter.write(`${GREEN_BOLD}===== stack =====${RESET}\n`)
+    inter.header('===== scope =====')
     let scope:Obj | null = ctx.scope
     let indent = " "
     while(scope !== null) {
@@ -60,12 +63,16 @@ function print_state(inter: Interface, opts: Options, ctx:Context) {
         scope = null
         indent += "  "
     }
-    inter.write('-- bytecode ---------\n')
+    inter.header('===== stack =====')
+    for(let obj of ctx.stack) {
+        inter.write(`${obj.print()}\n`)
+    }
+    inter.header('===== bytecode =======')
     ctx.bytecode.forEach((op, i)=> {
         let cursor = i == ctx.pc ? '*':' '
-        inter.write(`${cursor} ${util.inspect(op,{depth:1})}\n`)
+        inter.write(`${cursor} ${i} ${util.inspect(op,{depth:1})}\n`)
     })
-    inter.write("========\n")
+    inter.footer('=======================')
 }
 
 function step(inter: Interface, opts: Options, ctx:Context):void {
@@ -78,6 +85,28 @@ function step(inter: Interface, opts: Options, ctx:Context):void {
     inter.write("executing " + util.inspect(op) +"\n")
     let ret = execute_op(op, ctx.stack, ctx.scope, ctx)
     inter.write("returned " + ret.print() + "\n")
+}
+
+class OutputWrapper  {
+    private inter: Interface;
+    constructor(inter: Interface) {
+        this.inter = inter
+    }
+
+    write(s: string) {
+        this.inter.write(s)
+    }
+
+    header(s: string) {
+        this.inter.write(`${GREEN_BOLD}${s}${RESET}\n`)
+    }
+    footer(s: string) {
+        this.inter.write(`${BLUE_BOLD}${s}${RESET}\n`)
+    }
+
+    separator() {
+        this.inter.write(`\n\n${BLUE_BOLD}${'#'.repeat(20)}${RESET}\n`)
+    }
 }
 
 async function do_loop(opts: Options) {
@@ -95,9 +124,10 @@ async function do_loop(opts: Options) {
     if(opts.step) {
         ctx.running = false
     }
+    let out = new OutputWrapper(inter)
     while (true) {
-        inter.write('\n\n--------------------------------------\n')
-        print_state(inter,opts,ctx)
+        out.separator()
+        print_state(out,opts,ctx)
         print_menu(inter, opts)
         if(ctx.running) {
             step(inter,opts,ctx)
