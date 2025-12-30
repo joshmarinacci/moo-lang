@@ -1,4 +1,4 @@
-import {NatMeth, NilObj, Obj, ObjectProto} from "./obj.ts";
+import {BCMeth, NatMeth, NilObj, Obj, ObjectProto} from "./obj.ts";
 import {AstToSource, } from "./ast.ts";
 import type {Statement, PlainId} from "./ast.ts"
 import {StrObj} from "./string.ts";
@@ -76,5 +76,19 @@ export const BlockProto = new Obj("BlockProto", ObjectProto, {
             }
         }
         return last
-    })
+    }),
+    'whileTrue:': BCMeth([
+        // execute the body block
+        ['lookup-message','value'],    // lookup value message on the block
+        ['send-message',0],            // call value message
+
+        // execute the conditional block
+        ['load-plain-id','receiver'],  // the block is the receiver
+        ['lookup-message','value'],    // lookup value message on the block
+        ['send-message',0],            // call value message
+        ['jump-if-true',0],            // if the condition was true, jump to start
+
+        ['halt',null],
+    ]),
+
 })

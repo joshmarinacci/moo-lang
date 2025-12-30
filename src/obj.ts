@@ -1,4 +1,5 @@
 import {JoshLogger} from "./util.ts";
+import util from "node:util";
 
 
 const d = new JoshLogger()
@@ -107,7 +108,7 @@ export class Obj {
             return `Exception: ${this.get_slot('message')}`
         }
         if (this.name === 'Block') {
-            return `Block (${this.get_slot('args')}) ${this.get_slot('body')}`
+            return `Block (${util.inspect(this.get_slot('bytecode'))}`
         }
         if (this.name === 'List' || this.name === 'ListProto') {
             return `List: {${this._get_js_array().map(v => v._safe_print(depth-1)).join(', ')}}`
@@ -121,7 +122,7 @@ export class Obj {
         })
         let parent = this.parent?this.parent._safe_print(1):'nil'
         parent = ''
-        return `${this.name} {${slots.join(' ')}}\n ${parent} `
+        return `${this.name} {${slots.join(' ')}} ${parent} `
     }
     has_slot(name: string) {
         return this._method_slots.has(name)
@@ -358,6 +359,13 @@ export type NativeMethodSigature = (rec:Obj, args:Array<Obj>) => Obj;
 export const NatMeth = (fun:NativeMethodSigature):Obj => {
     return new Obj("NativeMethod", NativeMethodProto, {
         '_jsvalue': fun,
+    })
+}
+export const BytecodeMethodProto = new Obj("BytecodeMethodProto", ObjectProto, {})
+export type BytecodeMethodSigature = (rec:Obj, args:Array<Obj>) => Obj;
+export const BCMeth = (bytecode:ByteCode):Obj => {
+    return new Obj("BytecodeMethod", BytecodeMethodProto, {
+        'bytecode': bytecode,
     })
 }
 export function setup_object(scope: Obj) {

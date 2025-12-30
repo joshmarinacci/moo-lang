@@ -8,7 +8,7 @@ import {type ByteCode, compile_bytecode, execute_bytecode} from "../src/bytecode
 import {JoshLogger} from "../src/util.ts";
 
 let d = new JoshLogger()
-d.disable()
+// d.disable()
 
 function compare_execute(code:ByteCode, expected: Obj) {
     d.p("executing",code)
@@ -64,6 +64,47 @@ test('5 square',() => {
         ['send-message',0],
     ], NumObj(25))
 })
+test('simplest loop',() => {
+    // count from 0 to 5 and return the object each time.
+    /*
+        counter := 2
+        Debug print: "inside loop".
+        counter := counter + 1.
+        jump-if-true: counter < 5.
+        return counter.
+     */
+    compare_execute([
+        //set value of counter to 0
+        ['load-literal-string','counter'],
+        ['load-literal-number',2],
+        ['assign',null],
+        // execute block
+
+        [ 'load-plain-id', 'Debug' ],
+        [ 'lookup-message', 'print:' ],
+        [ 'load-literal-string', 'inside loop' ],
+        [ 'send-message', 1 ],
+
+        // increment counter
+        ['load-literal-string','counter'],
+        ['load-plain-id','counter'],
+        ['lookup-message','+'],
+        ['load-literal-number',1],
+        ['send-message',1],
+        ['assign',null],
+        // load 5
+
+        // see if counter < 5
+        ['load-plain-id','counter'],
+        ['lookup-message','<'],
+        ['load-literal-number',5],
+        ['send-message',1],
+        // if true then loop
+        ['jump-if-true',3],
+        // return counter
+        ['load-plain-id','counter'],
+    ],NumObj(5))
+})
 test('compile & execute: 1 + 2 = 3',() =>{
     cce('1 + 2', NumObj(3))
     cce('5 square', NumObj(25))
@@ -77,18 +118,57 @@ test('assignment operator', () => {
         v := 5.
         v.
     `, NumObj(5))
+    ccem(`
+    v := 5.
+    v := v + 1.
+    v.
+    `,NumObj(6))
 })
 test("block arg tests",() => {
+    // unary args
+    // ccem(`
+    //     self makeSlot: "foo" with: [
+    //         88.
+    //     ].
+    //     self foo.
+    //  `, NumObj(88))
+    //  keyword with one arg
     ccem(`
-        self makeSlot: "foo" with: [
+        self makeSlot: "foo:" with: [ bar |
             88.
         ].
-        self foo.
+        self foo: 88.
      `, NumObj(88))
+    /*
+        counter := 2.
+        [counter < 5] whileTrue: [ counter := counter + 1].
+
+        load-literal-string counter
+        load literal number 2
+        assign
+
+        create literal block: []
+        lookup message 'whileTrue:'
+        create literal block: []
+        send-message 1.
+     */
+    // ccem(`
+    //     counter := 2.
+    //     [counter < 5] whileTrue: [ counter := counter + 1. ].
+    //
+    // `,
+    // NumObj(88))
 })
 test('block eval',() => {
     ccem('[ 5 . ] value .',NumObj(5))
 })
 test('group eval',() => {
     ccem('(8 + 8).',NumObj(16))
+})
+test('invoke debug',() => {
+    ccem('Debug print: 67.',NilObj())
+})
+test('whileTrue: ',() => {
+    ccem(`[4 > 5] whileTrue: [5.].`, NumObj(5))
+
 })
