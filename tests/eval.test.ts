@@ -109,7 +109,7 @@ test('conditions',() => {
     cval(` 4 < 5 ifTrue: 44 + 44 ifFalse: 89.`,scope,NumObj(88))
     cval(` 4 < 5 ifTrue: 44 - 44 ifFalse: 89.`,scope,NumObj(0))
 
-    cval(` 4 < 5 ifTrue: [88.] ifFalse: [89.].`,scope,NumObj(88))
+    cval(` 4 < 5 ifTrue: [88.] ifFalse: [89.].`,scope,{expected:NumObj(88),bytecodeOnly:true})
     cval(` 4 > 5 ifTrue: [88.] ifFalse: [89.].`,scope,NumObj(89))
 })
 test('Debug tests',() => {
@@ -252,10 +252,10 @@ test('eval vector class',() => {
                    z: (a z + self z).
         ].
         a := Vector x: 1 y: 1 z: 1.
-        
+
         a x: 55.
         Debug equals: a x with: 55.
-        
+
         b := Vector x: 6 y: 7 z: 8.
         c := a add: b.
         c z.

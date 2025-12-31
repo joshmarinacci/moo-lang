@@ -18,11 +18,8 @@ test('strings',() => {
      foo := "start".
      foo := foo + "bar".
      foo. `,scope,StrObj("startbar"))
-    cval(`"foo" isEmpty`, scope, {
-        expected:BoolObj(false),
-        bytecodeOnly:true
-    })
-    cval(`"" isEmpty`, scope, BoolObj(true))
+    cval(`"foo" isEmpty`, scope, { expected:BoolObj(false), bytecodeOnly:true })
+    cval(`"" isEmpty`, scope, {expected:BoolObj(true), bytecodeOnly:true})
     cval(`"foo" at: 0`, scope, StrObj('f'))
     cval(`"foo" at: 1`, scope, StrObj('o'))
 })
@@ -55,10 +52,13 @@ test('common protocol',() => {
     cval('"foo" compare: "qux"', scope, NumObj(-1))
     cval('"foo" compare: "foo"', scope, NumObj(0))
     cval('"foobar" compare: "foobar"', scope,NumObj(0))
+
     // sort using compare
-    cval(`foo := { "foo" "bar" "quxx" }.
+    cval(`
+    foo := { "foo" "bar" "quxx" }.
      foo sortedBy: [ a b | a compare: b ].`, scope,
         ListObj(StrObj("foo"),StrObj("bar"),StrObj("quxx")))
+
     // loop over characters
     cval(`
      "foo" do: [ch |

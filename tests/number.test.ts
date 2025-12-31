@@ -5,7 +5,6 @@ import {Obj} from "../src/obj.ts";
 import {StrObj} from "../src/string.ts";
 import {BoolObj} from "../src/boolean.ts";
 import {sval} from "../src/eval.ts";
-import {ListObj} from "../src/arrays.ts";
 import {cval} from "./common.ts";
 
 test('arithmetic',() => {
@@ -52,7 +51,7 @@ test('common protocol',() => {
 
 test('times',() => {
     let scope = make_standard_scope()
-    // cval(`6 times: [n| Debug print: n. ]`,scope)
+    // cval(`6 times: [n| Debug print: n. ]`,scope,{bytecodeOnly:true})
 })
 
 test('units',() => {
