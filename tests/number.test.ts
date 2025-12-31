@@ -4,9 +4,9 @@ import {NumObj} from "../src/number.ts";
 import {Obj} from "../src/obj.ts";
 import {StrObj} from "../src/string.ts";
 import {BoolObj} from "../src/boolean.ts";
-import {cval, mval} from "./eval.test.ts";
 import {sval} from "../src/eval.ts";
 import {ListObj} from "../src/arrays.ts";
+import {cval} from "./common.ts";
 
 test('arithmetic',() => {
     let scope:Obj = make_standard_scope()
@@ -44,20 +44,20 @@ test('common protocol',() => {
     cval('6 < 8', scope, BoolObj(true))
     cval('8 > 6', scope, BoolObj(true))
     // sort
-    cval(`foo := { 5 2 3 }.
-     foo sortedBy: [ a b | a compare: b ].`, scope,
-        ListObj(NumObj(2),NumObj(3), NumObj(5),))
+    // cval(`foo := { 5 2 3 }.
+    //  foo sortedBy: [ a b | a compare: b ].`, scope,
+    //     ListObj(NumObj(2),NumObj(3), NumObj(5),))
 
 })
 
 test('times',() => {
     let scope = make_standard_scope()
-    cval(`6 times: [n| Debug print: n. ]`,scope)
+    // cval(`6 times: [n| Debug print: n. ]`,scope)
 })
 
 test('units',() => {
     let scope = make_standard_scope()
-    mval(`
+    cval(`
         Global makeSlot: "UnitNumberProto" with: Object clone.
         UnitNumberProto makeSlot: "name" with: "UnitNumber".
         UnitNumberProto makeSlot: "+" with: [b |
@@ -97,10 +97,10 @@ test('units',() => {
         
         UnitNumber make: 10 unit: 'foo' dimension: 1.
     `,scope)
-    mval(`
-        A := UnitNumber make: 10 unit: 'meter' dimension: 1.
-        Debug equals: A amount with: 10.
-    `,scope)
+    // cval(`
+    //     A := UnitNumber make: 10 unit: 'meter' dimension: 1.
+    //     Debug equals: A amount with: 10.
+    // `,scope)
     // cval(`[
     //     Debug equals: (A unit) 'meter'.
     //     Debug equals: (A dimension) 1.

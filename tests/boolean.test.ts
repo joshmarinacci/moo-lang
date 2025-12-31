@@ -3,7 +3,7 @@ import {make_standard_scope} from "../src/standard.ts";
 import {StrObj} from "../src/string.ts";
 import {BoolObj} from "../src/boolean.ts";
 import {Obj} from "../src/obj.ts";
-import {cval} from "./eval.test.ts";
+import {cval} from "./common.ts";
 
 test('booleans',() => {
     let scope:Obj = make_standard_scope();

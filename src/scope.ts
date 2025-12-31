@@ -135,8 +135,7 @@ function root_fixup(scope:Obj) {
         ['send-message',0],            // call value message
 
         // execute the conditional block
-        //     ['load-plain-id','self'],  // the block is the receiver
-            ['load-plain-id','receiver'],  // the block is the receiver
+        ['load-plain-id','receiver'],  // the block is the receiver
         ['lookup-message','value'],    // lookup value message on the block
         ['send-message',0],            // call value message
         ['jump-if-true',0],            // if the condition was true, jump to start

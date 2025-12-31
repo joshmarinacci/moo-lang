@@ -1,9 +1,9 @@
 import JSDOM from "jsdom"
 import test from "node:test";
 import {make_browser_scope} from "../src/browser.ts";
-import {cval} from "./eval.test.ts";
 import {NumObj} from "../src/number.ts";
 import {NilObj} from "../src/obj.ts";
+import {cval} from "./common.ts";
 
 test('dom test',() => {
     const { document } = (new JSDOM.JSDOM()).window;

@@ -1,8 +1,8 @@
 import test from "node:test";
 import {make_standard_scope} from "../src/standard.ts";
 import {NumObj} from "../src/number.ts";
-import {cval} from "./eval.test.ts";
 import {NilObj} from "../src/obj.ts";
+import {cval} from "./common.ts";
 
 test('array literals',() => {
     let scope = make_standard_scope()

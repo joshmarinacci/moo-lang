@@ -1,7 +1,8 @@
 import test from "node:test";
 import {make_standard_scope} from "../src/standard.ts";
-import {cval, mval} from "./eval.test.ts";
+import {mval} from "./eval.test.ts";
 import {NumObj} from "../src/number.ts";
+import {cval} from "./common.ts";
 
 test('set pixels color',() => {
     const scope = make_standard_scope();

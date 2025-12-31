@@ -57,7 +57,6 @@ export class STStack {
     }
 
     getFromEnd(number: number):Obj {
-        console.log("grabbing " + (this.data.length+number-1))
         return this.data[this.data.length + number - 1][0]
     }
 }

@@ -1,7 +1,7 @@
 import test from "node:test";
 import {Obj} from "../src/obj.ts";
 import {make_standard_scope} from "../src/standard.ts";
-import {mval} from "./eval.test.ts";
+import {cval} from "./common.ts";
 
 test('native JS api',() => {
     let scope: Obj = make_standard_scope()
@@ -12,7 +12,7 @@ test('native JS api',() => {
     // implement doNativeCall:target:with:with:
     // implement lookupNativeGlobal:. Only can return Math.
     // whatever is returned should be auto converted back to an ST object?
-    mval(`
+    cval(`
     Number understands: "toString" with: [ |
         Debug print: (self getJsSlot: "_jsvalue").
         self jsCall: "toString" on: (self getJsSlot: "_jsvalue").
@@ -26,9 +26,11 @@ test('native JS api',() => {
     ].
     3 pow: 5.
     
-    `,scope)
+    `,scope,{
+        evalOnly:true
+    })
 
-    mval(`
+    cval(`
         String understands: "foo:" with: [ arg |
             Debug print:"executing ".
             self setJsSlot:"_jsvalue" to: (arg getJsSlot: "_jsvalue").
@@ -36,5 +38,7 @@ test('native JS api',() => {
         ret := "".
         ret foo: "bar".
         Debug equals: ret with: "bar"
-    `,scope)
+    `,scope,{
+        evalOnly:true
+    })
 })
