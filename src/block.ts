@@ -16,7 +16,7 @@ export class ActivationObj extends Obj {
     }
     lookup_slot(name: string): Obj {
         if(name === 'self') {
-            return this.parent.parent
+            return this.parent
         }
         return super.lookup_slot(name);
     }
@@ -39,7 +39,7 @@ export const BlockProto = new Obj("BlockProto", ObjectProto, {
     'print': NatMeth((rec: Obj) => {
         let body = rec.get_js_slot('body') as Array<Statement>
         return StrObj(body.map(st => AstToSource(st)).join('\n'))
-    }),
+    },'BlockProto.print'),
     'value': NatMeth((rec: Obj, args: Array<Obj>) => {
         d.p("inside of the block")
         let params: Array<PlainId> = rec.get_slot('args') as unknown as Array<PlainId>
@@ -76,5 +76,5 @@ export const BlockProto = new Obj("BlockProto", ObjectProto, {
             }
         }
         return last
-    }),
+    },'BlockProto.value'),
 })

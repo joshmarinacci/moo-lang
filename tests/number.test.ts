@@ -22,7 +22,7 @@ test('arithmetic',() => {
     cval(`-5.`,scope,NumObj(-5))
     cval(`5 negate.`,scope,NumObj(-5))
     cval('5 double.',scope,{expected: NumObj(10),bytecodeOnly:true})
-    // cval('5 square',scope,NumObj(25))
+    cval('5 square',scope,{expected:NumObj(25),bytecodeOnly:true})
 })
 
 test('floating point math',() => {

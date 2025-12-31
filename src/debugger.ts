@@ -57,8 +57,8 @@ function print_state(inter: OutputWrapper, opts: Options, ctx:Context) {
             inter.write(' ')
         }
         inter.write('\n')
-        // scope = scope.parent
-        scope = null
+        if(scope.name.startsWith('Global')) break;
+        scope = scope.parent
         indent += "  "
     }
     inter.header('===== stack =====')

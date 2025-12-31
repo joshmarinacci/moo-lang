@@ -63,6 +63,7 @@ export class BytecodeMethod extends Obj implements Method {
             method:method,
             args:args,
         })
+        ctx.scope.parent = rec
         for (let i = 0; i < this.names.length; i++) {
             let param = this.names[i]
             d.p(`param '${param}'`, args[i].print())

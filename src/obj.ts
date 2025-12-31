@@ -94,10 +94,10 @@ export class Obj {
         this._data_slots.set(name,obj)
         this._make_method_slot(name,NatMeth((rec:Obj,args:Array<Obj>):Obj =>{
             return rec._get_data_slot(name)
-        }))
+        },`${name} getter`))
         this._make_method_slot(name+":",NatMeth((rec:Obj,args:Array<Obj>):Obj =>{
             return rec._set_data_slot(name,args[0])
-        }))
+        },`${name} setter`))
     }
     _get_data_slot(name:string):Obj {
         // console.log(`getting data slot ${name}`)
@@ -492,7 +492,7 @@ ROOT._make_method_slot('makeSlot:with:',NatMeth((rec:Obj, args:Array<Obj>):Obj =
         slot_value.parent = rec
     }
     return NilObj();
-}))
+},'makeSlot:with:'))
 
 export const BytecodeMethodProto = new Obj("BytecodeMethodProto", ObjectProto, {})
 export type BytecodeMethodSigature = (rec:Obj, args:Array<Obj>) => Obj;

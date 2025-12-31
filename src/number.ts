@@ -79,20 +79,20 @@ export const NumObj = (value:number):Obj => new Obj("NumberLiteral", NumberProto
 
 export function setup_number(scope: Obj) {
     scope._make_method_slot("Number", NumberProto)
-    bval(`Number makeSlot: 'double' with: [
+    bval(`
+    
+    Number makeSlot: 'double' with: [
       (self value) * 2.
-    ].`,scope);
-    bval(`Number makeSlot: 'square' with:[
+    ].
+    
+    Number makeSlot: 'square' with:[
        (self value) * (self value).
-    ].`,scope)
-    bval(`Nil makeSlot: 'isNil' with: [
+    ].
+    Nil makeSlot: 'isNil' with: [
          true
-      ].
-    `,scope)
-    bval(`Number makeSlot: 'times:' with: [ block |
-         0 range: self do: block. 
-      ].
-    `,scope)
-
-
+    ].
+    Number makeSlot: 'times:' with: [ block |
+         0 range: self do: block.
+    ].
+    `,scope);
 }
