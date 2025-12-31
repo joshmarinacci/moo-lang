@@ -22,8 +22,44 @@ export type Context = {
     scope:Obj,
     bytecode:Array<ByteOp>,
     pc:number,
-    stack:Array<Obj>,
+    stack:STStack,
     running: boolean
+}
+
+export class STStack {
+    private data: Array<[Obj,string]>;
+    constructor() {
+        this.data = []
+    }
+
+    print_small():string {
+        return ' ' + this.data.map(o => o[0].print() + '-' + o[1]).join(', ')
+    }
+
+    print_large() {
+        return this.data.map(a => `${a[0].print()} - ${a[1]}`).join('\n')
+    }
+
+    pop():Obj {
+        return this.data.pop()[0]
+    }
+
+    push(obj: Obj) {
+        this.data.push([obj,'unnamed'])
+    }
+
+    push_with(obj:Obj, label:string) {
+        this.data.push([obj,label])
+    }
+
+    size() {
+        return this.data.length
+    }
+
+    getFromEnd(number: number):Obj {
+        console.log("grabbing " + (this.data.length+number-1))
+        return this.data[this.data.length + number - 1][0]
+    }
 }
 
 
@@ -385,7 +421,7 @@ class NativeMethod extends Obj implements Method {
     dispatch(ctx: Context, arg_count: number): void {
         console.log("executing", this.print())
         console.log("real method is", this._get_js_unknown())
-        console.log('stak is',ctx.stack.map(o => o.print()))
+        console.log('stack is',ctx.stack.print_small())
         console.log("the argument count is", arg_count)
         let args = []
         for (let i = 0; i < arg_count; i++) {

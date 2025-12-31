@@ -1,5 +1,5 @@
 import test, {describe} from "node:test";
-import {type ByteCode, type Context, NilObj, Obj} from "../src/obj.ts";
+import {type ByteCode, type Context, NilObj, Obj, STStack} from "../src/obj.ts";
 import {NumObj} from "../src/number.ts";
 import {objsEqual} from "../src/debug.ts";
 import {make_standard_scope} from "../src/standard.ts";
@@ -35,22 +35,22 @@ function compare_execute_clean(code:ByteCode, expected: Obj) {
         scope: scope,
         bytecode: code,
         pc: 0,
-        stack: [],
+        stack: new STStack(),
         running:true
     }
     while(ctx.running) {
         console.log("=======")
-        console.log("stack",ctx.stack.map(o => o.print()))
+        console.log("stack",ctx.stack.print_small())
         console.log(ctx.bytecode)
         if(ctx.pc >= ctx.bytecode.length) break;
         let op = ctx.bytecode[ctx.pc]
         console.log('op ' + op)
-        let ret = execute_op(op, ctx.stack, scope, ctx)
+        let ret = execute_op(op, ctx)
     }
     console.log("done")
-    console.log("stack is",ctx.stack.map(o => o.print()))
+    console.log("stack is",ctx.stack.print_small())
 
-    if(ctx.stack.length > 1) {
+    if(ctx.stack.size() > 1) {
         throw new Error("stack too big. should just have the return value")
     }
     let ret = ctx.stack.pop()

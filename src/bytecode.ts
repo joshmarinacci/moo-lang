@@ -6,7 +6,8 @@ import {
     type Method,
     NilObj,
     Obj,
-    ObjectProto
+    ObjectProto,
+    STStack
 } from "./obj.ts";
 import {type Ast, AstToString, type BlockLiteral} from "./ast.ts";
 import {JoshLogger} from "./util.ts";
@@ -17,7 +18,7 @@ import {ListObj} from "./arrays.ts";
 
 
 let d = new JoshLogger()
-// d.disable()
+d.disable()
 
 
 export class BytecodeMethod extends Obj implements Method {
@@ -36,7 +37,7 @@ export class BytecodeMethod extends Obj implements Method {
     dispatch(ctx: Context, arg_count: number): void {
         console.log("executing", this.print())
         console.log("bytecode is", this.bytecode)
-        console.log('stack is',ctx.stack.map(o => o.print()))
+        console.log('stack is',ctx.stack.print_small())
         console.log("the argument count is", arg_count)
         let args:Array<Obj> = []
         for (let i = 0; i < arg_count; i++) {
@@ -49,11 +50,11 @@ export class BytecodeMethod extends Obj implements Method {
         d.p("the method is " + method.print())
         d.p("we've got a bytecode method")
         // save the old state
-        ctx.stack.push(new Obj("old-info",ObjectProto,{
+        ctx.stack.push_with(new Obj("old-info",ObjectProto,{
             pc:ctx.pc,
             scope:ctx.scope,
             bytecode: ctx.bytecode,
-        }))
+        }),'old-state')
         ctx.bytecode = this.bytecode
 
 
@@ -88,7 +89,6 @@ export class BytecodeMethod extends Obj implements Method {
     }
 }
 
-
 export function eval_block_obj(method:Obj, args:Array<Obj>) {
     d.p(`bytecode eval block obj: ${method.print()}`)
     d.p("bytecode is: " + method.get_js_slot("bytecode"))
@@ -98,92 +98,92 @@ export function eval_block_obj(method:Obj, args:Array<Obj>) {
         execute_bytecode(bytecode, scope)
     }
 }
-export function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[], ctx: Context):Obj {
-    d.p(`perform dispatch: ${method.name}`,method.print())
-    d.p("rec is " + rec.print())
-    d.p("args are " + args.map((arg) => arg.print()).join(", "))
-    if (method.name === 'MissingMethod') {
-        let handler = rec.lookup_slot('doesNotUnderstand:')
-        if(handler) {
-            d.p("the missing message name is",method.get_slot('name'))
-            let msg = new Obj("Message",ObjectProto,{})
-            msg._make_data_slot('selector',StrObj(method.get_slot('name')))
-            msg._make_data_slot('arguments',ListObj(...args))
-            d.p("doing extra dispatch to handler")
-            return perform_dispatch(handler,rec,[msg],stack)
-        } else {
-            return new Obj("Exception", ObjectProto, {"message": `Message not found: '${method.name}'`})
-        }
-    }
-    if (method.is_kind_of("NativeMethod")) {
-        d.p("doing the native method")
-        ctx.stack.push(new Obj("bytecode",ObjectProto,{bytecode:ctx.bytecode}))
-        ctx.stack.push(NumObj(ctx.pc+1))
-        ctx.stack.push(ctx.scope)
-        ctx.stack.push(rec)
-        ctx.stack.push(method)
-        let ret = (method.get_js_slot(JS_VALUE) as Function)(rec, args)
-                stack.push(ret)
-        return NilObj()
-    }
-    if (method.is_kind_of("BytecodeMethod")) {
-        d.p("weve got a bytecode method")
-        d.p(method.get_js_slot('bytecode'))
-        ctx.stack.push(new Obj("bytecode",ObjectProto,{bytecode:ctx.bytecode}))
-        ctx.stack.push(NumObj(ctx.pc+1))
-        ctx.bytecode = method.get_js_slot('bytecode') as ByteCode
-        ctx.stack.push(ctx.scope)
-        d.p("the receiver is " + rec.print())
-        ctx.stack.push(rec)
-        d.p("the method is " + method.print())
-        ctx.stack.push(method)
-        args.forEach((arg) => {
-            ctx.stack.push(arg)
-        })
-        ctx.scope = new ActivationObj(`block-activation`, method, {
-            receiver:rec,
-            method:method,
-            args:args,
-        })
-        // set pc
-        ctx.pc = 0
-        //  setup args
-        return NilObj()
-    }
-    if (method.name === 'Block') {
-        method.parent = rec
-        if (method.name === 'Block' && method.get_js_slot("bytecode") !== undefined) {
-            ctx.stack.push(new Obj("bytecode",ObjectProto,{bytecode:ctx.bytecode}))
-            ctx.stack.push(NumObj(ctx.pc+1))
-            ctx.bytecode = method.get_js_slot('bytecode') as ByteCode
-            ctx.stack.push(ctx.scope)
-            ctx.stack.push(rec)
-            ctx.stack.push(method)
-            ctx.scope = new ActivationObj(`block-activation`, method, {})
-            // set pc
-            ctx.pc = 0
-            //  setup args
-            return NilObj()
-        }
-
-        let meth = method.get_js_slot('value') as unknown
-        if (meth instanceof Obj && meth.is_kind_of("NativeMethod")) {
-            let ret = (meth.get_js_slot(JS_VALUE) as Function)(method, args)
-            stack.push(ret)
-            return NilObj()
-        }
-        if (meth instanceof Function) {
-            let ret = meth(method, args)
-            stack.push(ret)
-            return NilObj()
-        }
-    }
-    d.error("method is", method)
-    d.p("is native method?", method.is_kind_of('NativeMethod'))
-    d.p("is block method?", method.is_kind_of('Block'))
-    throw new Error("shouldn't be here")
-}
-export function execute_op(op: ByteOp, stack: Obj[], scope: Obj, ctx:Context): Obj {
+// export function perform_dispatch(method: Obj, rec: Obj, args: any[], stack: Obj[], ctx: Context):Obj {
+//     d.p(`perform dispatch: ${method.name}`,method.print())
+//     d.p("rec is " + rec.print())
+//     d.p("args are " + args.map((arg) => arg.print()).join(", "))
+//     if (method.name === 'MissingMethod') {
+//         let handler = rec.lookup_slot('doesNotUnderstand:')
+//         if(handler) {
+//             d.p("the missing message name is",method.get_slot('name'))
+//             let msg = new Obj("Message",ObjectProto,{})
+//             msg._make_data_slot('selector',StrObj(method.get_slot('name')))
+//             msg._make_data_slot('arguments',ListObj(...args))
+//             d.p("doing extra dispatch to handler")
+//             return perform_dispatch(handler,rec,[msg],stack)
+//         } else {
+//             return new Obj("Exception", ObjectProto, {"message": `Message not found: '${method.name}'`})
+//         }
+//     }
+//     if (method.is_kind_of("NativeMethod")) {
+//         d.p("doing the native method")
+//         ctx.stack.push(new Obj("bytecode",ObjectProto,{bytecode:ctx.bytecode}))
+//         ctx.stack.push_with(NumObj(ctx.pc+1),'pc')
+//         ctx.stack.push_with(ctx.scope,'old-scope')
+//         ctx.stack.push_with(rec,'receiver')
+//         ctx.stack.push_with(method,'method')
+//         let ret = (method.get_js_slot(JS_VALUE) as Function)(rec, args)
+//                 stack.push(ret)
+//         return NilObj()
+//     }
+//     if (method.is_kind_of("BytecodeMethod")) {
+//         d.p("weve got a bytecode method")
+//         d.p(method.get_js_slot('bytecode'))
+//         ctx.stack.push(new Obj("bytecode",ObjectProto,{bytecode:ctx.bytecode}))
+//         ctx.stack.push(NumObj(ctx.pc+1))
+//         ctx.bytecode = method.get_js_slot('bytecode') as ByteCode
+//         ctx.stack.push(ctx.scope)
+//         d.p("the receiver is " + rec.print())
+//         ctx.stack.push(rec)
+//         d.p("the method is " + method.print())
+//         ctx.stack.push(method)
+//         args.forEach((arg) => {
+//             ctx.stack.push(arg)
+//         })
+//         ctx.scope = new ActivationObj(`block-activation`, method, {
+//             receiver:rec,
+//             method:method,
+//             args:args,
+//         })
+//         // set pc
+//         ctx.pc = 0
+//         //  setup args
+//         return NilObj()
+//     }
+//     if (method.name === 'Block') {
+//         method.parent = rec
+//         if (method.name === 'Block' && method.get_js_slot("bytecode") !== undefined) {
+//             ctx.stack.push(new Obj("bytecode",ObjectProto,{bytecode:ctx.bytecode}))
+//             ctx.stack.push(NumObj(ctx.pc+1))
+//             ctx.bytecode = method.get_js_slot('bytecode') as ByteCode
+//             ctx.stack.push(ctx.scope)
+//             ctx.stack.push(rec)
+//             ctx.stack.push(method)
+//             ctx.scope = new ActivationObj(`block-activation`, method, {})
+//             // set pc
+//             ctx.pc = 0
+//             //  setup args
+//             return NilObj()
+//         }
+//
+//         let meth = method.get_js_slot('value') as unknown
+//         if (meth instanceof Obj && meth.is_kind_of("NativeMethod")) {
+//             let ret = (meth.get_js_slot(JS_VALUE) as Function)(method, args)
+//             stack.push(ret)
+//             return NilObj()
+//         }
+//         if (meth instanceof Function) {
+//             let ret = meth(method, args)
+//             stack.push(ret)
+//             return NilObj()
+//         }
+//     }
+//     d.error("method is", method)
+//     d.p("is native method?", method.is_kind_of('NativeMethod'))
+//     d.p("is block method?", method.is_kind_of('Block'))
+//     throw new Error("shouldn't be here")
+// }
+export function execute_op(op: ByteOp, ctx:Context): Obj {
     let name = op[0]
     ctx.pc++
     if(name === 'halt') {
@@ -191,7 +191,7 @@ export function execute_op(op: ByteOp, stack: Obj[], scope: Obj, ctx:Context): O
         return NilObj()
     }
     if(name === 'return') {
-        console.log("doing return with stack", ctx.stack.map(a => a.print()).join(", "))
+        console.log("doing return with stack", ctx.stack.print_small())
         let value = ctx.stack.pop() // get the value
         ctx.stack.pop() // pop the method off
         ctx.stack.pop() // pop off the receiver
@@ -200,33 +200,34 @@ export function execute_op(op: ByteOp, stack: Obj[], scope: Obj, ctx:Context): O
         console.log("got the pc from the stack as", pc.print())
         ctx.pc = pc._get_js_number()
         let bytecode = ctx.stack.pop() as Obj
-        ctx.bytecode = bytecode.get_js_slot('bytecode')
+        ctx.bytecode = bytecode.get_js_slot('bytecode') as ByteCode
         // push the return value back on
-        ctx.stack.push(value)
+        ctx.stack.push_with(value,'return')
         return NilObj()
     }
     if (name === 'load-literal-number') {
-        stack.push(NumObj(op[1] as number))
+        ctx.stack.push_with(NumObj(op[1] as number),'literal')
         return NilObj()
     }
     if (name === 'load-literal-string') {
-        stack.push(StrObj(op[1] as string))
+        ctx.stack.push_with(StrObj(op[1] as string),'literal')
         return NilObj()
     }
     if (name === 'create-literal-block') {
         let blk = op[1] as BlockLiteral
+        let desc = AstToString(blk)
         let bytecode = blk.body.map(a => compile_bytecode(a)).flat()
         let blk2 = new BytecodeMethod(blk.parameters.map(id => id.name), bytecode, BlockProto )
-        stack.push(blk2)
+        ctx.stack.push_with(blk2,desc)
         return NilObj()
     }
     if (name === 'load-plain-id') {
-        stack.push(scope.lookup_slot(op[1] as string))
+        ctx.stack.push_with(ctx.scope.lookup_slot(op[1] as string),op[1]as string)
         return NilObj()
     }
     if (name === 'lookup-message') {
         let message = op[1] as string
-        let rec: Obj = stack.pop() as Obj
+        let rec: Obj = ctx.stack.pop() as Obj
         let method = rec.lookup_slot(message)
         if(typeof method == 'function') {
             d.p(`error. method '${message}' on ${rec.print()} is unwrapped JS function`)
@@ -235,33 +236,33 @@ export function execute_op(op: ByteOp, stack: Obj[], scope: Obj, ctx:Context): O
             d.p("couldn't find the message")
             method = new Obj("MissingMethod",ObjectProto,{name:message})
         }
-        stack.push(rec)
-        stack.push(method)
+        ctx.stack.push_with(rec,'receiver')
+        ctx.stack.push_with(method,message)
         return NilObj()
     }
     if (name === 'send-message') {
         let arg_count = op[1] as number
-        let method = stack[stack.length-arg_count-1];
+        let method = ctx.stack.getFromEnd(-arg_count);
         (method as unknown as Method).dispatch(ctx,arg_count);
         return NilObj()
     }
     if (name === 'assign') {
-        let value = stack.pop() as Obj
-        let name = stack.pop() as Obj
-        scope._make_method_slot(name._get_js_string(), value)
+        let value = ctx.stack.pop()
+        let name = ctx.stack.pop()
+        ctx.scope._make_method_slot(name._get_js_string(), value)
         return NilObj()
     }
     if (name === 'return') {
-        let value = stack.pop() as Obj
-        let ret = new Obj('non-local-return',scope.parent,{})
+        let value = ctx.stack.pop() as Obj
+        let ret = new Obj('non-local-return',ctx.scope.parent,{})
         ret._is_return = true
         ret._make_method_slot('value',value)
-        ret._make_method_slot('target',scope.parent as Obj)
+        ret._make_method_slot('target',ctx.scope.parent as Obj)
         return ret
     }
     if (name === 'jump-if-true') {
         let distance = op[1] as number
-        let value = stack.pop() as Obj
+        let value = ctx.stack.pop() as Obj
         d.p("current value is",value.print())
         if(value._get_js_boolean() === true) {
             d.p("jumping by ", distance)
@@ -277,21 +278,12 @@ export function execute_op(op: ByteOp, stack: Obj[], scope: Obj, ctx:Context): O
         //keep the return value
         let ret = ctx.stack.pop() as Obj
         let oldInfo = ctx.stack.pop() as Obj
-        // console.log("old info is",oldInfo);
         ctx.pc = oldInfo?._method_slots.get('pc') as number;
         ctx.scope = oldInfo?._method_slots.get('scope') as Obj;
         ctx.bytecode = oldInfo?._method_slots.get('bytecode') as ByteCode;
-        // console.log("now pc is",ctx.pc)
-        // ctx.pc = oldInfo?.get_js_slot('pc')
-        // pc:ctx.pc+1,
-        //     scope:ctx.scope,
-        //     bytecode: ctx.bytecode,
-
-            //pull off the temps on the stack.
-        // let temp1 = ctx.stack.pop()
-        ctx.stack.push(ret)
+        ctx.stack.push_with(ret,'returned')
         d.p("now the stack is")
-        d.p(ctx.stack.map(v => v.print()))
+        d.p(ctx.stack.print_small())
         return NilObj()
     }
     throw new Error(`unknown bytecode operation '${name}'`)
@@ -303,14 +295,14 @@ export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
         scope: scope,
         bytecode: code,
         pc: 0,
-        stack: [],
+        stack: new STStack(),
         running:true
     }
 
     d.indent()
     while(ctx.running) {
         d.green(`==========  ${ctx.pc}`)
-        d.green(`Stack (${ctx.stack.length}) : ` + ctx.stack.map(v => v.print()).join(", "))
+        d.green(`Stack: ${ctx.stack.print_small()}`)
         d.green(`scope is ${ctx.scope.print()}`)
         if(ctx.pc >= ctx.bytecode.length) {
             console.log("we are done")
@@ -320,8 +312,8 @@ export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
 
         let op = ctx.bytecode[ctx.pc]
         d.red(`Op: ${op[0]} ${op[1]}`)
-        let ret = execute_op(op, ctx.stack, ctx.scope, ctx)
-        d.green(`Stack (${ctx.stack.length}) : ` + ctx.stack.map(v => v.print()).join(", "))
+        let ret = execute_op(op, ctx)
+        d.green(`Stack: ${ctx.stack.print_small()}`)
         if (ret.is_kind_of("Exception")) {
             d.error("returning exception")
             d.outdent()
@@ -330,9 +322,9 @@ export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
     }
     d.outdent()
     d.p("done executing")
-    d.p("stack left " + ctx.stack.length)
+    d.p("stack left " + ctx.stack.size())
 
-    if (ctx.stack.length > 0) {
+    if (ctx.stack.size() > 0) {
         let last = ctx.stack.pop() as Obj
         d.p("returning",last.print())
         if (last && last._is_return) last = last.get_slot('value') as Obj;

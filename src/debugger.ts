@@ -1,11 +1,9 @@
 import readline, {Interface} from "node:readline/promises"
 import util from "node:util"
-import {type ByteCode, type ByteOp, type Context, compile_bytecode, execute_op, perform_dispatch} from "./bytecode.ts";
+import {compile_bytecode, execute_op} from "./bytecode.ts";
 import {parse} from "./parser.ts";
-import {Obj, ObjectProto} from "./obj.ts";
+import {type Context, Obj, STStack} from "./obj.ts";
 import {make_standard_scope} from "./standard.ts";
-import {NumObj} from "./number.ts";
-import {ActivationObj} from "./block.ts";
 
 type Options = {
     code:string
@@ -64,9 +62,7 @@ function print_state(inter: OutputWrapper, opts: Options, ctx:Context) {
         indent += "  "
     }
     inter.header('===== stack =====')
-    for(let obj of ctx.stack) {
-        inter.write(`${obj.print()}\n`)
-    }
+    inter.write(ctx.stack.print_large()+'\n')
     inter.header('===== bytecode =======')
     ctx.bytecode.forEach((op, i)=> {
         let cursor = i == ctx.pc ? '*':' '
@@ -83,7 +79,7 @@ function step(inter: Interface, opts: Options, ctx:Context):void {
     }
     let op = ctx.bytecode[ctx.pc]
     inter.write("executing " + util.inspect(op) +"\n")
-    let ret = execute_op(op, ctx.stack, ctx.scope, ctx)
+    let ret = execute_op(op, ctx)
     inter.write("returned " + ret.print() + "\n")
 }
 
@@ -118,7 +114,7 @@ async function do_loop(opts: Options) {
         scope: make_standard_scope(),
         bytecode: compile_bytecode(parse(opts.code,'BlockBody')),
         pc: 0,
-        stack: [],
+        stack: new STStack(),
         running:true
     }
     if(opts.step) {
