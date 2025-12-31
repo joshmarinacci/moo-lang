@@ -1,4 +1,4 @@
-import type {NativeMethodSigature} from "./obj.ts"
+import type {NativeMethodSignature} from "./obj.ts"
 import {make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
 import {eval_block_obj, sval} from "./eval.ts";
 import {BoolObj} from "./boolean.ts";
@@ -6,7 +6,7 @@ import {StrObj} from "./string.ts";
 import {parse} from "./parser.ts";
 import {compile_bytecode, execute_bytecode} from "./bytecode.ts";
 
-const js_num_op = (cb:(a:number,b:number)=>number):NativeMethodSigature => {
+const js_num_op = (cb:(a:number,b:number)=>number):NativeMethodSignature => {
     return function (rec:Obj, args:Array<Obj>){
         if (args[0].name !== "NumberLiteral") {
             throw new Error(`cannot add a non number to a number: ${args[0].name}`);

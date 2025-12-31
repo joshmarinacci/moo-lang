@@ -18,7 +18,7 @@ import {ListObj} from "./arrays.ts";
 
 
 let d = new JoshLogger()
-d.disable()
+// d.disable()
 
 
 export class BytecodeMethod extends Obj implements Method {
@@ -231,6 +231,7 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         let method = rec.lookup_slot(message)
         if(typeof method == 'function') {
             d.p(`error. method '${message}' on ${rec.print()} is unwrapped JS function`)
+            throw new Error(`unwrapped js function: ${message} on ${rec.print()}`)
         }
         if (method.isNil()) {
             d.p("couldn't find the message")

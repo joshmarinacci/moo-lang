@@ -346,17 +346,56 @@ export interface Method {
     dispatch(ctx: Context, arg_count: number):void;
 }
 
-export const FakeNatMeth = (fun:NativeMethodSigature):Obj => {
+class FakeNativeMethod extends Obj implements Method {
+    private label: string;
+    constructor(name:string, props:Record<string,unknown>) {
+        super("NativeMethod",null,props);
+        this.label = name
+    }
+
+    dispatch(ctx: Context, arg_count: number): void {
+        console.log(`dispatching fake native method '${this.label}'`)
+        console.log(ctx.stack.print_small())
+        console.log("executing", this.print())
+        console.log("real method is", this._get_js_unknown())
+        console.log('stack is',ctx.stack.print_small())
+        console.log("the argument count is", arg_count)
+        let args = []
+        for (let i = 0; i < arg_count; i++) {
+            args.push(ctx.stack.pop())
+        }
+        args.reverse()
+        let meth = ctx.stack.pop()
+        let rec = ctx.stack.pop()
+        let ret = (this.get_js_slot(JS_VALUE) as Function)(rec, args)
+        console.log("got the return")
+        if(typeof ret == 'undefined') {
+            throw new Error(`FakeNativeMethod '${this.label}' returned undefined`)
+        }
+        console.log(ret)
+            console.log(ret.print())
+        if(ret instanceof Obj && !ret.isNil()) {
+            ctx.stack.push(ret)
+        }
+        // throw new Error("Method not implemented.");
+        // throw new Error("Method not implemented.");
+    }
+
+}
+export const FakeNatMeth = (fun:NativeMethodSignature):Obj => {
     return new Obj("NativeMethod", null, {
         '_jsvalue': fun,
     })
 }
+const FNM = (name:string, fun:NativeMethodSignature):Obj => {
+    return new FakeNativeMethod(name,{'_jsvalue':fun})
+}
 export const ROOT = new Obj("ROOT", null,{
-    'make_data_slot:with:':FakeNatMeth((rec:Obj, args:Array<Obj>):Obj => {
+    'make_data_slot:with:':FNM('make_data_slot:with:',((rec:Obj, args:Array<Obj>):Obj => {
         rec._make_data_slot(args[0]._get_js_string(), args[1])
         return NilObj()
-    }),
-    'understands:with:':(rec:Obj, args:Array<Obj>):Obj => {
+    })),
+    'understands:with:':FNM('understands:with:',(rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()
         let slot_value = args[1]
         rec._make_method_slot(slot_name,slot_value)
@@ -364,15 +403,15 @@ export const ROOT = new Obj("ROOT", null,{
             slot_value.parent = rec
         }
         return NilObj();
-    },
+    }),
     'getSlot:':FakeNatMeth((rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()
         return rec.get_slot(slot_name)
     }),
-    'getJsSlot:':(rec:Obj, args:Array<Obj>):Obj => {
+    'getJsSlot:':FNM('getJsSlot:',(rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()
         return rec.get_js_slot(slot_name) as Obj
-    },
+    }),
     'setJsSlot:to:':(rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()
         let jsvalue = args[1]
@@ -383,8 +422,8 @@ export const ROOT = new Obj("ROOT", null,{
         rec.name = args[0]._get_js_string()
         return NilObj()
     }),
-    'clone':FakeNatMeth((rec:Obj):Obj => rec.clone()),
-    'doesNotUnderstand:':FakeNatMeth((rec:Obj, args:Array<Obj>):Obj => {
+    'clone':FNM('clone',(rec:Obj):Obj => rec.clone()),
+    'doesNotUnderstand:':FNM('doesNotUnderstand:',(rec:Obj, args:Array<Obj>):Obj => {
         let msg = args[0]
         let name = msg._get_data_slot('selector')
         return new Obj("Exception", ObjectProto, {"message": `Message not found: '${name._get_js_string()}'`})
@@ -411,7 +450,7 @@ export const ObjectProto = new Obj("ObjectProto", ROOT, {})
 export const NilObj = () => new Obj("NilLiteral", NilProto, {})
 
 export const NativeMethodProto = new Obj("NativeMethodProto", ObjectProto, {})
-export type NativeMethodSigature = (rec:Obj, args:Array<Obj>) => Obj;
+export type NativeMethodSignature = (rec:Obj, args:Array<Obj>) => Obj;
 class NativeMethod extends Obj implements Method {
     constructor(name:string, parent:Obj, props:Record<string,unknown>) {
         super(name,parent,props);
@@ -437,7 +476,7 @@ class NativeMethod extends Obj implements Method {
         // throw new Error("Method not implemented.");
     }
 }
-export const NatMeth = (fun:NativeMethodSigature):Obj => {
+export const NatMeth = (fun:NativeMethodSignature):Obj => {
     return new NativeMethod("NativeMethod", NativeMethodProto, {
         '_jsvalue': fun,
     })
@@ -466,7 +505,7 @@ export function setup_object(scope: Obj) {
     scope._make_method_slot('nil', NilObj())
 }
 
-export function make_native_obj(name: string, proto: Obj, methods: Record<string, NativeMethodSigature>) {
+export function make_native_obj(name: string, proto: Obj, methods: Record<string, NativeMethodSignature>) {
     let wrapped_methods: Record<string, Obj> = {}
     Object.keys(methods).forEach(method => {
         wrapped_methods[method] = NatMeth(methods[method])

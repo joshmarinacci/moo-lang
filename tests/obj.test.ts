@@ -1,13 +1,15 @@
 import test from "node:test";
 import {NilObj, Obj} from "../src/obj.ts";
 import {make_standard_scope} from "../src/standard.ts";
-import {cval} from "./eval.test.ts";
 import {NumObj} from "../src/number.ts";
 import {StrObj} from "../src/string.ts";
+import {cval} from "./common.ts";
 
 test("clone",() => {
     let scope:Obj = make_standard_scope()
-    cval('Object clone',scope)
+    cval('Object clone',scope,{
+        bytecodeOnly:true
+    })
 })
 test("catch doesNotUnderstand",() => {
     let scope:Obj = make_standard_scope()
