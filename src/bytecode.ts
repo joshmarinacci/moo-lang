@@ -14,11 +14,11 @@ import {JoshLogger} from "./util.ts";
 import {NumObj} from "./number.ts";
 import {StrObj} from "./string.ts";
 import {ActivationObj, BlockProto} from "./block.ts";
-import {ListObj} from "./arrays.ts";
+import {parse} from "./parser.ts";
 
 
 let d = new JoshLogger()
-// d.disable()
+d.disable()
 
 
 export class BytecodeMethod extends Obj implements Method {
@@ -218,6 +218,7 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         let desc = AstToString(blk)
         let bytecode = blk.body.map(a => compile_bytecode(a)).flat()
         let blk2 = new BytecodeMethod(blk.parameters.map(id => id.name), bytecode, BlockProto )
+        // blk2.parent = ctx.scope
         ctx.stack.push_with(blk2,desc)
         return NilObj()
     }
@@ -447,4 +448,11 @@ export function compile_bytecode(ast: Ast): ByteCode {
         ].flat() as ByteCode
     }
     throw new Error(`unknown ast type ${ast.type}`)
+}
+
+export function bval(source: string, scope: Obj) {
+    let bytecode = compile_bytecode(parse(source,'BlockBody'))
+    // console.log("bytecode is",bytecode)
+    let ret_bcode  =  execute_bytecode(bytecode,scope)
+    // console.log("returned",ret_bcode.print())
 }

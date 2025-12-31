@@ -2,6 +2,7 @@ import {make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
 import {BoolObj} from "./boolean.ts";
 import {eval_block_obj, eval_statements} from "./eval.ts";
 import {NumObj} from "./number.ts";
+import {bval} from "./bytecode.ts";
 
 export const StringProto = make_native_obj("StringProto",ObjectProto,{
     'value':(rec:Obj) => rec,
@@ -45,7 +46,7 @@ export const StringProto = make_native_obj("StringProto",ObjectProto,{
 export const StrObj = (value:string):Obj => new Obj("StringLiteral", StringProto, {'_jsvalue': value})
 export function setup_string(scope: Obj) {
     scope._make_method_slot("String", StringProto)
-    eval_statements(`
+    bval(`
         String makeSlot: '_js' with: [
             self getJsSlot: '_jsvalue'.
         ].

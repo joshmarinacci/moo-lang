@@ -452,12 +452,14 @@ export const NilObj = () => new Obj("NilLiteral", NilProto, {})
 export const NativeMethodProto = new Obj("NativeMethodProto", ObjectProto, {})
 export type NativeMethodSignature = (rec:Obj, args:Array<Obj>) => Obj;
 class NativeMethod extends Obj implements Method {
-    constructor(name:string, parent:Obj, props:Record<string,unknown>) {
+    private label: string;
+    constructor(name:string, label:string, parent:Obj, props:Record<string,unknown>) {
         super(name,parent,props);
+        this.label = label
     }
 
     dispatch(ctx: Context, arg_count: number): void {
-        console.log("executing", this.print())
+        console.log(`executing: '${this.label}'`, this.print())
         console.log("real method is", this._get_js_unknown())
         console.log('stack is',ctx.stack.print_small())
         console.log("the argument count is", arg_count)
@@ -476,8 +478,8 @@ class NativeMethod extends Obj implements Method {
         // throw new Error("Method not implemented.");
     }
 }
-export const NatMeth = (fun:NativeMethodSignature):Obj => {
-    return new NativeMethod("NativeMethod", NativeMethodProto, {
+export const NatMeth = (fun:NativeMethodSignature,label?:string):Obj => {
+    return new NativeMethod("NativeMethod", label?label:'unnamed', NativeMethodProto, {
         '_jsvalue': fun,
     })
 }
@@ -508,7 +510,7 @@ export function setup_object(scope: Obj) {
 export function make_native_obj(name: string, proto: Obj, methods: Record<string, NativeMethodSignature>) {
     let wrapped_methods: Record<string, Obj> = {}
     Object.keys(methods).forEach(method => {
-        wrapped_methods[method] = NatMeth(methods[method])
+        wrapped_methods[method] = NatMeth(methods[method],method)
     })
     return new Obj(name, proto, wrapped_methods);
 }

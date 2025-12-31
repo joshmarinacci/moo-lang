@@ -3,8 +3,7 @@ import {make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
 import {eval_block_obj, sval} from "./eval.ts";
 import {BoolObj} from "./boolean.ts";
 import {StrObj} from "./string.ts";
-import {parse} from "./parser.ts";
-import {compile_bytecode, execute_bytecode} from "./bytecode.ts";
+import {bval} from "./bytecode.ts";
 
 const js_num_op = (cb:(a:number,b:number)=>number):NativeMethodSignature => {
     return function (rec:Obj, args:Array<Obj>){
@@ -77,26 +76,20 @@ const NumberProto = make_native_obj("NumberProto", ObjectProto, {
 });
 export const NumObj = (value:number):Obj => new Obj("NumberLiteral", NumberProto, { '_jsvalue': value,})
 
-function bval(source: string, scope: Obj) {
-    let bytecode = compile_bytecode(parse(source,'BlockBody'))
-    // console.log("bytecode is",bytecode)
-    let ret_bcode  =  execute_bytecode(bytecode,scope)
-    // console.log("returned",ret_bcode.print())
-}
 
 export function setup_number(scope: Obj) {
     scope._make_method_slot("Number", NumberProto)
-    sval(`Number makeSlot: 'double' with: [
+    bval(`Number makeSlot: 'double' with: [
       (self value) * 2.
     ].`,scope);
     bval(`Number makeSlot: 'square' with:[
        (self value) * (self value).
     ].`,scope)
-    sval(`Nil makeSlot: 'isNil' with: [
+    bval(`Nil makeSlot: 'isNil' with: [
          true
       ].
     `,scope)
-    sval(`Number makeSlot: 'times:' with: [ block |
+    bval(`Number makeSlot: 'times:' with: [ block |
          0 range: self do: block. 
       ].
     `,scope)

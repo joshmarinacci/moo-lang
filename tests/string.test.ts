@@ -18,7 +18,10 @@ test('strings',() => {
      foo := "start".
      foo := foo + "bar".
      foo. `,scope,StrObj("startbar"))
-    cval(`"foo" isEmpty`, scope, BoolObj(false))
+    cval(`"foo" isEmpty`, scope, {
+        expected:BoolObj(false),
+        bytecodeOnly:true
+    })
     cval(`"" isEmpty`, scope, BoolObj(true))
     cval(`"foo" at: 0`, scope, StrObj('f'))
     cval(`"foo" at: 1`, scope, StrObj('o'))
@@ -26,7 +29,7 @@ test('strings',() => {
 test('structure',() => {
     let scope = make_standard_scope()
     cval('"foobar" contains: "foo"', scope,BoolObj(true))
-    cval('"foobar" startsWith: "foo"', scope,BoolObj(true))
+    cval('"foobar" startsWith: "foo"', scope,{expected:BoolObj(true),bytecodeOnly:true})
     cval('"foobar" startsWith: "bar"', scope,BoolObj(false))
     cval('"foobar" endsWith: "foo"', scope,BoolObj(false))
     cval('"foobar" endsWith: "bar"', scope,BoolObj(true))

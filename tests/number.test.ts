@@ -21,7 +21,7 @@ test('arithmetic',() => {
     // cval('4 + (5 * 6).',scope,NumObj(34))
     cval(`-5.`,scope,NumObj(-5))
     cval(`5 negate.`,scope,NumObj(-5))
-    // cval('5 double.',scope,NumObj(10))
+    cval('5 double.',scope,{expected: NumObj(10),bytecodeOnly:true})
     // cval('5 square',scope,NumObj(25))
 })
 
