@@ -373,7 +373,10 @@ class FakeNativeMethod extends Obj implements Method {
             throw new Error(`FakeNativeMethod '${this.label}' returned undefined`)
         }
         console.log(ret)
-        console.log(ret.print())
+        if(typeof ret === 'string') {
+            ctx.stack.push(ret)
+        }
+        // console.log(ret.print())
         if(ret instanceof Obj && !ret.isNil()) {
             ctx.stack.push(ret)
         }

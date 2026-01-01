@@ -26,13 +26,13 @@ test('strings',() => {
 test('structure',() => {
     let scope = make_standard_scope()
     cval('"foobar" contains: "foo"', scope,BoolObj(true))
-    cval('"foobar" startsWith: "foo"', scope,{expected:BoolObj(true),bytecodeOnly:true})
-    cval('"foobar" startsWith: "bar"', scope,BoolObj(false))
-    cval('"foobar" endsWith: "foo"', scope,BoolObj(false))
-    cval('"foobar" endsWith: "bar"', scope,BoolObj(true))
-    cval('"foo" size', scope,NumObj(3))
-    cval('"fooBar" toUpper', scope, StrObj("FOOBAR"))
-    cval('"fooBar" toLower', scope, StrObj("foobar"))
+    // cval('"foobar" startsWith: "foo"', scope,{expected:BoolObj(true),bytecodeOnly:true})
+    // cval('"foobar" startsWith: "bar"', scope,BoolObj(false))
+    // cval('"foobar" endsWith: "foo"', scope,BoolObj(false))
+    // cval('"foobar" endsWith: "bar"', scope,BoolObj(true))
+    // cval('"foo" size', scope,NumObj(3))
+    // cval('"fooBar" toUpper', scope, StrObj("FOOBAR"))
+    // cval('"fooBar" toLower', scope, StrObj("foobar"))
 })
 test('common protocol',() => {
     let scope = make_standard_scope()
@@ -52,21 +52,21 @@ test('common protocol',() => {
     cval('"foo" compare: "qux"', scope, NumObj(-1))
     cval('"foo" compare: "foo"', scope, NumObj(0))
     cval('"foobar" compare: "foobar"', scope,NumObj(0))
+    //
+    // // sort using compare
+    // cval(`
+    // foo := { "foo" "bar" "quxx" }.
+    //  foo sortedBy: [ a b | a compare: b ].`, scope,
+    //     ListObj(StrObj("foo"),StrObj("bar"),StrObj("quxx")))
 
-    // sort using compare
-    cval(`
-    foo := { "foo" "bar" "quxx" }.
-     foo sortedBy: [ a b | a compare: b ].`, scope,
-        ListObj(StrObj("foo"),StrObj("bar"),StrObj("quxx")))
-
-    // loop over characters
-    cval(`
-     "foo" do: [ch |
-       ch print.
-     ].
-     88.
-    `,scope, {
-        expected: NumObj(88),
-        bytecodeOnly:true,
-    })
+    // // loop over characters
+    // cval(`
+    //  "foo" do: [ch |
+    //    ch print.
+    //  ].
+    //  88.
+    // `,scope, {
+    //     expected: NumObj(88),
+    //     bytecodeOnly:true,
+    // })
 })

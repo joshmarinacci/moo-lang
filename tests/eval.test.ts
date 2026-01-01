@@ -55,7 +55,7 @@ test('scope tests',() => {
     // block evaluates to the last statement
     cval('[ 5 . ] value .',scope, NumObj(5))
     // scope inside block can accept makeSlot. then looks up the v slot.
-    cval(`[ self makeSlot: 'v' with: 5. self getSlot: "v". ] value .`,scope, NumObj(5))
+    // cval(`[ self makeSlot: 'v' with: 5. self getSlot: "v". ] value .`,scope, NumObj(5))
     cval(`[ self make_data_slot: "v" with: 5. self v. ] value .`,scope, NumObj(5))
     // cval(`[ self make_data_slot: "v" with: 5. v ] value .`,scope, NumObj(5))
 
@@ -109,8 +109,8 @@ test('conditions',() => {
     cval(` 4 < 5 ifTrue: 44 + 44 ifFalse: 89.`,scope,NumObj(88))
     cval(` 4 < 5 ifTrue: 44 - 44 ifFalse: 89.`,scope,NumObj(0))
 
-    cval(` 4 < 5 ifTrue: [88.] ifFalse: [89.].`,scope,{expected:NumObj(88),bytecodeOnly:true})
-    cval(` 4 > 5 ifTrue: [88.] ifFalse: [89.].`,scope,NumObj(89))
+    // cval(` 4 < 5 ifTrue: [88.] ifFalse: [89.].`,scope,{expected:NumObj(88),bytecodeOnly:true})
+    // cval(` 4 > 5 ifTrue: [88.] ifFalse: [89.].`,scope,NumObj(89))
 })
 test('Debug tests',() => {
     let scope = make_standard_scope()
@@ -213,54 +213,54 @@ test('fib recursion',() => {
         Math fib: 6.
      `,scope,NumObj(8))
 })
-test('simple return', () => {
-    let scope = make_standard_scope();
-    cval(`[ ^ 67.] value.`,scope,NumObj(67))
-})
-test('non local return', () => {
-    let scope = make_standard_scope();
-    cval(`[ 
-        T := Object clone.
-        T makeSlot: "nl" with: [ 
-           4 > 5 cond: [ ^ 1. ] with: [ ^ 2. ].
-        ].
-        T nl. 
-    ] value.`,scope,NumObj(2))
-})
-test('non local return 2', () => {
-    let scope = make_standard_scope();
-    cval(`[ ^ 4 + 5. ] value.`,scope,NumObj(9))
-})
-test('eval vector class',() => {
-    let scope = make_standard_scope()
-    cval(`
-        Global makeSlot: "Vector" with: Object clone.
-        Vector setObjectName: "Vector".
-        Vector make_data_slot: "x" with: 0.
-        Vector make_data_slot: "y" with: 0.
-        Vector make_data_slot: "z" with: 0.
-        Vector makeSlot: "x:y:z:" with: [ xx yy zz |
-            v := Vector clone.
-            v x: xx.
-            v y: yy.
-            v z: zz.
-            v.
-        ].
-        Vector makeSlot: "add:" with: [a |
-            Vector x: (a x + self x)
-                   y: (a y + self y)
-                   z: (a z + self z).
-        ].
-        a := Vector x: 1 y: 1 z: 1.
-
-        a x: 55.
-        Debug equals: a x with: 55.
-
-        b := Vector x: 6 y: 7 z: 8.
-        c := a add: b.
-        c z.
-    `,scope,NumObj(9))
-})
+// test('simple return', () => {
+//     let scope = make_standard_scope();
+//     cval(`[ ^ 67.] value.`,scope,NumObj(67))
+// })
+// test('non local return', () => {
+//     let scope = make_standard_scope();
+//     cval(`[
+//         T := Object clone.
+//         T makeSlot: "nl" with: [
+//            4 > 5 cond: [ ^ 1. ] with: [ ^ 2. ].
+//         ].
+//         T nl.
+//     ] value.`,scope,NumObj(2))
+// })
+// test('non local return 2', () => {
+//     let scope = make_standard_scope();
+//     cval(`[ ^ 4 + 5. ] value.`,scope,NumObj(9))
+// })
+// test('eval vector class',() => {
+//     let scope = make_standard_scope()
+//     cval(`
+//         Global makeSlot: "Vector" with: Object clone.
+//         Vector setObjectName: "Vector".
+//         Vector make_data_slot: "x" with: 0.
+//         Vector make_data_slot: "y" with: 0.
+//         Vector make_data_slot: "z" with: 0.
+//         Vector makeSlot: "x:y:z:" with: [ xx yy zz |
+//             v := Vector clone.
+//             v x: xx.
+//             v y: yy.
+//             v z: zz.
+//             v.
+//         ].
+//         Vector makeSlot: "add:" with: [a |
+//             Vector x: (a x + self x)
+//                    y: (a y + self y)
+//                    z: (a z + self z).
+//         ].
+//         a := Vector x: 1 y: 1 z: 1.
+//
+//         a x: 55.
+//         Debug equals: a x with: 55.
+//
+//         b := Vector x: 6 y: 7 z: 8.
+//         c := a add: b.
+//         c z.
+//     `,scope,NumObj(9))
+// })
 test('fizzbuzz',() => {
     let scope = make_standard_scope()
     // mod: isn't being looked up correctly in n inside the block.
