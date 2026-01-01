@@ -54,7 +54,11 @@ function print_state(inter: OutputWrapper, opts: Options, ctx:Context) {
         inter.write(`${indent} - `)
         for(let key of scope._method_slots.keys()) {
             inter.write(key)
-            inter.write(' ')
+            let val = scope._method_slots.get(key)
+            if(val && val instanceof Obj) {
+                inter.write(`= ${val.print()}`)
+            }
+            inter.write('  ')
         }
         inter.write('\n')
         if(scope.name.startsWith('Global')) break;
