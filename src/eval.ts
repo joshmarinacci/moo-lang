@@ -1,6 +1,6 @@
 import {JoshLogger} from "./util.ts";
 
-import {JS_VALUE, NilObj, Obj, ObjectProto} from "./obj.ts";
+import {type Context, JS_VALUE, NilObj, Obj, ObjectProto, STStack} from "./obj.ts";
 import {NumObj} from "./number.ts";
 import {StrObj} from "./string.ts";
 import {objsEqual} from "./debug.ts";
@@ -19,12 +19,42 @@ import {AstToString} from "./ast.ts"
 import assert from "node:assert";
 import {DictObj, ListObj} from "./arrays.ts";
 import {BlockProto} from "./block.ts";
+import {type BytecodeMethod, execute_op} from "./bytecode.ts";
 
 const d = new JoshLogger()
 d.disable()
 
 export function eval_block_obj(method: Obj, args:Array<Obj>) {
-    if (method.name !== 'Block') return method
+    if (method.name === 'BytecodeBlock') {
+        let ctx:Context = {
+            scope: method,
+            bytecode: [],
+            pc: 0,
+            stack: new STStack(),
+            running:true
+        };
+        args.forEach(arg => ctx.stack.push_with(arg,'arg'))
+        ctx.stack.push_with(method,'method')
+        ctx.stack.push_with(method,'receiver');
+        ((method as BytecodeMethod).dispatch(ctx,args.length));
+        console.log('bytecode is now', ctx.bytecode)
+        while(ctx.running) {
+            console.log("=======")
+            console.log("stack",ctx.stack.print_small())
+            console.log(ctx.bytecode)
+            if(ctx.pc >= ctx.bytecode.length) break;
+            let op = ctx.bytecode[ctx.pc]
+            console.log('op ' + op)
+            let ret = execute_op(op, ctx)
+        }
+        // console.log('after dispatching bytecode method stack is')
+        // console.log(ctx.stack.print_small())
+        return ctx.stack.pop()
+    }
+    if (method.name !== 'Block') {
+        throw new Error(`trying to eval a method that isn't a block '${method.name}'`)
+        //return method
+    }
     let meth = method.get_js_slot('value') as unknown
     if (meth instanceof Obj && meth.is_kind_of("NativeMethod")) {
         return (meth.get_js_slot(JS_VALUE) as Function)(method,args)

@@ -35,10 +35,10 @@ export class BytecodeMethod extends Obj implements Method {
     // }
 
     dispatch(ctx: Context, arg_count: number): void {
-        console.log("executing", this.print())
-        console.log("bytecode is", this.bytecode)
-        console.log('stack is',ctx.stack.print_small())
-        console.log("the argument count is", arg_count)
+        // console.log("BytecodeMethod.dispatch: executing", this.print())
+        // console.log("bytecode is", this.bytecode)
+        // console.log('stack is',ctx.stack.print_small())
+        // console.log("the argument count is", arg_count)
         let args:Array<Obj> = []
         for (let i = 0; i < arg_count; i++) {
             args.push(ctx.stack.pop())
@@ -338,7 +338,7 @@ export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
 }
 
 export function compile_bytecode(ast: Ast): ByteCode {
-    d.p("compiling", AstToString(ast))
+    d.p("compiling", AstToString(ast), ast.type)
     if (Array.isArray(ast)) {
         return ast.map(a => compile_bytecode(a)).flat()
     }
@@ -445,7 +445,7 @@ export function compile_bytecode(ast: Ast): ByteCode {
     if (ast.type === 'return') {
         return [
             compile_bytecode(ast.value),
-            [['return', null]]
+            // [['return', null]]
         ].flat() as ByteCode
     }
     throw new Error(`unknown ast type ${ast.type}`)

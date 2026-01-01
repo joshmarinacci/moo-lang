@@ -99,18 +99,18 @@ test('nil',() => {
 })
 test('conditions',() => {
     let scope = make_standard_scope()
-    cval(` 4 < 5 ifTrue: 88.`,scope,NumObj(88))
+    cval(` 4 < 5 ifTrue: [88].`,scope,NumObj(88))
     cval(` 4 > 5 ifTrue: 88.`,scope,NilObj())
     cval(` 4 < 5 ifFalse: 88.`,scope,NilObj())
-    cval(` 4 > 5 ifFalse: 88.`,scope,NumObj(88))
+    cval(` 4 > 5 ifFalse: [88].`,scope,NumObj(88))
 
-    cval(` 4 < 5 ifTrue: 88 ifFalse: 89.`,scope,NumObj(88))
-    cval(` 4 > 5 ifTrue: 88 ifFalse: 89.`,scope,NumObj(89))
-    cval(` 4 < 5 ifTrue: 44 + 44 ifFalse: 89.`,scope,NumObj(88))
-    cval(` 4 < 5 ifTrue: 44 - 44 ifFalse: 89.`,scope,NumObj(0))
+    cval(` 4 < 5 ifTrue: [88] ifFalse: 89.`,scope,NumObj(88))
+    cval(` 4 > 5 ifTrue: 88 ifFalse: [89].`,scope,NumObj(89))
+    cval(` 4 < 5 ifTrue: [44 + 44] ifFalse: 89.`,scope,NumObj(88))
+    cval(` 4 < 5 ifTrue: [44 - 44] ifFalse: 89.`,scope,NumObj(0))
 
-    // cval(` 4 < 5 ifTrue: [88.] ifFalse: [89.].`,scope,{expected:NumObj(88),bytecodeOnly:true})
-    // cval(` 4 > 5 ifTrue: [88.] ifFalse: [89.].`,scope,NumObj(89))
+    cval(` 4 < 5 ifTrue: [88.] ifFalse: [89.].`,scope,{expected:NumObj(88),bytecodeOnly:true})
+    cval(` 4 > 5 ifTrue: [88.] ifFalse: [89.].`,scope,NumObj(89))
 })
 test('Debug tests',() => {
     let scope = make_standard_scope()
@@ -213,24 +213,24 @@ test('fib recursion',() => {
         Math fib: 6.
      `,scope,NumObj(8))
 })
-// test('simple return', () => {
-//     let scope = make_standard_scope();
-//     cval(`[ ^ 67.] value.`,scope,NumObj(67))
-// })
-// test('non local return', () => {
-//     let scope = make_standard_scope();
-//     cval(`[
-//         T := Object clone.
-//         T makeSlot: "nl" with: [
-//            4 > 5 cond: [ ^ 1. ] with: [ ^ 2. ].
-//         ].
-//         T nl.
-//     ] value.`,scope,NumObj(2))
-// })
-// test('non local return 2', () => {
-//     let scope = make_standard_scope();
-//     cval(`[ ^ 4 + 5. ] value.`,scope,NumObj(9))
-// })
+test('simple return', () => {
+    let scope = make_standard_scope();
+    cval(`[ ^ 67.] value.`,scope,NumObj(67))
+})
+test('non local return', () => {
+    let scope = make_standard_scope();
+    cval(`[
+        T := Object clone.
+        T makeSlot: "nl" with: [
+           4 > 5 cond: [ ^ 1. ] with: [ ^ 2. ].
+        ].
+        T nl.
+    ] value.`,scope,NumObj(2))
+})
+test('non local return 2', () => {
+    let scope = make_standard_scope();
+    cval(`[ ^ 4 + 5. ] value.`,scope,NumObj(9))
+})
 // test('eval vector class',() => {
 //     let scope = make_standard_scope()
 //     cval(`
@@ -261,23 +261,23 @@ test('fib recursion',() => {
 //         c z.
 //     `,scope,NumObj(9))
 // })
-test('fizzbuzz',() => {
-    let scope = make_standard_scope()
-    // mod: isn't being looked up correctly in n inside the block.
-    cval(`
-    [
-    1 range: 100 do: [ n |
-        three := (n mod: 3) == 0.
-        five := (n mod: 5) == 0.
-        (three and: five) ifTrue: [ 
-            ^ ("FizzBuzz" print).  
-        ].
-        three ifTrue: [ "Fizz" print. ].
-        five ifTrue: [ "Buzz" print. ].
-    ].
-    88. 
-    ] value .`,scope,NumObj(88))
-})
+// test('fizzbuzz',() => {
+//     let scope = make_standard_scope()
+//     // mod: isn't being looked up correctly in n inside the block.
+//     cval(`
+//     [
+//     1 range: 100 do: [ n |
+//         three := (n mod: 3) == 0.
+//         five := (n mod: 5) == 0.
+//         (three and: five) ifTrue: [
+//             ^ ("FizzBuzz" print).
+//         ].
+//         three ifTrue: [ "Fizz" print. ].
+//         five ifTrue: [ "Buzz" print. ].
+//     ].
+//     88.
+//     ] value .`,scope,NumObj(88))
+// })
 test('loops',() => {
     let scope = make_standard_scope()
     cval(`

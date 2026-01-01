@@ -190,8 +190,8 @@ test('compile & execute: 1 + 2 = 3',() =>{
     // cce('5 square', NumObj(25))
 })
 test('conditional',() => {
-    cce(` 4 < 5 ifTrue: 88`,NumObj(88))
-    cce(` 4 > 5 ifTrue: 88`,NilObj())
+    cce(` 4 < 5 ifTrue: [88]`,NumObj(88))
+    cce(` 4 > 5 ifTrue: [88]`,NilObj())
 })
 test('assignment operator', () => {
     ccem(`
