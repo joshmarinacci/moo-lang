@@ -145,6 +145,22 @@ export class Obj {
         if (this.name === 'NumberLiteral') {
             return `NumberLiteral (${this._get_js_number()})`;
         }
+        if (this.name === 'jsvalue') {
+            let jsval = this.get_slot('jsval') as unknown
+            let txt:string = typeof jsval
+            if(typeof jsval === 'string') {
+                txt = `string: "${jsval}"`
+            }
+            if(typeof jsval === 'number') {
+                txt = `number: ${jsval}`
+            }
+            if(typeof jsval === 'undefined') {
+                txt = 'undefined'
+            }
+
+            // console.log("js value is", this.get_slot('jsval'))
+            return `JSValue(${txt})`
+        }
         if (this.name === 'StringLiteral') {
             return `String(${this._get_js_string()})`;
         }
@@ -394,6 +410,9 @@ export const FakeNatMeth = (fun:NativeMethodSignature):Obj => {
 const FNM = (name:string, fun:NativeMethodSignature):Obj => {
     return new FakeNativeMethod(name,{'_jsvalue':fun})
 }
+export const JSWrapper = (value:unknown):Obj => {
+    return new Obj('jsvalue',ROOT,{jsval:value})
+}
 export const ROOT = new Obj("ROOT", null,{
     'make_data_slot:with:':FNM('make_data_slot:with:',((rec:Obj, args:Array<Obj>):Obj => {
         rec._make_data_slot(args[0]._get_js_string(), args[1])
@@ -418,7 +437,8 @@ export const ROOT = new Obj("ROOT", null,{
     }),
     'getJsSlot:':FNM('getJsSlot:',(rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()
-        return rec.get_js_slot(slot_name) as Obj
+        let jsval = rec.get_js_slot(slot_name)
+        return JSWrapper(jsval)
     }),
     'setJsSlot:to:':(rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()

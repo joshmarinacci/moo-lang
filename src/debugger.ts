@@ -1,4 +1,5 @@
 import readline, {Interface} from "node:readline/promises"
+import fs from "node:fs/promises"
 import util from "node:util"
 import {compile_bytecode, execute_op} from "./bytecode.ts";
 import {parse} from "./parser.ts";
@@ -6,8 +7,9 @@ import {type Context, Obj, STStack} from "./obj.ts";
 import {make_standard_scope} from "./standard.ts";
 
 type Options = {
-    code:string
+    code:string|undefined
     step:boolean
+    input:string|undefined
 }
 
 
@@ -21,6 +23,10 @@ function handle_args():Options {
             step: {
                 type:'boolean',
                 default: false,
+            },
+            input: {
+                type:'string',
+                default:'',
             }
         }
     })
@@ -114,9 +120,17 @@ async function do_loop(opts: Options) {
         input:process.stdin,
         output:process.stdout
     })
+
+    let code = ""
+    if(opts.code && opts.code.trim().length > 0) {
+        code = opts.code
+    }
+    if(opts.input && opts.input.trim().length >0) {
+        code = await fs.readFile(opts.input,{encoding:'utf-8'})
+    }
     let ctx:Context = {
         scope: make_standard_scope(),
-        bytecode: compile_bytecode(parse(opts.code,'BlockBody')),
+        bytecode: compile_bytecode(parse(code,'BlockBody')),
         pc: 0,
         stack: new STStack(),
         running:true

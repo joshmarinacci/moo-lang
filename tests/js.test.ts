@@ -1,44 +1,45 @@
-import test from "node:test";
+import test, {describe} from "node:test";
 import {Obj} from "../src/obj.ts";
 import {make_standard_scope} from "../src/standard.ts";
 import {cval} from "./common.ts";
+import {NumObj} from "../src/number.ts";
+import {BoolObj} from "../src/boolean.ts";
+import {StrObj} from "../src/string.ts";
 
-// test('native JS api',() => {
-//     let scope: Obj = make_standard_scope()
-//     // TODO: Math.pow(x,y)
-//     // TODO: allow identifiers beginning with underscore
-//     // TODO: implement understands:with: as a dupe of makeSlot:with:
-//     // implement doNativeCall:target:with
-//     // implement doNativeCall:target:with:with:
-//     // implement lookupNativeGlobal:. Only can return Math.
-//     // whatever is returned should be auto converted back to an ST object?
-//     cval(`
-//     Number understands: "toString" with: [ |
-//         Debug print: (self getJsSlot: "_jsvalue").
-//         self jsCall: "toString" on: (self getJsSlot: "_jsvalue").
-//     ].
-//     88 toString. // should print 88.
-//
-//     Number understands: "pow:" with: [ arg |
-//         Math := self jsLookupGlobal: "Math".
-//         value := self jsCall: "pow" on:Math with: (self getJsSlot: "_jsvalue") with: (arg getJsSlot: "_jsvalue").
-//         Debug print: value.
-//     ].
-//     3 pow: 5.
-//
-//     `,scope,{
-//         evalOnly:true
-//     })
-//
-//     cval(`
-//         String understands: "foo:" with: [ arg |
-//             Debug print:"executing ".
-//             self setJsSlot:"_jsvalue" to: (arg getJsSlot: "_jsvalue").
-//         ].
-//         ret := "".
-//         ret foo: "bar".
-//         Debug equals: ret with: "bar"
-//     `,scope,{
-//         evalOnly:true
-//     })
-// })
+describe('get js hooks',() => {
+    test('Boolean fromJs',() => {
+        let scope: Obj = make_standard_scope()
+        cval(`
+            String makeSlot: 'startsWith:' with: [str | 
+                Boolean fromJs: (self jsCall: "startsWith" 
+                                          on: (self getJsSlot: '_jsvalue')
+                                        with: (str  getJsSlot: '_jsvalue')
+                ). 
+            ].
+            "foobar" startsWith: "foo".
+        `,scope,{bytecodeOnly:true, expected:BoolObj(true)})
+    })
+    test('String fromJs',() => {
+        let scope: Obj = make_standard_scope()
+        cval(`
+            Number understands: "toString" with: [ |
+                String fromJs: (self jsCall: "toString" on: (self getJsSlot: "_jsvalue")).
+            ].
+            88 toString. 
+        `,scope,{bytecodeOnly:true, expected:StrObj('88')})
+    })
+    test('Number fromJs',() => {
+        let scope: Obj = make_standard_scope()
+        cval(`
+    Number understands: "pow:" with: [ arg |
+        Math := self jsLookupGlobal: "Math".
+        Number fromJs: (self jsCall: "pow" 
+                                 on:Math 
+                               with: (self getJsSlot: "_jsvalue") 
+                               with: (arg getJsSlot: "_jsvalue")
+        ).
+    ].
+    3 pow: 5.
+    `,scope,{ bytecodeOnly:true, expected: NumObj(243) })
+    })
+})

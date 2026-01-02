@@ -26,6 +26,7 @@ const js_bool_op = (cb:(a:number,b:number)=>boolean) => {
 
 const NumberProto = make_native_obj("NumberProto", ObjectProto, {
     'value':(rec:Obj) => rec,
+    'fromJs:':(rec:Obj, args:Array<Obj>):Obj => NumObj(args[0].get_slot('jsval') as unknown as number),
     '+':js_num_op((a,b)=>a+b),
     '-':js_num_op((a,b)=>a-b),
     '*':js_num_op((a,b)=>a*b),

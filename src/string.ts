@@ -6,7 +6,7 @@ import {bval} from "./bytecode.ts";
 
 export const StringProto = make_native_obj("StringProto",ObjectProto,{
     'value':(rec:Obj) => rec,
-    'fromJs:':(rec:Obj, args:Array<Obj>):Obj => StrObj(args[0] as unknown as string),
+    'fromJs:':(rec:Obj, args:Array<Obj>):Obj => StrObj(args[0].get_slot('jsval') as unknown as string),
     '+':((rec:Obj, args:Array<Obj>) => StrObj(rec.to_string() + args[0].to_string())),
     '<':((rec:Obj, args:Array<Obj>) => BoolObj(rec.to_string() < args[0].to_string())),
     '>':((rec:Obj, args:Array<Obj>) => BoolObj(rec.to_string() > args[0].to_string())),

@@ -22,7 +22,7 @@ const BooleanProto = make_native_obj("BooleanProto",ObjectProto,{
             return eval_block_obj(args[1],[])
         }
     },
-    'fromJs:':(rec:Obj, args:Array<Obj>):Obj => BoolObj(args[0] as unknown as boolean),
+    'fromJs:':(rec:Obj, args:Array<Obj>):Obj => BoolObj(args[0].get_slot('jsval') as unknown as boolean),
     'and:':(rec:Obj, args:Array<Obj>):Obj => BoolObj(rec._get_js_boolean() && args[0]._get_js_boolean()),
     'or:':(rec:Obj, args:Array<Obj>):Obj => BoolObj(rec._get_js_boolean() || args[0]._get_js_boolean()),
     'not':(rec:Obj, args:Array<Obj>):Obj => BoolObj(!rec._get_js_boolean()),
