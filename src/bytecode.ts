@@ -315,7 +315,7 @@ export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
         d.green(`Stack: ${ctx.stack.print_small()}`)
         d.green(`scope is ${ctx.scope.print()}`)
         if(ctx.pc >= ctx.bytecode.length) {
-            console.log("we are done")
+            d.p("we are done")
             ctx.running = false
             break;
         }

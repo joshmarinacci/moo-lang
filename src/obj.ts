@@ -355,12 +355,12 @@ class FakeNativeMethod extends Obj implements Method {
     }
 
     dispatch(ctx: Context, arg_count: number): void {
-        console.log(`dispatching fake native method '${this.label}'`)
-        console.log(ctx.stack.print_small())
-        console.log("executing", this.print())
-        console.log("real method is", this._get_js_unknown())
-        console.log('stack is',ctx.stack.print_small())
-        console.log("the argument count is", arg_count)
+        d.p(`dispatching fake native method '${this.label}'`)
+        d.p(ctx.stack.print_small())
+        d.p("executing", this.print())
+        d.p("real method is", this._get_js_unknown())
+        d.p('stack is',ctx.stack.print_small())
+        d.p("the argument count is", arg_count)
         let args = []
         for (let i = 0; i < arg_count; i++) {
             args.push(ctx.stack.pop())
@@ -369,11 +369,11 @@ class FakeNativeMethod extends Obj implements Method {
         let meth = ctx.stack.pop()
         let rec = ctx.stack.pop()
         let ret = (this.get_js_slot(JS_VALUE) as Function)(rec, args)
-        console.log("got the return")
+        d.p("got the return")
         if(typeof ret == 'undefined') {
             throw new Error(`FakeNativeMethod '${this.label}' returned undefined`)
         }
-        console.log(ret)
+        d.p(ret)
         if(typeof ret === 'string') {
             ctx.stack.push(ret)
         }
@@ -463,10 +463,10 @@ class NativeMethod extends Obj implements Method {
     }
 
     dispatch(ctx: Context, arg_count: number): void {
-        console.log(`executing: '${this.label}'`, this.print())
-        console.log("real method is", this._get_js_unknown())
-        console.log('stack is',ctx.stack.print_small())
-        console.log("the argument count is", arg_count)
+        d.p(`executing: '${this.label}'`, this.print())
+        d.p("real method is", this._get_js_unknown())
+        d.p('stack is',ctx.stack.print_small())
+        d.p("the argument count is", arg_count)
         let args = []
         for (let i = 0; i < arg_count; i++) {
             args.push(ctx.stack.pop())
@@ -475,7 +475,7 @@ class NativeMethod extends Obj implements Method {
         let meth = ctx.stack.pop()
         let rec = ctx.stack.pop()
         let ret = (this.get_js_slot(JS_VALUE) as Function)(rec, args)
-        console.log("got the return",ret.print())
+        d.p("got the return",ret.print())
         if(ret instanceof Obj && !ret.isNil()) {
             ctx.stack.push(ret)
         }

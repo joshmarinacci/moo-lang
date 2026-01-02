@@ -249,5 +249,12 @@ test('invoke debug',() => {
     ccem('Debug print: 67.',NilObj())
 })
 test('whileTrue: ',() => {
-    ccem(`[4 > 5] whileTrue: [5.].`, NumObj(5))
+    ccem(`
+    self make_data_slot: 'counter' with:0.
+    [self counter < 5] whileTrue: [
+         self counter: (self counter + 1).
+        self counter.
+    ].
+    self counter .
+    `, NumObj(5))
 })
