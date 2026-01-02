@@ -133,14 +133,16 @@ function root_fixup(scope:Obj) {
         // execute the body block
         ['lookup-message','value'],    // lookup value message on the block
         ['send-message',0],            // call value message
+            // remove whatever was left on the stack
+        ['pop',null],
 
         // execute the conditional block
         ['load-plain-id','receiver'],  // the block is the receiver
         ['lookup-message','value'],    // lookup value message on the block
         ['send-message',0],            // call value message
         ['jump-if-true',0],            // if the condition was true, jump to start
-
-        ['halt',null],
+        ['load-literal-string','done'],
+        // ['return-from-bytecode-call',null],
     ],BlockProto))
 
 }

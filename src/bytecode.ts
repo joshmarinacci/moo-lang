@@ -287,6 +287,13 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         ctx.stack.push_with(ret,'returned')
         d.p("now the stack is")
         d.p(ctx.stack.print_small())
+        d.p('now the scope is', ctx.scope)
+        d.p("the old info was ",oldInfo)
+        return NilObj()
+    }
+    if( name === 'pop') {
+        d.p("removing from the stack")
+        ctx.stack.pop()
         return NilObj()
     }
     throw new Error(`unknown bytecode operation '${name}'`)

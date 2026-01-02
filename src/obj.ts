@@ -15,6 +15,7 @@ export type OpType
     | 'halt'
     | 'jump-if-true'
     | 'return-from-bytecode-call'
+    | 'pop'
 export type ByteOp = [OpType, unknown]
 export type ByteCode = Array<ByteOp>;
 
