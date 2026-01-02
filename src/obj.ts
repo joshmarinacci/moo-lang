@@ -399,6 +399,10 @@ export const ROOT = new Obj("ROOT", null,{
         rec._make_data_slot(args[0]._get_js_string(), args[1])
         return NilObj()
     })),
+    'let:be:':FNM('let:be:',((rec:Obj, args:Array<Obj>):Obj => {
+        rec._make_data_slot(args[0]._get_js_string(), args[1])
+        return NilObj()
+    })),
     'understands:with:':FNM('understands:with:',(rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()
         let slot_value = args[1]

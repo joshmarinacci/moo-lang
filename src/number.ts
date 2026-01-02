@@ -53,15 +53,15 @@ const NumberProto = make_native_obj("NumberProto", ObjectProto, {
         }
         return NilObj()
     },
-    'range:do:':(rec:Obj, args:Array<Obj>):Obj => {
-        let start = rec._get_js_number()
-        let end = args[0]._get_js_number()
-        let block = args[1]
-        for(let i=start; i<end; i++) {
-            eval_block_obj(block, [NumObj(i)])
-        }
-        return NilObj()
-    },
+    // 'range:do:':(rec:Obj, args:Array<Obj>):Obj => {
+    //     let start = rec._get_js_number()
+    //     let end = args[0]._get_js_number()
+    //     let block = args[1]
+    //     for(let i=start; i<end; i++) {
+    //         eval_block_obj(block, [NumObj(i)])
+    //     }
+    //     return NilObj()
+    // },
     'print':(rec:Obj):Obj => StrObj(rec._get_js_number() + ''),
     'negate':(rec:Obj):Obj => NumObj(-rec._get_js_number()),
     'compare:':((rec:Obj, args:Array<Obj>) => {
@@ -90,6 +90,13 @@ export function setup_number(scope: Obj) {
     ].
     Nil makeSlot: 'isNil' with: [
          true
+    ].
+    Number makeSlot: 'range:do:' with: [ end block |
+      self make_data_slot: 'counter' with: 0.
+      [ self counter < end ] whileTrue: [
+         block valueWith: self counter.
+      ].
+      'donzo'.
     ].
     Number makeSlot: 'times:' with: [ block |
          0 range: self do: block.

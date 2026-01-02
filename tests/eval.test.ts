@@ -87,11 +87,11 @@ test('scope tests',() => {
         ] value.
     `,scope,NumObj(5))
 
-    // cval(`[
-    //     self makeSlot: "x" with: 5.
-    //     self makeSlot: "w"  with: [ self x. ].
-    //     self w.
-    // ] value .`,scope,NumObj(5))
+    cval(`[
+        self make_data_slot: "x" with: 5.
+        self makeSlot: "w"  with: [ self x. ].
+        self w.
+    ] value .`,scope,NumObj(5))
 })
 test('nil',() => {
     let scope:Obj = make_standard_scope();
@@ -118,53 +118,53 @@ test('Debug tests',() => {
 })
 test("block arg tests",() => {
     let scope = make_standard_scope()
-    mval(`
+    cval(`
         self makeSlot: "foo" with: [
             88.
         ].
         self foo.
      `,scope,NumObj(88))
-    mval(`
+    cval(`
         self makeSlot: "foo:" with: [ v |
             88.
         ].
         self foo: 1.
     `,scope,NumObj(88))
-    mval(`
+    cval(`
         self makeSlot: "foo:" with: [ v |
             88 + v.
         ].
         self foo: 1.
     `,scope,NumObj(89))
-    // cval(`[
-    //     self makeSlot: "foo" with: (Object clone).
-    //     foo makeSlot: "bar" with: 88.
-    //     Debug equals: (foo bar) with: 88.
-    //     foo makeSlot: "get_bar" with: [
-    //         self bar.
-    //     ].
-    //     Debug equals: (foo get_bar) with: 88.
-    //     foo makeSlot: "get_bar_better" with: [
-    //         bar.
-    //     ].
-    //     Debug equals: (foo get_bar_better) with: 88.
-    // ] value.`,scope, NilObj())
+    cval(`
+        self makeSlot: "foo" with: (Object clone).
+        foo make_data_slot: "bar" with: 88.
+        Debug equals: (foo bar) with: 88.
+        foo makeSlot: "get_bar" with: [
+            self bar.
+        ].
+        Debug equals: (foo get_bar) with: 88.
+        foo makeSlot: "get_bar_better" with: [
+            self bar.
+        ].
+        Debug equals: (foo get_bar_better) with: 88.
+    `,scope, NilObj())
 })
 test("global scope tests",() => {
     let scope = make_standard_scope()
-    // cval(`[
-    //     Global makeSlot: "foo" with: (Object clone).
-    //     foo makeSlot: "x" with: 5.
-    //     foo makeSlot: "bar" with: [
-    //         self makeSlot: "blah" with: (foo clone).
-    //         blah x.
-    //     ].
-    //     foo bar.
-    // ] value .`,scope,NumObj(5))
+    cval(`[
+        Global makeSlot: "foo" with: (Object clone).
+        foo let: "x" be: 5.
+        foo understands: "bar" with: [
+            self makeSlot: "blah" with: (foo clone).
+            blah x.
+        ].
+        foo bar.
+    ] value .`,scope,NumObj(5))
 
     // cval(`[
     //     Global makeSlot: "Foo" with: (Object clone).
-    //     Foo makeSlot: "make" with: [
+    //     Foo understands: "make" with: [
     //         self makeSlot: "blah" with: (Foo clone).
     //         blah makeSlot: "name" with: "Foo".
     //         blah.

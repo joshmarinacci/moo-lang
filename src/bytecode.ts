@@ -35,10 +35,11 @@ export class BytecodeMethod extends Obj implements Method {
     // }
 
     dispatch(ctx: Context, arg_count: number): void {
-        // console.log("BytecodeMethod.dispatch: executing", this.print())
-        // console.log("bytecode is", this.bytecode)
-        // console.log('stack is',ctx.stack.print_small())
-        // console.log("the argument count is", arg_count)
+        d.p("BytecodeMethod.dispatch: executing", this.print())
+        d.p("bytecode is", this.bytecode)
+        d.p('stack is',ctx.stack.print_small())
+        d.p("the argument count is", arg_count)
+        d.p("this names is",this.names)
         let args:Array<Obj> = []
         for (let i = 0; i < arg_count; i++) {
             args.push(ctx.stack.pop())

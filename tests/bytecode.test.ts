@@ -241,6 +241,8 @@ test("block arg tests",() => {
 })
 test('block eval',() => {
     ccem('[ 5 . ] value .',NumObj(5))
+    ccem('[ 5 . ] valueWith: 6.',NumObj(5))
+    ccem('[ v | 5 + v. ] valueWith: 6.',NumObj(11))
 })
 test('group eval',() => {
     ccem('(8 + 8).',NumObj(16))

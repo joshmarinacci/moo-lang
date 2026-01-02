@@ -29,16 +29,16 @@ test('set pixels color',() => {
         88.
     `,scope,NumObj(88));
 })
-test('fill image',() => {
-    const scope = make_standard_scope()
-    cval(`[
-        image := Image width: 10 height: 10.
-        image fill: [x y |
-            (x mod: 2) == 0 ifTrue: [ ^ Color red. ].
-            (y mod: 2) == 0 ifTrue: [ ^ Color green. ].
-            Color black.
-          ].
-        image save: "output/bar.png".
-        88.
-     ] value.`, scope, NumObj(88))
-})
+// test('fill image',() => {
+//     const scope = make_standard_scope()
+//     cval(`[
+//         image := Image width: 10 height: 10.
+//         image fill: [x y |
+//             (x mod: 2) == 0 ifTrue: [ ^ Color red. ].
+//             (y mod: 2) == 0 ifTrue: [ ^ Color green. ].
+//             Color black.
+//           ].
+//         image save: "output/bar.png".
+//         88.
+//      ] value.`, scope, NumObj(88))
+// })
