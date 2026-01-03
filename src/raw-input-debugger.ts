@@ -1,6 +1,8 @@
 import process from "node:process"
 import {make_standard_scope} from "./standard.ts";
-import {Obj} from "./obj.ts";
+import {type ByteCode, type ByteOp, Obj} from "./obj.ts";
+import {compile_bytecode} from "./bytecode.ts";
+import {parse} from "./parser.ts";
 
 process.stdin.setRawMode(true);
 process.stdin.resume();
@@ -37,7 +39,7 @@ class TreeState {
         if(index < 0) index = 0
         index += 1;
         if(index > names.length-1) index = names.length-1
-        name = names.at(index)
+        name = names.at(index) as string
         this.selection = name
     }
 
@@ -48,7 +50,7 @@ class TreeState {
         if(index < 0) index = 0
         index -= 1;
         if(index < 0) index = 0
-        name = names.at(index)
+        name = names.at(index) as string
         this.selection = name
     }
 
@@ -95,8 +97,22 @@ class TreeState {
     }
 }
 
-let state = new TreeState(scope)
-state.selection = 'Number'
+class BytecodeState {
+    private bytecode: ByteCode;
+    constructor(bytecode: Array<ByteOp>) {
+        this.bytecode = bytecode
+    }
+}
+
+let example_code = '4+5'
+let bytecode =  compile_bytecode(parse(example_code,'BlockBody'))
+
+let bytecode_state = new BytecodeState(bytecode)
+let scope_state = new TreeState(scope)
+scope_state.selection = 'Number'
+
+type Mode = 'bytecode'|'execution'|'stack'
+let active_mode:Mode = 'bytecode'
 
 function print_scope_view(state:TreeState) {
     const l = (...args:unknown[]) => process.stdout.write(args.join("")+"\n")
@@ -111,33 +127,61 @@ function print_scope_view(state:TreeState) {
     }
 }
 
-const key_bindings = {
-    'q':() => {
-        process.exit()
-    },
-    'j':() => {
-        state.nav_next_item()
-    },
-    'k':() => {
-        state.nav_prev_item()
-    },
-    '\r':() => {
-        state.select_item()
-    },
-    '\u001b[A': () => {
-        state.nav_prev_item()
-    },
-    '\u001b[B': () => {
-        state.nav_next_item()
-    },
-    '\u001b[D': () => {
-        state.nav_up_target()
-    }
+function print_bytecode_view(bytecode_state: BytecodeState) {
 }
 
 function clear_screen() {
     process.stdout.write("\x1Bc");
 }
+
+type KeyHandler = () => void;
+const key_bindings:Record<string,KeyHandler> = {
+    'q':() => {
+        process.exit()
+    },
+    's':() => {
+        active_mode = 'stack'
+    },
+    'b':() => {
+        active_mode = 'bytecode'
+    },
+    'e':() => {
+        active_mode = 'execution'
+    },
+    'j':() => {
+        scope_state.nav_next_item()
+    },
+    'k':() => {
+        scope_state.nav_prev_item()
+    },
+    '\r':() => {
+        scope_state.select_item()
+    },
+    '\u001b[A': () => {
+        scope_state.nav_prev_item()
+    },
+    '\u001b[B': () => {
+        scope_state.nav_next_item()
+    },
+    '\u001b[D': () => {
+        scope_state.nav_up_target()
+    }
+}
+
+function print_menu(active_mode: Mode) {
+    console.log(`menu: q:quit s:stack b:bytecode e:execution `)
+    console.log("arrows: nav")
+    console.log(`${active_mode}`)
+}
+
+
+function redraw() {
+    clear_screen()
+    print_scope_view(scope_state)
+    print_bytecode_view(bytecode_state)
+    print_menu(active_mode)
+}
+
 
 process.stdin.on("data", (key:string) => {
     // Ctrl+C
@@ -146,8 +190,7 @@ process.stdin.on("data", (key:string) => {
     }
     if(key in key_bindings) {
         key_bindings[key]();
-        clear_screen()
-        print_scope_view(state)
+        redraw()
         return
     }
     console.log(JSON.stringify(key));
@@ -162,4 +205,4 @@ process.on("SIGINT", () => {
     process.exit();
 });
 process.stdout.write("going\n")
-print_scope_view(state)
+redraw()
