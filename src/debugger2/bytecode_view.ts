@@ -1,6 +1,6 @@
 import {type ByteCode, type ByteOp, type Context} from "../obj.ts";
-import {type KeyHandler, type Mode, type ViewOutput} from "./model.ts";
-import {Header} from "./util.ts";
+import {type AppState, type KeyHandler, type Mode, type ViewOutput} from "./model.ts";
+import {BoxFrame, Header} from "./util.ts";
 
 export class BytecodeState {
     bytecode: ByteCode;
@@ -34,19 +34,22 @@ export function BytecodeViewInput(key:string, bytecode_state:BytecodeState) {
 }
 
 
-export function BytecodeViewRender(bytecode_state: BytecodeState, ctx:Context, active_mode:Mode):ViewOutput {
-    let output = []
-    output.push(...Header("bytecode",active_mode=="bytecode"))
-    bytecode_state.bytecode.forEach((op,n)=>{
+export function BytecodeViewRender(state:AppState):ViewOutput {
+    let output = new BoxFrame({
+        name:"bytecode",
+        width: state.width,
+        active:state.mode==='bytecode'
+    })
+    state.bytecode.bytecode.forEach((op,n)=>{
         let sel = ' '
-        if(n == bytecode_state.selected_index) {
+        if(n == state.bytecode.selected_index) {
             sel = '*'
         }
         let active = ' '
-        if(n === ctx.pc) {
+        if(n === state.ctx.pc) {
             active = '#'
         }
-        output.push(`   ${sel}  ${active} ${op[0]} ${op[1]}`)
+        output.addLine(`  ${sel} ${active} ${op[0]} ${op[1]}`)
     })
-    return output
+    return output.render()
 }

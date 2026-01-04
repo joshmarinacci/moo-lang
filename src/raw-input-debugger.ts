@@ -1,14 +1,13 @@
 import process from "node:process"
 import {make_standard_scope} from "./standard.ts";
 import {type Context, STStack} from "./obj.ts";
-import {compile_bytecode, execute_op} from "./bytecode.ts";
+import {compile_bytecode} from "./bytecode.ts";
 import {parse} from "./parser.ts";
-import {NumObj} from "./number.ts";
 import {BytecodeState, BytecodeViewInput, BytecodeViewRender} from "./debugger2/bytecode_view.ts";
-import {type KeyHandler, type Mode, type ViewOutput} from "./debugger2/model.ts";
-import {StackViewInput, StackViewRender, StackState} from "./debugger2/stack_view.ts";
-import {clear_screen, Header} from "./debugger2/util.ts";
-import util from "node:util";
+import {type AppState, type KeyHandler, type ViewOutput} from "./debugger2/model.ts";
+import {StackState, StackViewInput, StackViewRender} from "./debugger2/stack_view.ts";
+import {clear_screen} from "./debugger2/util.ts";
+import {ExecutionViewInput, ExecutionViewRender} from "./debugger2/execution_view.ts";
 
 process.stdin.setRawMode(true);
 process.stdin.resume();
@@ -24,23 +23,14 @@ let ctx:Context = {
     stack: new STStack(),
     running:false
 }
-ctx.stack.push_with(NumObj(5),'argument')
-ctx.stack.push_with(NumObj(4),'argument')
-
-type AppState = {
-    messages: Array<string>;
-    mode:Mode,
-    ctx:Context,
-    stack:StackState,
-    bytecode:BytecodeState
-}
 
 const state:AppState = {
     mode:"bytecode",
     ctx:ctx,
     stack:new StackState(ctx.stack),
     bytecode:new BytecodeState(ctx.bytecode),
-    messages:[]
+    messages:[],
+    width: 60,
 }
 
 
@@ -63,51 +53,11 @@ function draw(output:ViewOutput) {
     console.log(output.map(l => l + '\n').join(""))
 }
 
-function ConsoleViewRender(state:AppState):ViewOutput {
-    let output = []
-    output.push('- - - - - - -')
-    let log = state.messages
-    let len = state.messages.length
-    if(len > 10) log = log.slice(len-10)
-    log.forEach(msg => {
-        output.push(msg)
-    })
-    output.push('- - - - - - -')
-    return output
-}
-function ExecutionViewRender(state: AppState):ViewOutput {
-    let output = []
-    output.push(...Header('execution',state.mode === 'execution'))
-    output.push('space:step r:run')
-
-    output.push(...ConsoleViewRender(state))
-
-    output.push('')
-    output.push(`menu: q:quit s:stack b:bytecode e:execution `)
-    output.push("arrows: nav")
-    output.push(`${state.mode}`)
-    return output
-}
-function ExecutionViewInput(key: string, state: AppState) {
-    if(key === ' ') {
-        if(state.ctx.pc >= state.ctx.bytecode.length) {
-            state.messages.push('we are done')
-            state.ctx.running = false
-            return
-        }
-        let op = ctx.bytecode[ctx.pc]
-        state.messages.push('executing ' + util.inspect(op))
-        let ret = execute_op(op, ctx)
-    }
-    if(key === 'r') {
-        // run
-    }
-}
 
 function redraw() {
     clear_screen()
-    draw(StackViewRender(state.stack,state.mode))
-    draw(BytecodeViewRender(state.bytecode,state.ctx,state.mode))
+    draw(StackViewRender(state))
+    draw(BytecodeViewRender(state))
     draw(ExecutionViewRender(state))
 }
 

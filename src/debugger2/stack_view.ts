@@ -1,7 +1,6 @@
 import {Obj, STStack} from "../obj.ts";
-import {type KeyHandler, type Mode, type ViewOutput} from "./model.ts";
-import {Header} from "./util.ts";
-import {it} from "node:test";
+import {type AppState, type KeyHandler, type Mode, type ViewOutput} from "./model.ts";
+import {BoxFrame} from "./util.ts";
 
 export class StackState  {
     stack: STStack;
@@ -60,24 +59,27 @@ export function StackViewInput(key:string, stack_state:StackState) {
         stack_bindings[key]()
     }
 }
-export function StackViewRender(stack_state:StackState, active_mode:Mode):ViewOutput {
-    let output = []
-    output.push(...Header("stack",active_mode=="stack"))
-    stack_state.stack.items().forEach(([item,label], n) => {
-        let dot = (n === stack_state.selected_index)?"*":" "
-        output.push(`  ${dot} ${item.print()} ${label}`)
+export function StackViewRender(state:AppState):ViewOutput {
+    let output = new BoxFrame({
+        name:'Stack',
+        width:state.width,
+        active:state.mode === 'stack'
     })
-    if(stack_state.selected_item instanceof Obj) {
-        let obj = stack_state.selected_item as Obj
+    state.stack.stack.items().forEach(([item,label], n) => {
+        let dot = (n === state.stack.selected_index)?"*":" "
+        output.addLine(`  ${dot} ${item.print()} ${label}`)
+    })
+    if(state.stack.selected_item instanceof Obj) {
+        let obj = state.stack.selected_item as Obj
         obj._list_slot_names().forEach((str,index) => {
-            output.push(`    ${str}`)
+            output.addLine(`    ${str}`)
         })
         if(obj.parent) {
             obj.parent._list_slot_names().forEach((str,index) => {
-                output.push(`       ${str}`)
+                output.addLine(`       ${str}`)
             })
         }
     }
-    return output
+    return output.render()
 }
 
