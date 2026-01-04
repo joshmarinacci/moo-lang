@@ -1,8 +1,12 @@
 import process from "node:process"
 import {make_standard_scope} from "./standard.ts";
-import {type ByteCode, type ByteOp, Obj} from "./obj.ts";
+import {type Context, Obj, STStack} from "./obj.ts";
 import {compile_bytecode} from "./bytecode.ts";
 import {parse} from "./parser.ts";
+import {NumObj} from "./number.ts";
+import {BytecodeState, print_bytecode_view} from "./debugger2/bytecode_view.ts";
+import {type Mode} from "./debugger2/model.ts";
+import {print_stack_view, StackState} from "./debugger2/stack_view.ts";
 
 process.stdin.setRawMode(true);
 process.stdin.resume();
@@ -14,11 +18,13 @@ const GREEN_BOLD = '\x1b[1;32m'
 const BLUE_BOLD = '\x1b[1;34m'
 const RESET = '\x1b[0m'; // Resets all attributes
 
-function header() {
-    process.stdout.write(`${RED}input is: ${RESET}`+'\n')
-}
+// function header() {
+//     process.stdout.write(`${RED}input is: ${RESET}`+'\n')
+// }
 
-const scope = make_standard_scope()
+// const scope = make_standard_scope()
+
+
 
 class TreeState {
     root:Obj
@@ -97,37 +103,43 @@ class TreeState {
     }
 }
 
-class BytecodeState {
-    private bytecode: ByteCode;
-    constructor(bytecode: Array<ByteOp>) {
-        this.bytecode = bytecode
-    }
-}
-
 let example_code = '4+5'
 let bytecode =  compile_bytecode(parse(example_code,'BlockBody'))
 
-let bytecode_state = new BytecodeState(bytecode)
-let scope_state = new TreeState(scope)
-scope_state.selection = 'Number'
-
-type Mode = 'bytecode'|'execution'|'stack'
 let active_mode:Mode = 'bytecode'
-
-function print_scope_view(state:TreeState) {
-    const l = (...args:unknown[]) => process.stdout.write(args.join("")+"\n")
-    l('========== scope =======')
-    l(`${state.root.name} > ${state.path.join(' > ')}`)
-    for(let name of state.get_selected_children()) {
-        if(state.is_selected_name(name)) {
-            l(`  * ${name}`)
-        } else {
-            l(`    ${name}`)
-        }
-    }
+let ctx:Context = {
+    scope: make_standard_scope(),
+    bytecode: bytecode,
+    pc: 0,
+    stack: new STStack(),
+    running:false
 }
 
-function print_bytecode_view(bytecode_state: BytecodeState) {
+ctx.stack.push_with(NumObj(5),'argument')
+ctx.stack.push_with(NumObj(4),'argument')
+
+
+let stack_state = new StackState(ctx.stack)
+let bytecode_state = new BytecodeState(ctx.bytecode)
+// let scope_state = new TreeState(scope)
+// scope_state.selection = 'Number'
+
+// function print_scope_view(state:TreeState) {
+//     l('========== scope =======')
+//     l(`${state.root.name} > ${state.path.join(' > ')}`)
+//     for(let name of state.get_selected_children()) {
+//         if(state.is_selected_name(name)) {
+//             l(`  * ${name}`)
+//         } else {
+//             l(`    ${name}`)
+//         }
+//     }
+// }
+
+function print_menu(active_mode: Mode) {
+    console.log(`menu: q:quit s:stack b:bytecode e:execution `)
+    console.log("arrows: nav")
+    console.log(`${active_mode}`)
 }
 
 function clear_screen() {
@@ -136,49 +148,56 @@ function clear_screen() {
 
 type KeyHandler = () => void;
 const key_bindings:Record<string,KeyHandler> = {
-    'q':() => {
+    'q': () => {
         process.exit()
     },
-    's':() => {
+    's': () => {
         active_mode = 'stack'
     },
-    'b':() => {
+    'b': () => {
         active_mode = 'bytecode'
     },
-    'e':() => {
+    'e': () => {
         active_mode = 'execution'
-    },
-    'j':() => {
-        scope_state.nav_next_item()
-    },
-    'k':() => {
-        scope_state.nav_prev_item()
-    },
-    '\r':() => {
-        scope_state.select_item()
-    },
-    '\u001b[A': () => {
-        scope_state.nav_prev_item()
-    },
-    '\u001b[B': () => {
-        scope_state.nav_next_item()
-    },
-    '\u001b[D': () => {
-        scope_state.nav_up_target()
     }
 }
 
-function print_menu(active_mode: Mode) {
-    console.log(`menu: q:quit s:stack b:bytecode e:execution `)
-    console.log("arrows: nav")
-    console.log(`${active_mode}`)
+const stack_bindings:Record<string, KeyHandler> = {
+    'j':() => {
+        stack_state.nav_next_item()
+    },
+    'k':() => {
+        stack_state.nav_prev_item()
+    },
+    '\r':() => {
+        stack_state.select_item()
+    },
+    '\u001b[A': () => {
+        stack_state.nav_prev_item()
+    },
+    '\u001b[B': () => {
+        stack_state.nav_next_item()
+    },
+    // '\u001b[D': () => {
+    //     stack_state.nav_up_target()
+    // }
+}
+
+const bytecode_bindings:Record<string, KeyHandler> = {
+    'j':() => {
+        bytecode_state.nav_next_item()
+    },
+    'k':() => {
+        bytecode_state.nav_prev_item()
+    },
 }
 
 
 function redraw() {
     clear_screen()
-    print_scope_view(scope_state)
-    print_bytecode_view(bytecode_state)
+    // print_scope_view(scope_state)
+    print_stack_view(stack_state,ctx, active_mode)
+    print_bytecode_view(bytecode_state,ctx,active_mode)
     print_menu(active_mode)
 }
 
@@ -192,6 +211,20 @@ process.stdin.on("data", (key:string) => {
         key_bindings[key]();
         redraw()
         return
+    }
+    if(active_mode === 'stack') {
+        if(key in stack_bindings) {
+            stack_bindings[key]();
+            redraw()
+            return
+        }
+    }
+    if(active_mode === 'bytecode') {
+        if(key in bytecode_bindings) {
+            bytecode_bindings[key]();
+            redraw()
+            return
+        }
     }
     console.log(JSON.stringify(key));
 });

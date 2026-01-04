@@ -60,6 +60,10 @@ export class STStack {
     getFromEnd(number: number):Obj {
         return this.data[this.data.length + number - 1][0]
     }
+
+    items():Array<[Obj,string]> {
+        return this.data
+    }
 }
 
 
