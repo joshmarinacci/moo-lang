@@ -1,5 +1,6 @@
 import {type ByteCode, type ByteOp, type Context} from "../obj.ts";
 import {type KeyHandler, type Mode, type ViewOutput} from "./model.ts";
+import {Header} from "./util.ts";
 
 export class BytecodeState {
     bytecode: ByteCode;
@@ -18,7 +19,7 @@ export class BytecodeState {
     }
 }
 
-export function handle_bytecode_input(key:string, bytecode_state:BytecodeState) {
+export function BytecodeViewInput(key:string, bytecode_state:BytecodeState) {
     const bytecode_bindings:Record<string, KeyHandler> = {
         'j':() => {
             bytecode_state.nav_next_item()
@@ -33,19 +34,19 @@ export function handle_bytecode_input(key:string, bytecode_state:BytecodeState) 
 }
 
 
-export function render_bytecode_view(bytecode_state: BytecodeState, ctx:Context, active_mode:Mode):ViewOutput {
+export function BytecodeViewRender(bytecode_state: BytecodeState, ctx:Context, active_mode:Mode):ViewOutput {
     let output = []
-    if(active_mode === 'bytecode') {
-        output.push("======= bytecode =======")
-    } else {
-        output.push('------- bytecode -------')
-    }
+    output.push(...Header("bytecode",active_mode=="bytecode"))
     bytecode_state.bytecode.forEach((op,n)=>{
-        let prefix = '    ';
+        let sel = ' '
         if(n == bytecode_state.selected_index) {
-            prefix = '  * '
+            sel = '*'
         }
-        output.push(`${prefix}${op[0]} ${op[1]}`)
+        let active = ' '
+        if(n === ctx.pc) {
+            active = '#'
+        }
+        output.push(`   ${sel}  ${active} ${op[0]} ${op[1]}`)
     })
     return output
 }

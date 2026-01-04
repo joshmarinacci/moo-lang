@@ -1,7 +1,8 @@
-import {type Context, Obj, STStack} from "../obj.ts";
+import {Obj, STStack} from "../obj.ts";
 import {type KeyHandler, type Mode, type ViewOutput} from "./model.ts";
+import {Header} from "./util.ts";
 
-export class StackState {
+export class StackState  {
     stack: STStack;
     selected_index: number;
     selected_item : Obj|null
@@ -28,32 +29,7 @@ export class StackState {
     }
 }
 
-export function print_stack_view(stack_state:StackState, ctx: Context, active_mode:Mode):ViewOutput {
-    let output = []
-    if(active_mode === 'stack') {
-        output.push("======= stack =======")
-    } else {
-        output.push('------- stack -------')
-    }
-    stack_state.stack.items().forEach(([item,label], n) => {
-        let dot = (n === stack_state.selected_index)?"*":" "
-        output.push(`  ${dot} ${item.print()} ${label}`)
-    })
-    if(stack_state.selected_item instanceof Obj) {
-        let obj = stack_state.selected_item as Obj
-        obj._list_slot_names().forEach((str,index) => {
-            output.push(`    ${str}`)
-        })
-        if(obj.parent) {
-            obj.parent._list_slot_names().forEach((str,index) => {
-                output.push(`       ${str}`)
-            })
-        }
-    }
-    return output
-}
-
-export function handle_stackview_input(key:string, stack_state:StackState) {
+export function StackViewInput(key:string, stack_state:StackState) {
     const stack_bindings: Record<string, KeyHandler> = {
         'j': () => {
             stack_state.nav_next_item()
@@ -78,3 +54,24 @@ export function handle_stackview_input(key:string, stack_state:StackState) {
         stack_bindings[key]()
     }
 }
+export function StackViewRender(stack_state:StackState, active_mode:Mode):ViewOutput {
+    let output = []
+    output.push(...Header("stack",active_mode=="stack"))
+    stack_state.stack.items().forEach(([item,label], n) => {
+        let dot = (n === stack_state.selected_index)?"*":" "
+        output.push(`  ${dot} ${item.print()} ${label}`)
+    })
+    if(stack_state.selected_item instanceof Obj) {
+        let obj = stack_state.selected_item as Obj
+        obj._list_slot_names().forEach((str,index) => {
+            output.push(`    ${str}`)
+        })
+        if(obj.parent) {
+            obj.parent._list_slot_names().forEach((str,index) => {
+                output.push(`       ${str}`)
+            })
+        }
+    }
+    return output
+}
+
