@@ -1,6 +1,7 @@
 import {Obj, STStack} from "../obj.ts";
 import {type KeyHandler, type Mode, type ViewOutput} from "./model.ts";
 import {Header} from "./util.ts";
+import {it} from "node:test";
 
 export class StackState  {
     stack: STStack;
@@ -25,7 +26,12 @@ export class StackState  {
     }
 
     select_item() {
-        this.selected_item = this.stack.items()[this.selected_index][0];
+        let item = this.stack.items()[this.selected_index][0];
+        if(this.selected_item === item) {
+            this.selected_item = null
+        } else {
+            this.selected_item = item
+        }
     }
 }
 
