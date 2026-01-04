@@ -4,9 +4,9 @@ import {type Context, Obj, STStack} from "./obj.ts";
 import {compile_bytecode} from "./bytecode.ts";
 import {parse} from "./parser.ts";
 import {NumObj} from "./number.ts";
-import {BytecodeState, print_bytecode_view} from "./debugger2/bytecode_view.ts";
-import {type Mode} from "./debugger2/model.ts";
-import {print_stack_view, StackState} from "./debugger2/stack_view.ts";
+import {BytecodeState, handle_bytecode_input, render_bytecode_view} from "./debugger2/bytecode_view.ts";
+import {type KeyHandler, type Mode, type ViewOutput} from "./debugger2/model.ts";
+import {handle_stackview_input, print_stack_view, StackState} from "./debugger2/stack_view.ts";
 
 process.stdin.setRawMode(true);
 process.stdin.resume();
@@ -146,7 +146,6 @@ function clear_screen() {
     process.stdout.write("\x1Bc");
 }
 
-type KeyHandler = () => void;
 const key_bindings:Record<string,KeyHandler> = {
     'q': () => {
         process.exit()
@@ -162,42 +161,13 @@ const key_bindings:Record<string,KeyHandler> = {
     }
 }
 
-const stack_bindings:Record<string, KeyHandler> = {
-    'j':() => {
-        stack_state.nav_next_item()
-    },
-    'k':() => {
-        stack_state.nav_prev_item()
-    },
-    '\r':() => {
-        stack_state.select_item()
-    },
-    '\u001b[A': () => {
-        stack_state.nav_prev_item()
-    },
-    '\u001b[B': () => {
-        stack_state.nav_next_item()
-    },
-    // '\u001b[D': () => {
-    //     stack_state.nav_up_target()
-    // }
+function draw(output:ViewOutput) {
+    console.log(output.map(l => l + '\n').join(""))
 }
-
-const bytecode_bindings:Record<string, KeyHandler> = {
-    'j':() => {
-        bytecode_state.nav_next_item()
-    },
-    'k':() => {
-        bytecode_state.nav_prev_item()
-    },
-}
-
-
 function redraw() {
     clear_screen()
-    // print_scope_view(scope_state)
-    print_stack_view(stack_state,ctx, active_mode)
-    print_bytecode_view(bytecode_state,ctx,active_mode)
+    draw(print_stack_view(stack_state,ctx, active_mode))
+    draw(render_bytecode_view(bytecode_state,ctx,active_mode))
     print_menu(active_mode)
 }
 
@@ -213,18 +183,14 @@ process.stdin.on("data", (key:string) => {
         return
     }
     if(active_mode === 'stack') {
-        if(key in stack_bindings) {
-            stack_bindings[key]();
-            redraw()
-            return
-        }
+        handle_stackview_input(key,stack_state)
+        redraw()
+        return
     }
     if(active_mode === 'bytecode') {
-        if(key in bytecode_bindings) {
-            bytecode_bindings[key]();
-            redraw()
-            return
-        }
+        handle_bytecode_input(key,bytecode_state);
+        redraw()
+        return
     }
     console.log(JSON.stringify(key));
 });

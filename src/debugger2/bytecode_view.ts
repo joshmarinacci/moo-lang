@@ -1,5 +1,5 @@
-import {type ByteCode, type ByteOp, type Context, Obj, STStack} from "../obj.ts";
-import {l, type Mode} from "./model.ts";
+import {type ByteCode, type ByteOp, type Context} from "../obj.ts";
+import {type KeyHandler, type Mode, type ViewOutput} from "./model.ts";
 
 export class BytecodeState {
     bytecode: ByteCode;
@@ -18,17 +18,34 @@ export class BytecodeState {
     }
 }
 
-export function print_bytecode_view(bytecode_state: BytecodeState, ctx:Context, active_mode:Mode) {
+export function handle_bytecode_input(key:string, bytecode_state:BytecodeState) {
+    const bytecode_bindings:Record<string, KeyHandler> = {
+        'j':() => {
+            bytecode_state.nav_next_item()
+        },
+        'k':() => {
+            bytecode_state.nav_prev_item()
+        },
+    }
+    if(key in bytecode_bindings) {
+        bytecode_bindings[key]()
+    }
+}
+
+
+export function render_bytecode_view(bytecode_state: BytecodeState, ctx:Context, active_mode:Mode):ViewOutput {
+    let output = []
     if(active_mode === 'bytecode') {
-        l("======= bytecode =======")
+        output.push("======= bytecode =======")
     } else {
-        l('------- bytecode -------')
+        output.push('------- bytecode -------')
     }
     bytecode_state.bytecode.forEach((op,n)=>{
         let prefix = '    ';
         if(n == bytecode_state.selected_index) {
             prefix = '  * '
         }
-        l(`${prefix}${op[0]} ${op[1]}`)
+        output.push(`${prefix}${op[0]} ${op[1]}`)
     })
+    return output
 }
