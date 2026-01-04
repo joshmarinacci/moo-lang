@@ -1,12 +1,5 @@
-import {compile_bytecode} from "../bytecode.ts";
-import {parse} from "../parser.ts";
 import {type Context, Obj, STStack} from "../obj.ts";
-import {make_standard_scope} from "../standard.ts";
-import {NumObj} from "../number.ts";
-import {BytecodeState, render_bytecode_view} from "./bytecode_view.ts";
-import process from "node:process";
 import {type KeyHandler, type Mode, type ViewOutput} from "./model.ts";
-import {l} from "./model.ts";
 
 export class StackState {
     stack: STStack;
