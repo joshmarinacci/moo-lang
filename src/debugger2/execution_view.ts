@@ -35,7 +35,7 @@ function ConsoleViewRender(state:AppState):ViewOutput {
 
 export function ExecutionViewRender(state: AppState):ViewOutput {
     let output = new BoxFrame({
-        name:"execution",
+        name:"Execution",
         width: state.width,
         active: state.mode === 'execution'
     })

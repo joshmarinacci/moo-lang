@@ -1,6 +1,10 @@
 import process from "node:process";
 import type {ViewOutput} from "./model.ts";
 
+const RED = '\x1b[31m'
+const BLACK = '\x1b[30m'
+const BLACK_BOLD = '\x1b[1;30m'
+const RED_BOLD = '\x1b[1;31m'
 const GREEN = '\x1b[32m';
 const GREEN_BOLD = '\x1b[1;32m'
 const RESET = '\x1b[0m'; // Resets all attributes
@@ -48,7 +52,7 @@ function stringToBorder(str:string):Border {
 }
 
 const STYLE:Style = {
-    attribute: '\x1b[31m',
+    attribute: BLACK,
     border: stringToBorder('+-+| |+-+')
 }
 
@@ -80,7 +84,7 @@ export class BoxFrame {
         let style = STYLE
         if (this.active) {
             style = {
-                attribute:GREEN_BOLD,
+                attribute:BLACK_BOLD,
                 border:STYLE.border
             }
         }

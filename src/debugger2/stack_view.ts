@@ -71,13 +71,21 @@ export function StackViewRender(state:AppState):ViewOutput {
     })
     if(state.stack.selected_item instanceof Obj) {
         let obj = state.stack.selected_item as Obj
+        // method slot names
         obj._list_slot_names().forEach((str,index) => {
-            output.addLine(`    ${str}`)
+            output.addLine(`    m: ${str}`)
         })
+        // data slot names
+        for(let key of obj._data_slots.keys()) {
+            output.addLine(`    d: ${key}`)
+        }
         if(obj.parent) {
             obj.parent._list_slot_names().forEach((str,index) => {
-                output.addLine(`       ${str}`)
+                output.addLine(`      m: ${str}`)
             })
+            for(let key of obj.parent._data_slots.keys()) {
+                output.addLine(`    d: ${key}`)
+            }
         }
     }
     return output.render()

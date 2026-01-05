@@ -36,7 +36,7 @@ export function BytecodeViewInput(key:string, bytecode_state:BytecodeState) {
 
 export function BytecodeViewRender(state:AppState):ViewOutput {
     let output = new BoxFrame({
-        name:"bytecode",
+        name:"Bytecode",
         width: state.width,
         active:state.mode==='bytecode'
     })
