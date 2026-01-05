@@ -56,7 +56,7 @@ const STYLE:Style = {
     border: stringToBorder('+-+| |+-+')
 }
 
-STYLE.border = stringToBorder('┌─┐│ │└─┘')
+STYLE.border = stringToBorder('┌─╮│ │╰─┘')
 
 export class BoxFrame {
     private width: number;
