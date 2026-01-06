@@ -1,12 +1,11 @@
 import test from "node:test";
 import {make_standard_scope} from "../src/standard.ts";
-import {mval} from "./eval.test.ts";
 import {NumObj} from "../src/number.ts";
 import {cval} from "./common.ts";
 
 test('set pixels color',() => {
     const scope = make_standard_scope();
-    mval(`
+    cval(`
         Color make_data_slot: "teal" with: (Color from: { 0 255 255 }).
         Color make_data_slot: "yellow" with: (Color from: { 255 255 0 }).
         Color make_data_slot: "magenta" with: (Color from: { 255 0 255 }).

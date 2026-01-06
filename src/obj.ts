@@ -374,35 +374,30 @@ class FakeNativeMethod extends Obj implements Method {
         this.label = name
     }
 
-    dispatch(ctx: Context, arg_count: number): void {
-        d.p(`dispatching fake native method '${this.label}'`)
-        d.p(ctx.stack.print_small())
-        d.p("executing", this.print())
+    dispatch(ctx: Context, act:Obj): void {
+        d.p("inside NativeMethod")
+        d.p(`executing: '${this.label}'`, this.print())
         d.p("real method is", this._get_js_unknown())
         d.p('stack is',ctx.stack.print_small())
-        d.p("the argument count is", arg_count)
-        let args = []
-        for (let i = 0; i < arg_count; i++) {
-            args.push(ctx.stack.pop())
-        }
-        args.reverse()
-        let meth = ctx.stack.pop()
-        let rec = ctx.stack.pop()
+
+        let args = act.get_slot('args') as unknown as Array<Obj>
+        d.p('args are',args.map(a => a.print()))
+        let meth = act.get_slot('method')
+        d.p('method is', meth.print())
+        let rec = act.get_slot('receiver')
+        d.p('rec is',rec.print())
         let ret = (this.get_js_slot(JS_VALUE) as Function)(rec, args)
-        d.p("got the return")
-        if(typeof ret == 'undefined') {
-            throw new Error(`FakeNativeMethod '${this.label}' returned undefined`)
-        }
-        d.p(ret)
-        if(typeof ret === 'string') {
-            ctx.stack.push(ret)
-        }
-        // console.log(ret.print())
+        d.p("got the return",ret.print())
         if(ret instanceof Obj && !ret.isNil()) {
+            act._make_method_slot('return',ret)
+        }
+    }
+    cleanup(ctx: Context, act: Obj) {
+        let ret = act.get_slot('return')
+        if(ret) {
+            d.p('ret is', ret.print())
             ctx.stack.push(ret)
         }
-        // throw new Error("Method not implemented.");
-        // throw new Error("Method not implemented.");
     }
 
 }
