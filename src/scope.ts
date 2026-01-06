@@ -135,7 +135,7 @@ function root_fixup(scope:Obj) {
         ['jump-if-true',0],            // if the condition was true, jump to start
         ['load-literal-string','done'],
         // ['return-from-bytecode-call',null],
-    ],BlockProto))
+    ],BlockProto,undefined))
 
 }
 

@@ -183,4 +183,5 @@ Dates could be sorted by before or after
 
 ## bytecode issues
 * [x] `list := { 1 2 3 4 5 }.` fails
-* store the uncompiled code with the bytecode in the context and BytecocdeMethod impl.
+* [x] store the uncompiled code BytecocdeMethod impl.
+* [x] show the values in the current scope that can be looked up

@@ -24,11 +24,13 @@ d.disable()
 export class BytecodeMethod extends Obj implements Method {
     private bytecode: ByteCode;
     private names: Array<string>;
-    constructor(parameterNames:Array<string>, bytecode:ByteCode, parent:Obj) {
+    private ast: BlockLiteral | undefined;
+    constructor(parameterNames:Array<string>, bytecode:ByteCode, parent:Obj, ast?:BlockLiteral) {
         super('BytecodeBlock',parent,{});
         this.names = parameterNames
         this.bytecode = bytecode
         this.bytecode.push(['return-from-bytecode-call',null])
+        this.ast = ast
     }
     // print(): string {
     //     return this.name + " [ " + util.inspect(this.bytecode) + ' ]'
@@ -222,7 +224,7 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         let blk = op[1] as BlockLiteral
         let desc = AstToString(blk)
         let bytecode = blk.body.map(a => compile_bytecode(a)).flat()
-        let blk2 = new BytecodeMethod(blk.parameters.map(id => id.name), bytecode, BlockProto )
+        let blk2 = new BytecodeMethod(blk.parameters.map(id => id.name), bytecode, BlockProto, blk)
         // blk2.parent = ctx.scope
         ctx.stack.push_with(blk2,desc)
         return NilObj()
