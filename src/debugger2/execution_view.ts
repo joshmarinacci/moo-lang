@@ -2,6 +2,7 @@ import util from "node:util";
 import {execute_op} from "../bytecode.ts";
 import type {AppState, ViewOutput} from "./model.ts";
 import {BoxFrame, Header} from "./util.ts";
+import {type Ast, AstToString} from "../ast.ts";
 
 
 export function ExecutionViewInput(key: string, state: AppState) {
@@ -12,7 +13,13 @@ export function ExecutionViewInput(key: string, state: AppState) {
             return
         }
         let op = state.ctx.bytecode[state.ctx.pc]
-        state.messages.push('executing ' + util.inspect(op))
+        let arg = op[1]
+        let name = op[0]
+        let val = util.inspect(arg,{depth:1})
+        if(arg && 'block-literal' == arg.type) {
+            val = AstToString(arg as Ast)
+        }
+        state.messages.push(`${name} : ${val}`)
         let ret = execute_op(op, state.ctx)
     }
     if (key === 'r') {
@@ -22,14 +29,17 @@ export function ExecutionViewInput(key: string, state: AppState) {
 
 function ConsoleViewRender(state:AppState):ViewOutput {
     let output = []
-    output.push('- - - - - - -')
     let log = state.messages
     let len = state.messages.length
     if(len > 10) log = log.slice(len-10)
+    let max_len = state.width - 4
     log.forEach(msg => {
-        output.push(msg)
+        msg = msg.replaceAll(/\n/g,'')
+        if(msg.length > max_len) {
+            msg = msg.substring(0,max_len)
+        }
+        output.push(' ' + msg)
     })
-    output.push('- - - - - - -')
     return output
 }
 
@@ -43,9 +53,7 @@ export function ExecutionViewRender(state: AppState):ViewOutput {
 
     output.addAll(ConsoleViewRender(state))
 
-    output.addLine('')
     output.addLine(`menu: q:quit c:context s:stack b:bytecode e:execution `)
-    output.addLine("arrows: nav")
     output.addLine(`${state.mode}`)
     output.addLine(`${state.code}`)
     return output.render()

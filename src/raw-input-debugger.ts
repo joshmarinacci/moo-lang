@@ -1,4 +1,5 @@
 import process from "node:process"
+import fs from "node:fs/promises"
 import {make_standard_scope} from "./standard.ts";
 import {type Context, Obj, STStack} from "./obj.ts";
 import {compile_bytecode} from "./bytecode.ts";
@@ -39,7 +40,6 @@ function handle_args():Options {
 }
 
 let options = handle_args()
-console.log(options)
 
 process.stdin.setRawMode(true);
 process.stdin.resume();
@@ -59,6 +59,9 @@ let example_code = `
 if(options.code){
     example_code = options.code
 }
+if(options.input) {
+    example_code = await fs.readFile(options.input,{encoding:"utf-8"})
+}
 let bytecode =  compile_bytecode(parse(example_code,'BlockBody'))
 
 let scope = new Obj("Temp Context",make_standard_scope(),{})
@@ -77,7 +80,7 @@ const state:AppState = {
     stack:new StackState(ctx),
     bytecode:new BytecodeState(ctx),
     messages:[],
-    width: 60,
+    width: 70,
     code:example_code
 }
 
@@ -151,5 +154,4 @@ process.on("SIGINT", () => {
     cleanup();
     process.exit();
 });
-process.stdout.write("going\n")
 redraw()

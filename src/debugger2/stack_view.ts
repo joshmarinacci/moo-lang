@@ -66,8 +66,14 @@ export function StackViewRender(state:AppState):ViewOutput {
         active:state.mode === 'stack'
     })
     state.ctx.stack.items().forEach(([item,label], n) => {
-        let dot = (n === state.stack.selected_index)?"*":" "
-        output.addLine(`  ${dot} ${item.print()}  | ${label}`)
+        let dot = (n === state.stack.selected_index)?"❥":" "
+        let max_len = state.width - 6
+        let name = item.print().padEnd(20)
+        let str = `${name} | ${label}`
+        if(str.length > max_len) {
+            str = str.substring(0,max_len)
+        }
+        output.addLine(`${dot} ${str}`)
     })
     if(state.stack.selected_item instanceof Obj) {
         let obj = state.stack.selected_item as Obj

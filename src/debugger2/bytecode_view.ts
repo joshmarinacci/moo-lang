@@ -40,16 +40,25 @@ export function BytecodeViewRender(state:AppState):ViewOutput {
         width: state.width,
         active:state.mode==='bytecode'
     })
+    let len = state.ctx.bytecode.length
     state.ctx.bytecode.forEach((op,n)=>{
+        if(len > 10) {
+            if (n < state.ctx.pc - 5) {
+                return
+            }
+            if(n > state.ctx.pc+5 && n > 10) {
+                return
+            }
+        }
         let sel = ' '
         if(n == state.bytecode.selected_index) {
             sel = '*'
         }
         let active = ' '
         if(n === state.ctx.pc) {
-            active = '#'
+            active = '▶'
         }
-        output.addLine(`  ${sel} ${active} ${op[0]} ${op[1]}`)
+        output.addLine(`  ${sel} ${active} ${n.toString().padStart(2,'0')} ${op[0]}: ${op[1]}`)
     })
     return output.render()
 }
