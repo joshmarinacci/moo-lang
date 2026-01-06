@@ -129,7 +129,7 @@ export class Obj {
         }
     }
     _make_method_slot(name: string, obj: Obj) {
-        if(!obj) {
+        if(obj === null || obj == undefined) {
             throw new Error(`cannot make method slot ${name}. value is null`)
         }
         this._method_slots.set(name,obj)

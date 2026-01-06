@@ -1,6 +1,6 @@
 import {JoshLogger} from "./util.ts";
 
-import {type Context, JS_VALUE, NilObj, Obj, ObjectProto, STStack} from "./obj.ts";
+import {type Context, JS_VALUE, type Method, NilObj, Obj, ObjectProto, STStack} from "./obj.ts";
 import {NumObj} from "./number.ts";
 import {StrObj} from "./string.ts";
 import {objsEqual} from "./debug.ts";
@@ -18,7 +18,7 @@ import type {
 import {AstToString} from "./ast.ts"
 import assert from "node:assert";
 import {DictObj, ListObj} from "./arrays.ts";
-import {BlockProto} from "./block.ts";
+import {ActivationObj, BlockProto} from "./block.ts";
 import {type BytecodeMethod, execute_op} from "./bytecode.ts";
 
 const d = new JoshLogger()
@@ -33,10 +33,15 @@ export function eval_block_obj(method: Obj, args:Array<Obj>) {
             stack: new STStack(),
             running:true
         };
-        args.forEach(arg => ctx.stack.push_with(arg,'arg'))
-        ctx.stack.push_with(method,'method')
-        ctx.stack.push_with(method,'receiver');
-        ((method as BytecodeMethod).dispatch(ctx,args.length));
+        let act = new ActivationObj(`block-activation`, method, {
+            receiver:method,
+            method:method,
+            args:args,
+        });
+        ctx.stack.push(act);
+        d.p('stack after',ctx.stack.print_small());
+
+        (act.get_slot('method') as unknown as Method).dispatch(ctx,act);
         console.log('bytecode is now', ctx.bytecode)
         while(ctx.running) {
             console.log("=======")
@@ -49,7 +54,8 @@ export function eval_block_obj(method: Obj, args:Array<Obj>) {
         }
         // console.log('after dispatching bytecode method stack is')
         // console.log(ctx.stack.print_small())
-        return ctx.stack.pop()
+        let act2 = ctx.stack.pop()
+        return act2.get_slot('return')
     }
     if (method.name !== 'Block') {
         throw new Error(`trying to eval a method that isn't a block '${method.name}'`)
