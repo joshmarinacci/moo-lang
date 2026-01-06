@@ -6,10 +6,10 @@ import {make_standard_scope} from "../src/standard.ts";
 import {parse} from "../src/parser.ts";
 import {compile_bytecode, execute_bytecode, execute_op} from "../src/bytecode.ts";
 import {JoshLogger} from "../src/util.ts";
-import {BlkArgs, Num, PlnId, Stmt} from "../src/ast.ts";
+import {Binary, BlkArgs, Method, Num, PlnId, Stmt, SymId} from "../src/ast.ts";
 
 let d = new JoshLogger()
-// d.disable()
+d.disable()
 
 function compare_execute(code:ByteCode, expected: Obj) {
     d.p("executing",code)
@@ -89,6 +89,7 @@ test("1 + 2 = 3",() => {
         // puts result on the stack
         //SendMessage(1),
         ['send-message',1],
+        ['return-message',0]
         // return whatever is left on the stack
         //ReturnValue(),
         // ['return-value',null]
@@ -99,6 +100,7 @@ test('5 square',() => {
         ['load-literal-number',5],
         ['lookup-message','square'],
         ['send-message',0],
+        ['return-message',0]
     ], NumObj(25))
 })
 test('simplest loop',() => {
@@ -121,6 +123,7 @@ test('simplest loop',() => {
         [ 'lookup-message', 'print:' ],
         [ 'load-literal-string', 'inside loop' ],
         [ 'send-message', 1 ],
+        ['return-message',0],
 
         // increment counter
         ['load-literal-string','counter'],
@@ -128,6 +131,7 @@ test('simplest loop',() => {
         ['lookup-message','+'],
         ['load-literal-number',1],
         ['send-message',1],
+        ['return-message',0],
         ['assign',null],
         // load 5
 
@@ -136,6 +140,7 @@ test('simplest loop',() => {
         ['lookup-message','<'],
         ['load-literal-number',5],
         ['send-message',1],
+        ['return-message',0],
         // if true then loop
         ['jump-if-true',3],
         // return counter
@@ -151,6 +156,7 @@ describe("function calls", () => {
             ['lookup-message', '*'],
             ['load-literal-number', 5],
             ['send-message', 1],
+            ['return-message',0]
         ], NumObj(20))
     })
     test('block bytecode method', () => {
@@ -161,10 +167,12 @@ describe("function calls", () => {
             ['load-literal-string','foo:'],
             ['create-literal-block',BlkArgs([PlnId('bar')],[Stmt(Num(88))])],
             ['send-message',2],
+            ['return-message',0],
             ['load-plain-id','self'],
             [ 'lookup-message', 'foo:' ],
             ['load-literal-number',88],
             ['send-message',1],
+            ['return-message',2],
         ], NumObj(88))
     })
     test('block value returning a value',() => {
@@ -172,16 +180,22 @@ describe("function calls", () => {
         compare_execute_clean([
             ['create-literal-block',BlkArgs([],[Stmt(Num(5))])],
             ['lookup-message','value'],
-            ['send-message',0]
+            ['send-message',0],
+            ['return-message',0],
         ],NumObj(5))
     })
     test('block value accepting a parameter',() => {
-        ccem('[b| 7 + b. ] valueWith: 6 .',NumObj(13))
-        // compare_execute_clean([
-        //     ['create-literal-block',BlkArgs([],[Stmt(Num(5))])],
-        //     ['lookup-message','value'],
-        //     ['send-message',0]
-        // ],NumObj(5))
+        // ccem('[b| 7 + b. ] valueWith: 6 .',NumObj(13))
+        compare_execute_clean([
+            ['create-literal-block',BlkArgs([PlnId('b')],
+                // precedence("4+5",Method(Num(4),Binary(SymId('+'),Num(5))))
+                [Stmt(Method(Num(7),Binary(SymId('+'),PlnId('b'))))])
+            ],
+            ['lookup-message','valueWith:'],
+            ['load-literal-number',6],
+            ['send-message',1],
+            ['return-message',0],
+        ],NumObj(13))
     })
 })
 
