@@ -232,36 +232,36 @@ test('non local return 2', () => {
     let scope = make_standard_scope();
     cval(`[ ^ 4 + 5. ] value.`,scope,NumObj(9))
 })
-// test('eval vector class',() => {
-//     let scope = make_standard_scope()
-//     cval(`
-//         Global makeSlot: "Vector" with: Object clone.
-//         Vector setObjectName: "Vector".
-//         Vector make_data_slot: "x" with: 0.
-//         Vector make_data_slot: "y" with: 0.
-//         Vector make_data_slot: "z" with: 0.
-//         Vector makeSlot: "x:y:z:" with: [ xx yy zz |
-//             v := Vector clone.
-//             v x: xx.
-//             v y: yy.
-//             v z: zz.
-//             v.
-//         ].
-//         Vector makeSlot: "add:" with: [a |
-//             Vector x: (a x + self x)
-//                    y: (a y + self y)
-//                    z: (a z + self z).
-//         ].
-//         a := Vector x: 1 y: 1 z: 1.
-//
-//         a x: 55.
-//         Debug equals: a x with: 55.
-//
-//         b := Vector x: 6 y: 7 z: 8.
-//         c := a add: b.
-//         c z.
-//     `,scope,NumObj(9))
-// })
+test('eval vector class',() => {
+    let scope = make_standard_scope()
+    cval(`
+        Global makeSlot: "Vector" with: Object clone.
+        Vector setObjectName: "Vector".
+        Vector make_data_slot: "x" with: 0.
+        Vector make_data_slot: "y" with: 0.
+        Vector make_data_slot: "z" with: 0.
+        Vector makeSlot: "x:y:z:" with: [ xx yy zz |
+            v := Vector clone.
+            v x: xx.
+            v y: yy.
+            v z: zz.
+            v.
+        ].
+        Vector makeSlot: "add:" with: [a |
+            Vector x: (a x + self x)
+                   y: (a y + self y)
+                   z: (a z + self z).
+        ].
+        a := Vector x: 1 y: 1 z: 1.
+
+        a x: 55.
+        Debug equals: a x with: 55.
+
+        b := Vector x: 6 y: 7 z: 8.
+        c := a add: b.
+        c z.
+    `,scope,NumObj(9))
+})
 // test('fizzbuzz',() => {
 //     let scope = make_standard_scope()
 //     // mod: isn't being looked up correctly in n inside the block.

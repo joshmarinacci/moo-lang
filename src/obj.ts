@@ -450,7 +450,7 @@ export const ROOT = new Obj("ROOT", null,{
         rec._set_js_unknown(jsvalue)
         return NilObj()
     },
-    'setObjectName:':FakeNatMeth((rec:Obj, args:Array<Obj>):Obj => {
+    'setObjectName:':FNM('setObjectName:',(rec:Obj, args:Array<Obj>):Obj => {
         rec.name = args[0]._get_js_string()
         return NilObj()
     }),
