@@ -74,11 +74,11 @@ test('scope tests',() => {
         v make_data_slot: "w" with: 5.
         v w.
     `,scope,NumObj(5))
-    // cval(`[
-    //     self makeSlot: "v" with: (Object clone).
-    //     v make_data_slot: "w" with: [ 5. ].
-    //     v w.
-    // ] value.`,scope,NumObj(5))
+    cval(`[  
+        self makeSlot: "v" with: (Object clone).
+        v make_data_slot: "w" with: 5.
+        v w.
+    ] value.`,scope,NumObj(5))
 
     cval(`
         self makeSlot: "v" with: 5.
@@ -187,18 +187,19 @@ test('assignment operator', () => {
         v := 6.
         v.
     `,scope,NumObj(6))
-    // sval(`[
-    //     T := (Object clone).
-    //     T make_data_slot: "v" with: 44.
-    //     T makeSlot: "gv" with: [
-    //         self v.
-    //     ].
-    //     T makeSlot: "sv:" with: [ vv |
-    //         v := vv.
-    //     ].
-    //     T sv: 88.
-    //     T gv.
-    // ] value.`,scope,NumObj(88))
+    cval(`[
+        T := (Object clone).
+        T make_data_slot: "v" with: 44.
+        T makeSlot: "gv" with: [
+            self v.
+        ].
+        T makeSlot: "sv:" with: [ vv |
+            self v: vv.
+            self v.
+        ].
+        T sv: 88.
+        T gv.
+    ] value.`,scope,NumObj(88))
 })
 test('fib recursion',() => {
     let scope = make_standard_scope()

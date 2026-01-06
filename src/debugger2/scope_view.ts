@@ -1,4 +1,4 @@
-import {type Context} from "../obj.ts";
+import {type Context, Obj} from "../obj.ts";
 import type {AppState, ViewOutput} from "./model.ts";
 import {BoxFrame} from "./util.ts";
 
@@ -19,11 +19,14 @@ export function ContextViewRender(state:AppState):ViewOutput {
         active:state.mode === 'scope'
     })
 
-    console.log("scope is " + state.ctx.scope.print())
     output.addLine(state.ctx.scope.print())
-    console.log("scope is " + state.ctx.scope._list_slot_names().join(", "));
     for(let name of state.ctx.scope._list_slot_names()) {
-        output.addLine(`   ${name} : ${state.ctx.scope.lookup_slot(name).print()}`);
+        let val = state.ctx.scope.lookup_slot(name);
+        if(val instanceof Obj) {
+            output.addLine(`   ${name} : ${val.print()}`);
+        } else {
+            output.addLine(`   ${name} : ${typeof val}`)
+        }
     }
 
     return output.render()
