@@ -5,13 +5,11 @@ import util from "node:util";
 export type OpType
     = 'lookup-message'
     | 'send-message'
-    | 'return-value'
     | 'load-literal-number'
     | 'load-plain-id'
     | 'load-literal-string'
     | 'create-literal-block'
     | 'assign'
-    | 'return'
     | 'halt'
     | 'jump-if-true'
     | 'return-from-bytecode-call'

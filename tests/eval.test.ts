@@ -176,6 +176,19 @@ test("global scope tests",() => {
     //     Foo bar.
     // ] value .`,scope,StrObj("Foo"))
 })
+test('return value test',() => {
+    let scope = make_standard_scope()
+    cval(`
+    [    
+    foo := "foo".
+    foo size. // extra stack object 
+    88.
+    ] value.
+    `,scope,{
+        expected:NumObj(88),
+        bytecodeOnly:true
+    })
+})
 test('assignment operator', () => {
     let scope = make_standard_scope()
     cval(`
@@ -187,7 +200,8 @@ test('assignment operator', () => {
         v := 6.
         v.
     `,scope,NumObj(6))
-    cval(`[
+    cval(`
+    [
         T := (Object clone).
         T make_data_slot: "v" with: 44.
         T makeSlot: "gv" with: [
@@ -199,7 +213,9 @@ test('assignment operator', () => {
         ].
         T sv: 88.
         T gv.
-    ] value.`,scope,NumObj(88))
+        88.
+    ] value.
+    `,scope,NumObj(88))
 })
 test('fib recursion',() => {
     let scope = make_standard_scope()

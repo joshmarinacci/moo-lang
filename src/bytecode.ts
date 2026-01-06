@@ -197,21 +197,21 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         ctx.running = false
         return NilObj()
     }
-    if(name === 'return') {
-        console.log("doing return with stack", ctx.stack.print_small())
-        let value = ctx.stack.pop() // get the value
-        ctx.stack.pop() // pop the method off
-        ctx.stack.pop() // pop off the receiver
-        ctx.scope = ctx.stack.pop() as Obj // restore the cope
-        let pc = ctx.stack.pop() as Obj
-        console.log("got the pc from the stack as", pc.print())
-        ctx.pc = pc._get_js_number()
-        let bytecode = ctx.stack.pop() as Obj
-        ctx.bytecode = bytecode.get_js_slot('bytecode') as ByteCode
-        // push the return value back on
-        ctx.stack.push_with(value,'return')
-        return NilObj()
-    }
+    // if(name === 'return') {
+    //     console.log("doing return with stack", ctx.stack.print_small())
+    //     let value = ctx.stack.pop() // get the value
+    //     ctx.stack.pop() // pop the method off
+    //     ctx.stack.pop() // pop off the receiver
+    //     ctx.scope = ctx.stack.pop() as Obj // restore the cope
+    //     let pc = ctx.stack.pop() as Obj
+    //     console.log("got the pc from the stack as", pc.print())
+    //     ctx.pc = pc._get_js_number()
+    //     let bytecode = ctx.stack.pop() as Obj
+    //     ctx.bytecode = bytecode.get_js_slot('bytecode') as ByteCode
+    //     // push the return value back on
+    //     ctx.stack.push_with(value,'return')
+    //     return NilObj()
+    // }
     if (name === 'load-literal-number') {
         ctx.stack.push_with(NumObj(op[1] as number),'literal')
         return NilObj()
@@ -261,14 +261,14 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         ctx.scope._make_method_slot(name._get_js_string(), value)
         return NilObj()
     }
-    if (name === 'return') {
-        let value = ctx.stack.pop() as Obj
-        let ret = new Obj('non-local-return',ctx.scope.parent,{})
-        ret._is_return = true
-        ret._make_method_slot('value',value)
-        ret._make_method_slot('target',ctx.scope.parent as Obj)
-        return ret
-    }
+    // if (name === 'return') {
+    //     let value = ctx.stack.pop() as Obj
+    //     let ret = new Obj('non-local-return',ctx.scope.parent,{})
+    //     ret._is_return = true
+    //     ret._make_method_slot('value',value)
+    //     ret._make_method_slot('target',ctx.scope.parent as Obj)
+    //     return ret
+    // }
     if (name === 'jump-if-true') {
         let distance = op[1] as number
         let value = ctx.stack.pop() as Obj
@@ -286,6 +286,7 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         d.p('return from a bytecode call')
         //keep the return value
         let ret = ctx.stack.pop() as Obj
+        d.p("the return value is", ret.print())
         let oldInfo = ctx.stack.pop() as Obj
         ctx.pc = oldInfo?._method_slots.get('pc') as number;
         ctx.scope = oldInfo?._method_slots.get('scope') as Obj;
