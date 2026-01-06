@@ -179,5 +179,8 @@ Dates could be sorted by before or after
 * [x] string repeat: number.
 * [x] make editor taller vertically
 * [ ] assigning a variable inside a block that was declared outside a block isn't setting properly.
-* [ ] doesNotUnderstand is broken becuase treewalk isn't calling when it doesn't find the slot
-* 
+* [ ] doesNotUnderstand is broken becuase treewalk isn't calling when it doesn't find the slot 
+
+## bytecode issues
+* [x] `list := { 1 2 3 4 5 }.` fails
+* store the uncompiled code with the bytecode in the context and BytecocdeMethod impl.

@@ -47,5 +47,6 @@ export function ExecutionViewRender(state: AppState):ViewOutput {
     output.addLine(`menu: q:quit s:stack b:bytecode e:execution `)
     output.addLine("arrows: nav")
     output.addLine(`${state.mode}`)
+    output.addLine(`${state.code}`)
     return output.render()
 }

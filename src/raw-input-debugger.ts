@@ -8,10 +8,42 @@ import {type AppState, type KeyHandler, type ViewOutput} from "./debugger2/model
 import {StackState, StackViewInput, StackViewRender} from "./debugger2/stack_view.ts";
 import {clear_screen} from "./debugger2/util.ts";
 import {ExecutionViewInput, ExecutionViewRender} from "./debugger2/execution_view.ts";
+import util from "node:util";
+
+type Options = {
+    code:string,
+    input:string,
+}
+
+function handle_args():Options {
+    let {values, positionals} = util.parseArgs({
+        options: {
+            code: {
+                type: 'string'
+            },
+            step: {
+                type: 'boolean',
+                default: false,
+            },
+            input: {
+                type: 'string',
+                default: '',
+            }
+        }
+    })
+    // console.log('values', values)
+    // console.log("foo is", values)
+    // console.log('positionals', positionals)
+    return values as Options
+}
+
+let options = handle_args()
+console.log(options)
 
 process.stdin.setRawMode(true);
 process.stdin.resume();
 process.stdin.setEncoding("utf8");
+
 
 // let example_code = '"abc" do: [ch | ch print. ].'
 let example_code = `
@@ -22,6 +54,10 @@ let example_code = `
     ].
     self counter .
 `
+
+if(options.code){
+    example_code = options.code
+}
 let bytecode =  compile_bytecode(parse(example_code,'BlockBody'))
 
 let ctx:Context = {
@@ -39,6 +75,7 @@ const state:AppState = {
     bytecode:new BytecodeState(ctx),
     messages:[],
     width: 60,
+    code:example_code
 }
 
 

@@ -424,6 +424,7 @@ export function compile_bytecode(ast: Ast): ByteCode {
             bt.forEach(code => codes.push(code))
             codes.push(['send-message',1])
         })
+        codes.push(['load-plain-id',temp_var])
         return codes
     }
     if (ast.type === 'map-literal') {

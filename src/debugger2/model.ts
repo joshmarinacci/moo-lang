@@ -12,5 +12,6 @@ export type AppState = {
     ctx: Context,
     stack: StackState,
     bytecode: BytecodeState,
-    width: number
+    width: number,
+    code:string,
 }
