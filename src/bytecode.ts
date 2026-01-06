@@ -40,6 +40,9 @@ export class BytecodeMethod extends Obj implements Method {
         d.p('stack is',ctx.stack.print_small())
         d.p("the argument count is", arg_count)
         d.p("this names is",this.names)
+        if(arg_count !== this.names.length){
+            throw new Error(`arg count not equal to parameter length ${this.names.length}`)
+        }
         let args:Array<Obj> = []
         for (let i = 0; i < arg_count; i++) {
             args.push(ctx.stack.pop())

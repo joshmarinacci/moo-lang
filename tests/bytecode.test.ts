@@ -241,7 +241,7 @@ test("block arg tests",() => {
 })
 test('block eval',() => {
     ccem('[ 5 . ] value .',NumObj(5))
-    ccem('[ 5 . ] valueWith: 6.',NumObj(5))
+    // ccem('[ 5 . ] valueWith: 6.',NumObj(5))
     ccem('[ v | 5 + v. ] valueWith: 6.',NumObj(11))
 })
 test('group eval',() => {
@@ -254,7 +254,7 @@ test('whileTrue: ',() => {
     ccem(`
     self make_data_slot: 'counter' with:0.
     [self counter < 5] whileTrue: [
-         self counter: (self counter + 1).
+        self counter: (self counter + 1).
         self counter.
     ].
     self counter .

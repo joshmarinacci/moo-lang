@@ -33,14 +33,14 @@ export const StringProto = make_native_obj("StringProto",ObjectProto,{
     'contains:':(rec:Obj,args:Array<Obj>) => BoolObj(rec._get_js_string().includes(args[0]._get_js_string())),
     'print':(rec:Obj):Obj => StrObj(rec._get_js_string()),
     'repeat:':(rec:Obj, args:Array<Obj>):Obj => StrObj(rec._get_js_string().repeat(args[0]._get_js_number())),
-    'do:':(rec:Obj, args:Array<Obj>):Obj=>{
-        let str = rec._get_js_string()
-        let block = args[0]
-        for(let i =0; i<str.length; i++) {
-            eval_block_obj(block,[StrObj(str[i])])
-        }
-        return NilObj()
-    },
+    // 'do:':(rec:Obj, args:Array<Obj>):Obj=>{
+    //     let str = rec._get_js_string()
+    //     let block = args[0]
+    //     for(let i =0; i<str.length; i++) {
+    //         eval_block_obj(block,[StrObj(str[i])])
+    //     }
+    //     return NilObj()
+    // },
 });
 
 export const StrObj = (value:string):Obj => new Obj("StringLiteral", StringProto, {'_jsvalue': value})

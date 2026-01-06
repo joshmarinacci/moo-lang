@@ -62,7 +62,21 @@ test('common protocol',() => {
 })
 test('loop over string chars',() => {
     let scope = make_standard_scope()
+    // the inner block can't access the 'lam' variable of the outer block
     cval(`
+    String makeSlot: 'do:' with: [ lam | 
+        Debug print: 'starting string do loop'.
+        Debug print: 'string len is ' + self size.
+        self make_data_slot: 'counter' with:0.
+        Debug print: 'outside lam is ' + lam.
+        [self counter < self size] whileTrue: [
+            Debug print: 'inside lam is ' + lam.
+            lam valueWith: 'a'.
+            self counter: (self counter + 1).
+            self counter.
+        ].
+        self counter .
+    ].
      "abc" do: [ch | ch print. ].
      88.
     `,scope, {
