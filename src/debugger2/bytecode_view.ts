@@ -3,15 +3,15 @@ import {type AppState, type KeyHandler, type Mode, type ViewOutput} from "./mode
 import {BoxFrame, Header} from "./util.ts";
 
 export class BytecodeState {
-    bytecode: ByteCode;
     selected_index: number;
-    constructor(bytecode: Array<ByteOp>) {
-        this.bytecode = bytecode
+    private ctx: Context;
+    constructor(ctx:Context) {
+        this.ctx = ctx
         this.selected_index = 0
     }
 
     nav_next_item() {
-        this.selected_index = Math.min(this.selected_index+1,this.bytecode.length-1)
+        this.selected_index = Math.min(this.selected_index+1,this.ctx.bytecode.length-1)
     }
 
     nav_prev_item() {
@@ -40,7 +40,7 @@ export function BytecodeViewRender(state:AppState):ViewOutput {
         width: state.width,
         active:state.mode==='bytecode'
     })
-    state.bytecode.bytecode.forEach((op,n)=>{
+    state.ctx.bytecode.forEach((op,n)=>{
         let sel = ' '
         if(n == state.bytecode.selected_index) {
             sel = '*'

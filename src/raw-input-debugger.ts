@@ -13,7 +13,15 @@ process.stdin.setRawMode(true);
 process.stdin.resume();
 process.stdin.setEncoding("utf8");
 
-let example_code = '4+5'
+// let example_code = '"abc" do: [ch | ch print. ].'
+let example_code = `
+    self make_data_slot: 'counter' with:0.
+    [self counter < 5] whileTrue: [
+         self counter: (self counter + 1).
+        self counter.
+    ].
+    self counter .
+`
 let bytecode =  compile_bytecode(parse(example_code,'BlockBody'))
 
 let ctx:Context = {
@@ -25,10 +33,10 @@ let ctx:Context = {
 }
 
 const state:AppState = {
-    mode:"bytecode",
+    mode:"execution",
     ctx:ctx,
-    stack:new StackState(ctx.stack),
-    bytecode:new BytecodeState(ctx.bytecode),
+    stack:new StackState(ctx),
+    bytecode:new BytecodeState(ctx),
     messages:[],
     width: 60,
 }
@@ -50,12 +58,12 @@ const key_bindings:Record<string,KeyHandler> = {
 }
 
 function draw(output:ViewOutput) {
-    console.log(output.map(l => l + '\n').join(""))
+    console.log(output.join("\n"))
 }
 
 
 function redraw() {
-    clear_screen()
+    // clear_screen()
     draw(StackViewRender(state))
     draw(BytecodeViewRender(state))
     draw(ExecutionViewRender(state))

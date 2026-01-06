@@ -59,14 +59,14 @@ test('common protocol',() => {
     //  foo sortedBy: [ a b | a compare: b ].`, scope,
     //     ListObj(StrObj("foo"),StrObj("bar"),StrObj("quxx")))
 
-    // // loop over characters
-    // cval(`
-    //  "foo" do: [ch |
-    //    ch print.
-    //  ].
-    //  88.
-    // `,scope, {
-    //     expected: NumObj(88),
-    //     bytecodeOnly:true,
-    // })
+})
+test('loop over string chars',() => {
+    let scope = make_standard_scope()
+    cval(`
+     "abc" do: [ch | ch print. ].
+     88.
+    `,scope, {
+        expected: NumObj(88),
+        bytecodeOnly:true,
+    })
 })
