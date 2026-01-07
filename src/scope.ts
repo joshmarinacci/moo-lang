@@ -15,7 +15,7 @@ import {setup_debug} from "./debug.ts";
 import {setup_string, StrObj} from "./string.ts";
 import {eval_really_perform_call} from "./eval.ts";
 import {BlockProto} from "./block.ts";
-import {BytecodeMethod} from "./bytecode.ts";
+import {bval, BytecodeMethod} from "./bytecode.ts";
 
 function root_fixup(scope:Obj) {
     ROOT._make_method_slot('listSlotNames',NatMeth((rec:Obj, args:Array<Obj>):Obj => {
@@ -139,6 +139,12 @@ function root_fixup(scope:Obj) {
         ['return-from-bytecode-call',null],
     ],BlockProto,undefined))
 
+    bval(`
+        String makeSlot: 'dump' with: [|
+          Debug print: self.
+          nil.
+        ].
+    `,scope)
 }
 
 export function make_common_scope():Obj {

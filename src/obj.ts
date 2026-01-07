@@ -455,14 +455,14 @@ export const ROOT = new Obj("ROOT", null,{
         let name = msg._get_data_slot('selector')
         return new Obj("Exception", ObjectProto, {"message": `Message not found: '${name._get_js_string()}'`})
     }),
-    'dump':(rec:Obj):Obj => {
-        console.log("DUMPOING")
-        d.p("DUMPING: ", rec.name)
-        d.indent()
-        rec.dump();
-        d.outdent()
-        return NilObj()
-    },
+    // 'dump':(rec:Obj):Obj => {
+    //     console.log("DUMPOING")
+    //     d.p("DUMPING: ", rec.name)
+    //     d.indent()
+    //     rec.dump();
+    //     d.outdent()
+    //     return NilObj()
+    // },
     '_let:with:':(rec:Obj, args:Array<Obj>):Obj => {
         rec._let_field(args[0]._get_js_string(), args[1])
         return args[1]

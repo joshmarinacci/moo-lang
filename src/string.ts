@@ -64,6 +64,6 @@ export function setup_string(scope: Obj) {
         ].
         String makeSlot: 'isEmpty' with: [|
             self size == 0
-        ]
+        ].
     `,scope)
 }
