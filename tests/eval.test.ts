@@ -203,11 +203,11 @@ test('assignment operator', () => {
     cval(`
     [
         T := (Object clone).
-        T make_data_slot: "v" with: 44.
-        T makeSlot: "gv" with: [
+        T make_data_slot: 'v' with: 44.
+        T makeSlot: 'gv' with: [
             self v.
         ].
-        T makeSlot: "sv:" with: [ vv |
+        T makeSlot: 'sv:' with: [ vv |
             self v: vv.
             self v.
         ].
@@ -298,11 +298,13 @@ test('eval vector class',() => {
 test('loops',() => {
     let scope = make_standard_scope()
     cval(`
+    [
     self _let: "counter" with: 0.
     0 to: 5 do: [n |
         self _set: "counter" with: counter + 1.
     ].
     Debug equals: counter with: 5.
+    ] value .
     `,scope, {
         evalOnly:true
     })

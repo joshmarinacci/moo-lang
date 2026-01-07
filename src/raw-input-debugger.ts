@@ -8,13 +8,14 @@ import {BytecodeState, BytecodeViewInput, BytecodeViewRender} from "./debugger2/
 import {type AppState, type KeyHandler, type ViewOutput} from "./debugger2/model.ts";
 import {StackState, StackViewInput, StackViewRender} from "./debugger2/stack_view.ts";
 import {clear_screen} from "./debugger2/util.ts";
-import {ExecutionViewInput, ExecutionViewRender} from "./debugger2/execution_view.ts";
+import {ExecutionViewInput, ExecutionViewRender, run} from "./debugger2/execution_view.ts";
 import util from "node:util";
 import {ContextState, ContextViewInput, ContextViewRender} from "./debugger2/scope_view.ts";
 
 type Options = {
     code:string,
     input:string,
+    run:boolean,
 }
 
 function handle_args():Options {
@@ -24,6 +25,10 @@ function handle_args():Options {
                 type: 'string'
             },
             step: {
+                type: 'boolean',
+                default: false,
+            },
+            run: {
                 type: 'boolean',
                 default: false,
             },
@@ -71,6 +76,10 @@ let ctx:Context = {
     pc: 0,
     stack: new STStack(),
     running:false
+}
+
+if(options.run){
+    ctx.running = true
 }
 
 const state:AppState = {
@@ -154,4 +163,7 @@ process.on("SIGINT", () => {
     cleanup();
     process.exit();
 });
+if(state.ctx.running) {
+    run(state)
+}
 redraw()
