@@ -183,5 +183,11 @@ Dates could be sorted by before or after
 
 ## bytecode issues
 * [x] `list := { 1 2 3 4 5 }.` fails
-* [x] store the uncompiled code BytecocdeMethod impl.
+* [x] store the uncompiled code BytecodeMethod impl.
 * [x] show the values in the current scope that can be looked up
+
+
+When creating a block the parent should be the outer context. However, the block
+still needs access to block methods, so it should have BlockProto in it's chain. How do we
+reconcile these? Copy the block proto methods in manually? We only need the one, right?
+

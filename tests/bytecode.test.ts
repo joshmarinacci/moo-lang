@@ -201,11 +201,9 @@ describe("function calls", () => {
 })
 
 function ctx_execute(source: string):Context {
-    let bytecode = compile_bytecode(parse(source,'BlockBody'))
-    let scope:Obj = make_standard_scope();
     let ctx:Context = {
-        scope: scope,
-        bytecode: bytecode,
+        scope: new Obj("Temp Context",make_standard_scope(),{}),
+        bytecode: compile_bytecode(parse(source,'BlockBody')),
         pc: 0,
         stack: new STStack(),
         running:true
@@ -225,6 +223,13 @@ function ctx_execute(source: string):Context {
 }
 
 describe('scope stability', () => {
+    test('just halt',() =>{
+        let ctx = ctx_execute('self halt') as Context
+        assert.equal(ctx.pc,2)
+        assert.equal(ctx.stack.size(),1)
+        // scope should be Global
+        assert.equal(ctx.scope.name,'Temp Context')
+    })
     test('basic scope',() =>{
         let ctx = ctx_execute('4 + 5. self halt') as Context
         // 4 + 5. self halt.
@@ -235,42 +240,54 @@ describe('scope stability', () => {
         let top = ctx.stack.pop()
         assert.equal(top._get_js_number(),9)
         // scope should be Global
-        assert.equal(ctx.scope.name,'Global')
+        assert.equal(ctx.scope.name,'Temp Context')
     })
     test('simple block call',() => {
         let ctx = ctx_execute('[ self halt. ] value.') as Context
-        // pc should be 1?
         // scope should be an activation context
         assert.equal(ctx.scope.name,BLOCK_ACTIVATION);
-        console.log('scope is',ctx.scope.print())
-        console.log("parent scope is", ctx.scope.parent?.print())
-        console.log("grand parent scope is", ctx.scope.parent?.parent?.print())
-        // parent scope should be the global context
-        assert.equal(ctx.scope.parent.name,'Global Scope');
+        // parent scope should be the block itself
+        // @ts-ignore
+        assert.equal(ctx.scope.parent.name,'BytecodeMethod');
+        // grandparent scope should be the temp context
+        // @ts-ignore
+        assert.equal(ctx.scope.parent.parent.name,'Temp Context');
     })
     test('inside while true', () => {
         let ctx = ctx_execute('[4<5] whileTrue: [ self halt. ]') as Context
-        // scope parent should be the global context
+        // grand parent should be the temp context
+        assert.equal(ctx.scope.name,BLOCK_ACTIVATION);
+        assert.equal(ctx.scope.parent.name,'BytecodeMethod');
+        assert.equal(ctx.scope.parent.parent.name,'Temp Context');
     })
     test('inside method', () => {
         let ctx = ctx_execute(`
-        Number make_slot: "foo" with: [
+        Number makeSlot: "foo" with: [
             self halt.
         ].
         5 foo.
         `) as Context
+        // stack should be the block activation and the number itself
+        console.log('scope',ctx.scope.print())
+        console.log('scope',ctx.scope.parent.print())
+        assert.equal(ctx.scope.name,BLOCK_ACTIVATION);
+        assert.equal(ctx.scope.parent.name,'NumberLiteral');
         // scope parent should be the Number
     })
     test('access to block parameters', () => {
         let ctx = ctx_execute(`
-        String makeSlot: 'do:' with: [ lam |
+        Number makeSlot: 'foo:' with: [ v |
             self halt. 
         ].
-        "abc" do: 5.
+        5 foo: 6.
         `) as Context
-        // scope should be activation context
-        // lam should be visible in the act.args
-        // lam should be 5.
+        // scope is the block activation
+        assert.equal(ctx.scope.name,BLOCK_ACTIVATION);
+        // it should have a v variable on it
+        let v = ctx.scope.lookup_slot('v')
+        // the v should hold the passed in parameter 6
+        assert.equal(v._get_js_number(),6)
+
     })
     test('nested access to block parameters',() => {
         let ctx = ctx_execute(`

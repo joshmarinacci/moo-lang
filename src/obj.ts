@@ -140,6 +140,11 @@ export class Obj {
     print():string {
         return this._safe_print(5)
     }
+    _print_parent_chain():string {
+        let str = this.print()
+        if(this.parent) str += ",  " + this.parent._print_parent_chain()
+        return str
+    }
     _safe_print(depth:number):string {
         if (depth < 1) {
             return this.name

@@ -26,7 +26,7 @@ export class BytecodeMethod extends Obj implements Method {
     private names: Array<string>;
     private ast: BlockLiteral | undefined;
     constructor(parameterNames:Array<string>, bytecode:ByteCode, parent:Obj, ast?:BlockLiteral) {
-        super('BytecodeBlock',parent,{});
+        super('BytecodeMethod',parent,{});
         this.names = parameterNames
         this.bytecode = bytecode
         this.bytecode.push(['return-from-bytecode-call',null])
@@ -118,7 +118,11 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         let desc = AstToString(blk)
         let bytecode = blk.body.map(a => compile_bytecode(a)).flat()
         let blk2 = new BytecodeMethod(blk.parameters.map(id => id.name), bytecode, BlockProto, blk)
-        // blk2.parent = ctx.scope
+        if(BlockProto.lookup_slot('whileTrue:')) {
+            blk2._make_method_slot('whileTrue:', BlockProto.lookup_slot('whileTrue:'))
+        }
+        // set the parent to the enclosing scope
+        blk2.parent = ctx.scope
         ctx.stack.push_with(blk2,desc)
         return NilObj()
     }
