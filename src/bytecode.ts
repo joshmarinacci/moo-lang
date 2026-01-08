@@ -88,12 +88,13 @@ export class BytecodeMethod extends Obj implements Method {
     }
 }
 
+export const BLOCK_ACTIVATION = "block-activation"
 export function eval_block_obj(method:Obj, args:Array<Obj>) {
     d.p(`bytecode eval block obj: ${method.print()}`)
     d.p("bytecode is: " + method.get_js_slot("bytecode"))
     if (method.name === 'Block' && method.get_js_slot("bytecode") !== undefined) {
         let bytecode = method.get_js_slot('bytecode') as ByteCode;
-        let scope = new ActivationObj(`block-activation`, method, {})
+        let scope = new ActivationObj(BLOCK_ACTIVATION, method, {})
         execute_bytecode(bytecode, scope)
     }
 }
@@ -152,7 +153,7 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         args.reverse()
         let method = ctx.stack.pop()
         let rec = ctx.stack.pop()
-        let act = new ActivationObj(`block-activation`, method, {
+        let act = new ActivationObj(BLOCK_ACTIVATION, method, {
             receiver:rec,
             method:method,
             args:args,

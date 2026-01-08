@@ -25,9 +25,11 @@ export function ContextViewRender(state:AppState):ViewOutput {
         if(val instanceof Obj) {
             output.addLine(`   ${name} : ${val.print()}`);
         } else {
-            output.addLine(`   ${name} : ${typeof val}`)
+            output.addLine(`   ${name} : ${typeof val} ${val}`)
         }
     }
+
+    output.addLine(`parent ${state.ctx.scope.parent?.print()}`)
 
     return output.render()
 }

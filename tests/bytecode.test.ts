@@ -4,9 +4,10 @@ import {NumObj} from "../src/number.ts";
 import {objsEqual} from "../src/debug.ts";
 import {make_standard_scope} from "../src/standard.ts";
 import {parse} from "../src/parser.ts";
-import {compile_bytecode, execute_bytecode, execute_op} from "../src/bytecode.ts";
+import {BLOCK_ACTIVATION, compile_bytecode, execute_bytecode, execute_op} from "../src/bytecode.ts";
 import {JoshLogger} from "../src/util.ts";
 import {Binary, BlkArgs, Method, Num, PlnId, Stmt, SymId} from "../src/ast.ts";
+import assert from "node:assert";
 
 let d = new JoshLogger()
 d.disable()
@@ -196,6 +197,97 @@ describe("function calls", () => {
             ['send-message',1],
             ['return-message',0],
         ],NumObj(13))
+    })
+})
+
+function ctx_execute(source: string):Context {
+    let bytecode = compile_bytecode(parse(source,'BlockBody'))
+    let scope:Obj = make_standard_scope();
+    let ctx:Context = {
+        scope: scope,
+        bytecode: bytecode,
+        pc: 0,
+        stack: new STStack(),
+        running:true
+    }
+    while(ctx.running) {
+        console.log("=======")
+        console.log("stack",ctx.stack.print_small())
+        console.log(ctx.bytecode)
+        if(ctx.pc >= ctx.bytecode.length) break;
+        let op = ctx.bytecode[ctx.pc]
+        // console.log('op ' + op)
+        let ret = execute_op(op, ctx)
+    }
+    console.log("done")
+    console.log("stack is",ctx.stack.print_small())
+    return ctx
+}
+
+describe('scope stability', () => {
+    test('basic scope',() =>{
+        let ctx = ctx_execute('4 + 5. self halt') as Context
+        // 4 + 5. self halt.
+        assert.equal(ctx.pc,7)
+        assert.equal(ctx.stack.size(),2)
+        // context should contain 9 on the stack.
+        ctx.stack.pop()
+        let top = ctx.stack.pop()
+        assert.equal(top._get_js_number(),9)
+        // scope should be Global
+        assert.equal(ctx.scope.name,'Global')
+    })
+    test('simple block call',() => {
+        let ctx = ctx_execute('[ self halt. ] value.') as Context
+        // pc should be 1?
+        // scope should be an activation context
+        assert.equal(ctx.scope.name,BLOCK_ACTIVATION);
+        console.log('scope is',ctx.scope.print())
+        console.log("parent scope is", ctx.scope.parent?.print())
+        console.log("grand parent scope is", ctx.scope.parent?.parent?.print())
+        // parent scope should be the global context
+        assert.equal(ctx.scope.parent.name,'Global Scope');
+    })
+    test('inside while true', () => {
+        let ctx = ctx_execute('[4<5] whileTrue: [ self halt. ]') as Context
+        // scope parent should be the global context
+    })
+    test('inside method', () => {
+        let ctx = ctx_execute(`
+        Number make_slot: "foo" with: [
+            self halt.
+        ].
+        5 foo.
+        `) as Context
+        // scope parent should be the Number
+    })
+    test('access to block parameters', () => {
+        let ctx = ctx_execute(`
+        String makeSlot: 'do:' with: [ lam |
+            self halt. 
+        ].
+        "abc" do: 5.
+        `) as Context
+        // scope should be activation context
+        // lam should be visible in the act.args
+        // lam should be 5.
+    })
+    test('nested access to block parameters',() => {
+        let ctx = ctx_execute(`
+            String makeSlot: 'do:' with: [ lam | 
+                [self counter < self size] whileTrue: [
+                    self halt.
+                ].
+            ].
+            "abc" do: 5.
+        `) as Context;
+        // scope = activation context of the inner block
+        // scope.parent = activation context of the 'do:' method
+        // act should have lam in it's args
+        // lam should be 5
+        // scope.parent.parent should be the string object
+        // scope.parent.parent.parent should the String class
+        // calling lookup(lam) on scope should return the lam value of 5
     })
 })
 
