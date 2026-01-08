@@ -65,5 +65,14 @@ export function setup_string(scope: Obj) {
         String makeSlot: 'isEmpty' with: [|
             self size == 0
         ].
+        String makeSlot: 'do:' with: [blk |
+            self make_data_slot: 'counter' with:0.
+            [self counter < self size] whileTrue: [
+                blk performWith: self at: counter.
+                self counter: (self counter + 1).
+                self counter.
+            ].
+            self counter .
+        ].
     `,scope)
 }
