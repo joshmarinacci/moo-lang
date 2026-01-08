@@ -10,7 +10,7 @@ import {StackState, StackViewInput, StackViewRender} from "./debugger2/stack_vie
 import {clear_screen} from "./debugger2/util.ts";
 import {ExecutionViewInput, ExecutionViewRender, run} from "./debugger2/execution_view.ts";
 import util from "node:util";
-import {ContextState, ContextViewInput, ContextViewRender} from "./debugger2/scope_view.ts";
+import {ContextState, ContextViewInput, ContextViewRender} from "./debugger2/context_view.ts";
 
 type Options = {
     code:string,

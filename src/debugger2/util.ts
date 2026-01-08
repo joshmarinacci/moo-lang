@@ -2,6 +2,14 @@ import process from "node:process";
 import type {ViewOutput} from "./model.ts";
 import {styleText} from "node:util";
 
+export const Glyphs = {
+    right_triangle: '▶',
+    left_triangle:'◀',
+    down_triangle:'▼',
+    up_triangle:'▲',
+    black_circle:'●'
+}
+
 const Colors = {
     red:31,
     green:32,
@@ -116,6 +124,9 @@ export class BoxFrame {
             + style.border.TopRight
         output.push(styleIt(style,header))
         this.content.forEach((str, n) => {
+            if(str.length > this.width - 3) {
+                str = str.substring(0,this.width-7) + '...'
+            }
             let pad = Math.max(this.width - str.length - 3,0)
             output.push(`${style.attribute}${style.border.Left} ${str} ${' '.repeat(pad)}${style.border.Right}${RESET}`)
         })

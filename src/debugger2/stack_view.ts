@@ -1,6 +1,6 @@
 import {type Context, Obj, STStack} from "../obj.ts";
 import {type AppState, type KeyHandler, type Mode, type ViewOutput} from "./model.ts";
-import {BoxFrame} from "./util.ts";
+import {BoxFrame, Glyphs} from "./util.ts";
 
 export class StackState  {
     selected_index: number;
@@ -66,7 +66,7 @@ export function StackViewRender(state:AppState):ViewOutput {
         active:state.mode === 'stack'
     })
     state.ctx.stack.items().forEach(([item,label], n) => {
-        let dot = (n === state.stack.selected_index)?"❥":" "
+        let dot = (n === state.stack.selected_index)?Glyphs.right_triangle:" "
         let max_len = state.width - 6
         let name = item.print().padEnd(20)
         let str = `${name} | ${label}`

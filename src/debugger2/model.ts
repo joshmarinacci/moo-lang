@@ -1,7 +1,7 @@
 import type {Context} from "../obj.ts";
 import {StackState} from "./stack_view.ts";
 import {BytecodeState} from "./bytecode_view.ts";
-import {ContextState} from "./scope_view.ts";
+import {ContextState} from "./context_view.ts";
 
 export type Mode = 'bytecode'|'execution'|'stack'|'scope'
 export type KeyHandler = () => void;

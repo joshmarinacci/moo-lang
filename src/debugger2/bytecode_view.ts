@@ -1,6 +1,6 @@
 import {type ByteCode, type ByteOp, type Context} from "../obj.ts";
 import {type AppState, type KeyHandler, type Mode, type ViewOutput} from "./model.ts";
-import {BoxFrame, Header} from "./util.ts";
+import {BoxFrame, Glyphs, Header} from "./util.ts";
 
 export class BytecodeState {
     selected_index: number;
@@ -52,11 +52,11 @@ export function BytecodeViewRender(state:AppState):ViewOutput {
         }
         let sel = ' '
         if(n == state.bytecode.selected_index) {
-            sel = '*'
+            sel = Glyphs.right_triangle
         }
         let active = ' '
         if(n === state.ctx.pc) {
-            active = '▶'
+            active = Glyphs.black_circle
         }
         output.addLine(`  ${sel} ${active} ${n.toString().padStart(2,'0')} ${op[0]}: ${op[1]}`)
     })
