@@ -268,8 +268,6 @@ describe('scope stability', () => {
         5 foo.
         `) as Context
         // stack should be the block activation and the number itself
-        console.log('scope',ctx.scope.print())
-        console.log('scope',ctx.scope.parent.print())
         assert.equal(ctx.scope.name,BLOCK_ACTIVATION);
         assert.equal(ctx.scope.parent.name,'NumberLiteral');
         // scope parent should be the Number
@@ -291,12 +289,12 @@ describe('scope stability', () => {
     })
     test('nested access to block parameters',() => {
         let ctx = ctx_execute(`
-            String makeSlot: 'do:' with: [ lam | 
-                [self counter < self size] whileTrue: [
+            Number makeSlot: 'foo:' with: [ v | 
+                [1 < 2] whileTrue: [
                     self halt.
                 ].
             ].
-            "abc" do: 5.
+            5 foo: 6.
         `) as Context;
         // scope = activation context of the inner block
         // scope.parent = activation context of the 'do:' method
