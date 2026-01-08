@@ -1,12 +1,24 @@
 import process from "node:process";
 import type {ViewOutput} from "./model.ts";
+import {styleText} from "node:util";
 
-const RED = '\x1b[31m'
-const BLACK = '\x1b[30m'
-const BLACK_BOLD = '\x1b[1;30m'
-const RED_BOLD = '\x1b[1;31m'
-const GREEN = '\x1b[32m';
-const GREEN_BOLD = '\x1b[1;32m'
+const Colors = {
+    red:31,
+    green:32,
+}
+const Attributes = {
+    off:0,
+    bold:1,
+    italic:3,
+    reverse:7,
+    plain:10,
+}
+
+
+const RED = `\x1b[${Colors.red}m`
+const GREEN = `\x1b[${Colors.green}m`;
+const PLAIN = `\x1b[${Attributes.plain}m`;
+const BOLD = `\x1b[${Attributes.bold}m`
 const RESET = '\x1b[0m'; // Resets all attributes
 
 export function clear_screen() {
@@ -52,16 +64,19 @@ function stringToBorder(str:string):Border {
 }
 
 const STYLE:Style = {
-    attribute: BLACK,
+    attribute: PLAIN,
     border: stringToBorder('+-+| |+-+')
 }
-
 STYLE.border = stringToBorder('┌─╮│ │╰─┘')
 
+function styleIt(style: Style, text: string) {
+    return `${style.attribute}${text}${RESET}`
+}
+
 export class BoxFrame {
-    private width: number;
-    private name: string;
-    private active: boolean;
+    private readonly width: number;
+    private readonly name: string;
+    private readonly active: boolean;
     private content: string[];
 
     constructor(opts: { name: string; width: number; active: boolean }) {
@@ -84,8 +99,8 @@ export class BoxFrame {
         let style = STYLE
         if (this.active) {
             style = {
-                attribute:BLACK_BOLD,
-                border:STYLE.border
+                ... STYLE,
+                attribute:BOLD,
             }
         }
 
@@ -99,7 +114,7 @@ export class BoxFrame {
             + ' ' + this.name + ' '
             +style.border.Top.repeat(margin+right_pad)
             + style.border.TopRight
-        output.push(`${style.attribute}${header}${RESET}`)
+        output.push(styleIt(style,header))
         this.content.forEach((str, n) => {
             let pad = Math.max(this.width - str.length - 3,0)
             output.push(`${style.attribute}${style.border.Left} ${str} ${' '.repeat(pad)}${style.border.Right}${RESET}`)
