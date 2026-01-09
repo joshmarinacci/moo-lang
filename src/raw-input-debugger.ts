@@ -46,6 +46,15 @@ function handle_args():Options {
 
 let options = handle_args()
 
+function validateOptions(options: Options) {
+    if(!options.code && !options.input) {
+        console.error("Must specify --code <some code> or --input <input file>")
+        process.exit()
+    }
+}
+
+validateOptions(options)
+
 process.stdin.setRawMode(true);
 process.stdin.resume();
 process.stdin.setEncoding("utf8");

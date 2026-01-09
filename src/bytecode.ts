@@ -75,6 +75,9 @@ export class BytecodeMethod extends Obj implements Method {
     }
 
     lookup_slot(name: string): Obj {
+        if(name === 'self') {
+            return this.parent.lookup_slot(name)
+        }
         // console.log("doing custom lookup slot for ",name)
         if(name === 'value') {
             return this
@@ -157,7 +160,7 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         args.reverse()
         let method = ctx.stack.pop()
         let rec = ctx.stack.pop()
-        let act = new ActivationObj(BLOCK_ACTIVATION, method, {
+        let act = new ActivationObj(BLOCK_ACTIVATION, ctx.scope, {
             receiver:rec,
             method:method,
             args:args,

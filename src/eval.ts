@@ -25,7 +25,7 @@ const d = new JoshLogger()
 d.disable()
 
 export function eval_block_obj(method: Obj, args:Array<Obj>) {
-    if (method.name === 'BytecodeBlock') {
+    if (method.name === 'BytecodeMethod') {
         let ctx:Context = {
             scope: method,
             bytecode: [],
