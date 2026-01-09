@@ -61,7 +61,7 @@ export class STStack {
     }
 
     items():Array<[Obj,string]> {
-        return this.data
+        return this.data.slice()
     }
 }
 
@@ -79,7 +79,9 @@ export class Obj {
     _method_slots: Map<string, Obj>;
     _is_return: boolean;
     private _hash_value: string;
+    uuid: string;
     constructor(name: string, parent: Obj|null, props:Record<string,unknown>) {
+        this.uuid = Math.random().toString(36);
         this._hash_value = "obj_"+(Math.random()*1_000_000)
         this.name = name;
         this.parent = parent
@@ -401,7 +403,7 @@ class FakeNativeMethod extends Obj implements Method {
         let ret = act.get_slot('return')
         if(!ret) ret = NilObj()
         d.p('ret is', ret.print())
-        ctx.stack.push(ret)
+        ctx.stack.push_with(ret,'return value from ' + this.label)
     }
 
 }
@@ -503,7 +505,7 @@ class NativeMethod extends Obj implements Method {
         let ret = act.get_slot('return')
         if(!ret) ret = NilObj()
         d.p('ret is', ret.print())
-        ctx.stack.push(ret)
+        ctx.stack.push_with(ret,'return value from ' + this.label)
     }
 }
 export const NatMeth = (fun:NativeMethodSignature,label?:string):Obj => {

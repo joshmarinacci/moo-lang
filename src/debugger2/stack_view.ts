@@ -77,6 +77,7 @@ export function StackViewRender(state:AppState):ViewOutput {
     })
     if(state.stack.selected_item instanceof Obj) {
         let obj = state.stack.selected_item as Obj
+        output.addLine(`    uuid: ${obj.uuid}`)
         // method slot names
         obj._list_slot_names().forEach((str,index) => {
             output.addLine(`    m: ${str}`)

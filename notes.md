@@ -211,7 +211,7 @@ Inside the dispatch a bytecode method will:
 * put the current bytecode into the activation
 * put the current scope into the activation
 * put the current PC (program counter) into the activation
-* set new bytecode, scope.
+* set new bytecode, scope, and stack.
 * set the PC to 0.
 * put the arguments to the method into the current scope so they can be looked up.
 

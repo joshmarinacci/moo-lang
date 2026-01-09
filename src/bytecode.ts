@@ -56,9 +56,11 @@ export class BytecodeMethod extends Obj implements Method {
         act._make_method_slot('bytecode',ctx.bytecode)
         act._make_method_slot('scope',ctx.scope)
         act._make_method_slot('pc',ctx.pc)
+        act._make_method_slot('stack',ctx.stack)
         ctx.bytecode = this.bytecode
         ctx.scope = act
         ctx.scope.parent = rec
+        ctx.stack = new STStack()
         for (let i = 0; i < this.names.length; i++) {
             let param = this.names[i]
             d.p(`param '${param}'`, args[i].print())
@@ -70,7 +72,7 @@ export class BytecodeMethod extends Obj implements Method {
         let ret = act.get_slot('return')
         if(!ret) ret = NilObj()
         d.p('ret is', ret.print())
-        ctx.stack.push(ret)
+        ctx.stack.push_with(ret,'return value from ' + this.name)
     }
 
     lookup_slot(name: string): Obj {
@@ -165,7 +167,8 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
             method:method,
             args:args,
         });
-        ctx.stack.push(act);
+        d.p("pushed activation")
+        ctx.stack.push_with(act,`for ${method.print()} ${act.uuid}`);
         d.p('stack after',ctx.stack.print_small());
         // console.log("method is",act.get_slot('method'));
         (act.get_slot('method') as unknown as Method).dispatch(ctx,act);
@@ -185,14 +188,6 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         ctx.scope._make_method_slot(name._get_js_string(), value)
         return NilObj()
     }
-    // if (name === 'return') {
-    //     let value = ctx.stack.pop() as Obj
-    //     let ret = new Obj('non-local-return',ctx.scope.parent,{})
-    //     ret._is_return = true
-    //     ret._make_method_slot('value',value)
-    //     ret._make_method_slot('target',ctx.scope.parent as Obj)
-    //     return ret
-    // }
     if (name === 'jump-if-true') {
         let distance = op[1] as number
         let value = ctx.stack.pop() as Obj
@@ -206,7 +201,7 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         return NilObj()
         // return ret
     }
-    if(name === 'return-from-bytecode-call') {
+    if (name === 'return-from-bytecode-call') {
         d.p('return from a bytecode call')
         //keep the return value
         let ret = ctx.stack.pop() as Obj
@@ -222,12 +217,13 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         let scope = act.get_slot('scope')
         d.p("old scope is",scope.print())
         let pc = act.get_slot('pc')
+        let stack = act.get_slot('stack') as unknown as STStack
         act._make_method_slot('return',ret)
         d.p("old pc is",pc)
         ctx.bytecode = bytecode
         ctx.scope = scope
         ctx.pc = pc
-        ctx.stack.push(act)
+        ctx.stack = stack
         return NilObj()
     }
     if( name === 'pop') {
