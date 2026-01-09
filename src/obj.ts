@@ -399,10 +399,9 @@ class FakeNativeMethod extends Obj implements Method {
     }
     cleanup(ctx: Context, act: Obj) {
         let ret = act.get_slot('return')
-        if(ret) {
-            d.p('ret is', ret.print())
-            ctx.stack.push(ret)
-        }
+        if(!ret) ret = NilObj()
+        d.p('ret is', ret.print())
+        ctx.stack.push(ret)
     }
 
 }
@@ -502,10 +501,9 @@ class NativeMethod extends Obj implements Method {
     }
     cleanup(ctx: Context, act: Obj) {
         let ret = act.get_slot('return')
-        if(ret) {
-            d.p('ret is', ret.print())
-            ctx.stack.push(ret)
-        }
+        if(!ret) ret = NilObj()
+        d.p('ret is', ret.print())
+        ctx.stack.push(ret)
     }
 }
 export const NatMeth = (fun:NativeMethodSignature,label?:string):Obj => {

@@ -1,6 +1,7 @@
 import {type ByteCode, type ByteOp, type Context} from "../obj.ts";
 import {type AppState, type KeyHandler, type Mode, type ViewOutput} from "./model.ts";
 import {BoxFrame, Glyphs, Header} from "./util.ts";
+import {type Ast, AstToString} from "../ast.ts";
 
 export class BytecodeState {
     selected_index: number;
@@ -58,7 +59,12 @@ export function BytecodeViewRender(state:AppState):ViewOutput {
         if(n === state.ctx.pc) {
             active = Glyphs.black_circle
         }
-        output.addLine(`  ${sel} ${active} ${n.toString().padStart(2,'0')} ${op[0]}: ${op[1]}`)
+        let name = op[0]
+        let value = op[1]
+        if(value && value.type == 'block-literal') {
+            value = AstToString(value as Ast)
+        }
+        output.addLine(`  ${sel} ${active} ${n.toString().padStart(2,'0')} ${name}: ${value}`)
     })
     return output.render()
 }

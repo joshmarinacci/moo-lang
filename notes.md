@@ -191,3 +191,68 @@ When creating a block the parent should be the outer context. However, the block
 still needs access to block methods, so it should have BlockProto in it's chain. How do we
 reconcile these? Copy the block proto methods in manually? We only need the one, right?
 
+## Message Sends
+
+A message send is done with an activation block. The interpreter will do the following for every message send.
+
+* move the message arguments off the stack into the activation block.
+* move the method itself and the receiver off of the stack and into the activation block.
+* push the activation block onto the stack.
+* dispatch the method.
+
+Once control returns to the method where the message was sent there should be a return-message
+bytecode after the send-message bytecode.  This will
+
+* pop the activation off of the stack.
+* call cleanup() on the method in the activation stack.
+
+Inside the dispatch a bytecode method will:
+
+* put the current bytecode into the activation
+* put the current scope into the activation
+* put the current PC (program counter) into the activation
+* set new bytecode, scope.
+* set the PC to 0.
+* put the arguments to the method into the current scope so they can be looked up.
+
+When a bytecode method is done it's cleanup will be called.
+
+* if the activation has a return value, the return value will be put onto the stack.
+
+
+When a NativeMethod runs, it has different implementations of dispatch and cleanup. Dispatch
+will 
+
+* run the native JS function method with the receiver and args from the activation.
+* if the native function returns an object it will be put into the return slot of the activation.
+
+In cleanup it will
+
+* if there is a return value, put it on the stack.
+
+there is also a FakeNativeMethod which does the exact same things as NativeMethod.
+
+
+Bytecode methods will inject an extra bytecode for `return-from-bytecode-call` which will
+be executed as the last thing in a bytecode method before it returns. This will:
+
+* pop the return value from the stack.
+* pop the activation record from the stack.
+* restore the bytecode, scope, and pc to the context
+* put the return value into the activation
+* put the activation record back on the stack.
+
+
+
+All of the above ensures that before control changes for a message send,
+* arguments have been removed from the stack
+* an activation is at the top of the stack containing all necessary information
+
+and when control returns
+* there is an activation at the top of the stack.
+* it is removed and it's cleanup method is called.
+* any return value from the method is left on the stack.
+
+
+we get extra stuff on the stack when a method returns null.
+when completing a method we should clear the stack back to what it was before, which should nuke any remaining values, right?

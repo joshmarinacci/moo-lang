@@ -68,10 +68,9 @@ export class BytecodeMethod extends Obj implements Method {
     }
     cleanup(ctx: Context, act: Obj) {
         let ret = act.get_slot('return')
-        if(ret) {
-            d.p('ret is', ret.print())
-            ctx.stack.push(ret)
-        }
+        if(!ret) ret = NilObj()
+        d.p('ret is', ret.print())
+        ctx.stack.push(ret)
     }
 
     lookup_slot(name: string): Obj {
@@ -125,6 +124,7 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
             blk2._make_method_slot('whileTrue:', BlockProto.lookup_slot('whileTrue:'))
         }
         // set the parent to the enclosing scope
+        blk2._make_method_slot("description",StrObj(desc))
         blk2.parent = ctx.scope
         ctx.stack.push_with(blk2,desc)
         return NilObj()
@@ -213,7 +213,7 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         d.p("the return value is", ret.print())
         d.p("now the stack is")
         d.p(ctx.stack.print_small())
-        let act = ctx.stack.pop()
+        let act = ctx.scope
         d.p('activation is',act.print())
         d.p('method is', act.get_slot('method').print());
         d.p('doing BytecodeMethod cleanup')

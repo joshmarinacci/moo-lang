@@ -53,7 +53,11 @@ export function AstToString(ast: Ast): string {
         return '(' + ast.body.map(a => AstToString(a)).join(' ') +  ')'
     }
     if (ast.type === 'block-literal') {
-        return '[' + ast.body.map(a => AstToString(a)).join(' ') + ']'
+        return '['
+            + ast.parameters.map(a => AstToString(a)).join(' ')
+            +  '|'
+            + ast.body.map(a => AstToString(a)).join(' ')
+            + ']'
     }
     if (ast.type === 'assignment') {
         return AstToString(ast.target) + ":=" + AstToString(ast.value)

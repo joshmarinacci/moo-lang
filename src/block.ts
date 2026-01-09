@@ -59,6 +59,7 @@ export const BlockProto = new Obj("BlockProto", ObjectProto, {
         }
         let last = NilObj()
         if(bytecode) {
+            throw new Error("doing old block proto")
             last = execute_bytecode(bytecode,scope)
             if (last._is_return) {
                 return process_return(last,scope)

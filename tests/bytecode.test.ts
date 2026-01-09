@@ -269,8 +269,8 @@ describe('scope stability', () => {
         `) as Context
         // stack should be the block activation and the number itself
         assert.equal(ctx.scope.name,BLOCK_ACTIVATION);
-        assert.equal(ctx.scope.parent.name,'NumberLiteral');
         // scope parent should be the Number
+        assert.equal(ctx.scope.parent.name,'NumberLiteral');
     })
     test('access to block parameters', () => {
         let ctx = ctx_execute(`
@@ -285,7 +285,6 @@ describe('scope stability', () => {
         let v = ctx.scope.lookup_slot('v')
         // the v should hold the passed in parameter 6
         assert.equal(v._get_js_number(),6)
-
     })
     test('nested access to block parameters',() => {
         let ctx = ctx_execute(`
@@ -297,12 +296,27 @@ describe('scope stability', () => {
             5 foo: 6.
         `) as Context;
         // scope = activation context of the inner block
-        // scope.parent = activation context of the 'do:' method
-        // act should have lam in it's args
-        // lam should be 5
-        // scope.parent.parent should be the string object
-        // scope.parent.parent.parent should the String class
-        // calling lookup(lam) on scope should return the lam value of 5
+        assert.equal(ctx.scope.name,BLOCK_ACTIVATION);
+        // scope.parent.parent = activation context of the 'do:' method
+        assert.equal(ctx.scope.parent.parent.name,BLOCK_ACTIVATION);
+        let outer = ctx.scope.parent.parent as Obj
+        console.log("scope is", outer)
+        // act should have v in it's args
+        let v = outer.lookup_slot('v')
+        // v should be 6
+        assert.equal(v._get_js_number(),6)
+    })
+    test('return from nested method call returning nil',() => {
+        let ctx = ctx_execute(`
+        [
+            self make_data_slot: 'foo' with: 0.
+            [4>5] whileTrue: [
+                nil.
+            ].
+            self halt
+        ] value.
+        `) as Context;
+
     })
 })
 
@@ -373,11 +387,13 @@ test('invoke debug',() => {
 })
 test('whileTrue: ',() => {
     ccem(`
-    self make_data_slot: 'counter' with:0.
-    [self counter < 5] whileTrue: [
-        self counter: (self counter + 1).
-        self counter.
-    ].
-    self counter .
+    [
+        self make_data_slot: 'counter' with:0.
+        [self counter < 5] whileTrue: [
+            self counter: (self counter + 1).
+            self counter.
+        ].
+        self counter .
+    ] value.
     `, NumObj(5))
 })
