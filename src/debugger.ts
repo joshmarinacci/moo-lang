@@ -16,6 +16,7 @@ type Options = {
     code:string,
     input:string,
     run:boolean,
+    exit:boolean,
 }
 
 function handle_args():Options {
@@ -29,6 +30,10 @@ function handle_args():Options {
                 default: false,
             },
             run: {
+                type: 'boolean',
+                default: false,
+            },
+            exit: {
                 type: 'boolean',
                 default: false,
             },
@@ -171,5 +176,9 @@ process.on("SIGINT", () => {
 });
 if(state.ctx.running) {
     run(state)
+    if(options.exit) {
+        console.log(state.ctx.stack.pop().print())
+        process.exit(0)
+    }
 }
 redraw()
