@@ -62,15 +62,7 @@ process.stdin.resume();
 process.stdin.setEncoding("utf8");
 
 
-// let example_code = '"abc" do: [ch | ch print. ].'
-let example_code = `
-    self make_data_slot: 'counter' with:0.
-    [self counter < 5] whileTrue: [
-         self counter: (self counter + 1).
-        self counter.
-    ].
-    self counter .
-`
+let example_code = `4 + 5`
 
 if(options.code){
     example_code = options.code
