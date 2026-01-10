@@ -345,6 +345,7 @@ export function compile_bytecode(ast: Ast): ByteCode {
             ['load-plain-id','List'],
             ['lookup-message','clone'],
             ['send-message',0],
+            ['return-message',0],
             ['assign',null],
         ]
         ast.body.map(value => {
@@ -354,6 +355,7 @@ export function compile_bytecode(ast: Ast): ByteCode {
             // d.p("making byte code",bt)
             bt.forEach(code => codes.push(code))
             codes.push(['send-message',1])
+            codes.push(['return-message',0])
         })
         codes.push(['load-plain-id',temp_var])
         return codes

@@ -2,6 +2,7 @@ import {JS_VALUE, make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
 import {NumObj} from "./number.ts";
 import {eval_block_obj, sval} from "./eval.ts";
 import {StrObj} from "./string.ts";
+import {bval} from "./bytecode.ts";
 
 class JSSet {
     data: Map<unknown,Obj>
@@ -271,13 +272,13 @@ export function setup_arrays(scope:Obj) {
     scope._make_method_slot("Dict",DictProto)
     scope._make_method_slot("Set",SetProto)
 
-    sval(`List makeSlot: 'first' with: [
+    bval(`List makeSlot: 'first' with: [
          self at:0
     ].`,scope);
-    sval(`List makeSlot: 'last' with: [
+    bval(`List makeSlot: 'last' with: [
          self at: (self size -1)
     ].`,scope);
-    sval(`List makeSlot: 'sorted' with: [
+    bval(`List makeSlot: 'sorted' with: [
          self sortedBy: [a b | a - b ]
     ].`,scope);
 

@@ -65,6 +65,6 @@ export function ExecutionViewRender(state: AppState):ViewOutput {
 
     output.addLine(`menu: q:quit c:context s:stack b:bytecode e:execution `)
     output.addLine(`${state.mode}`)
-    output.addLine(`${state.code}`)
+    output.addLine(`${state.code.trim()}`)
     return output.render()
 }

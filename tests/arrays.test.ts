@@ -6,12 +6,12 @@ import {cval} from "./common.ts";
 
 test('array literals',() => {
     let scope = make_standard_scope()
-    // cval(`
-    //     l := { 4 5 6 }.
-    //     Debug equals: (l at: 0) with: 4.
-    //     Debug equals: (l at: 1) with: 5.
-    //     Debug equals: l size with: 3.
-    //  `, scope)
+    cval(`
+        l := { 4 5 6 }.
+        Debug equals: (l at: 0) with: 4.
+        Debug equals: (l at: 1) with: 5.
+        Debug equals: l size with: 3.
+     `, scope)
 })
 
 test('dict literals', () => {
@@ -32,40 +32,40 @@ test('dict literals', () => {
 
 test('list api', () => {
     let scope = make_standard_scope()
-    // cval(`[
-    //     l := (List clone).
-    //     Debug equals: l size with: 0.
-    //
-    //     l add: 1.
-    //     Debug equals: l size with: 1.
-    //     Debug equals: (l at: 0) with: 1.
-    //
-    //     l add: 3.
-    //     Debug equals: l size with: 2.
-    //
-    //     l at: 1 set: 8.
-    //     Debug equals: l size with: 2.
-    //     Debug equals: (l at: 1) with: 8.
-    //
-    //     l do: [ n | n. ].
-    //
-    //     l add: 5.
-    //
-    //     Debug equals: (l first) with: 1.
-    //     Debug equals: (l last) with: 5.
-    //
-    //     Debug equals: l size with: 3.
-    //     l push: 88.
-    //     Debug equals: l size with: 4.
-    //     l pop.
-    //     Debug equals: l size with: 3.
-    //
-    //
-    //
-    //     l3 := { 6, 7 }.
-    //     // Debug equals: (l3 join: ",") with: "6,7".
-    //
-    //     ] value.`,scope)
+    cval(`[
+        l := (List clone).
+        Debug equals: l size with: 0.
+
+        l add: 1.
+        Debug equals: l size with: 1.
+        Debug equals: (l at: 0) with: 1.
+
+        l add: 3.
+        Debug equals: l size with: 2.
+
+        l at: 1 set: 8.
+        Debug equals: l size with: 2.
+        Debug equals: (l at: 1) with: 8.
+
+        l do: [ n | n. ].
+
+        l add: 5.
+
+        Debug equals: (l first) with: 1.
+        Debug equals: (l last) with: 5.
+
+        Debug equals: l size with: 3.
+        l push: 88.
+        Debug equals: l size with: 4.
+        l pop.
+        Debug equals: l size with: 3.
+
+
+
+        l3 := { 6, 7 }.
+        // Debug equals: (l3 join: ",") with: "6,7".
+
+        ] value.`,scope,{bytecodeOnly:true})
 })
 
 test('list selection',() => {
