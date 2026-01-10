@@ -161,7 +161,7 @@ describe("function calls", () => {
         ], NumObj(20))
     })
     test('block bytecode method', () => {
-        // ccem(` self makeSlot: "foo:" with: [ bar |  88.  ].  self foo: 88.`, NumObj(88))
+        // ccem(` self makeSlot: 'foo:' with: [ bar |  88.  ].  self foo: 88.`, NumObj(88))
         compare_execute_clean([
             ['load-plain-id','self'],
             ['lookup-message','makeSlot:with:'],
@@ -169,6 +169,7 @@ describe("function calls", () => {
             ['create-literal-block',BlkArgs([PlnId('bar')],[Stmt(Num(88))])],
             ['send-message',2],
             ['return-message',0],
+            ['pop',0], // get rid of the nil from the makeSlot: method.
             ['load-plain-id','self'],
             [ 'lookup-message', 'foo:' ],
             ['load-literal-number',88],
