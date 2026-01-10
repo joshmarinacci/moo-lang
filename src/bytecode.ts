@@ -16,10 +16,8 @@ import {StrObj} from "./string.ts";
 import {ActivationObj, BlockProto} from "./block.ts";
 import {parse} from "./parser.ts";
 
-
 let d = new JoshLogger()
 d.disable()
-
 
 export class BytecodeMethod extends Obj implements Method {
     private bytecode: ByteCode;
@@ -32,10 +30,6 @@ export class BytecodeMethod extends Obj implements Method {
         this.bytecode.push(['return-from-bytecode-call',null])
         this.ast = ast
     }
-    // print(): string {
-    //     return this.name + " [ " + util.inspect(this.bytecode) + ' ]'
-    // }
-
     dispatch(ctx: Context, act:Obj): void {
         d.p("BytecodeMethod.dispatch: executing", this.print())
         d.p("bytecode is", this.bytecode)
@@ -76,18 +70,9 @@ export class BytecodeMethod extends Obj implements Method {
     }
 
     lookup_slot(name: string): Obj {
-        if(name === 'self') {
-            return this.parent.lookup_slot(name)
-        }
-        // console.log("doing custom lookup slot for ",name)
-        if(name === 'value') {
-            return this
-            // return new BytecodeMethod(this.lit, this.bytecode, this.parent as Obj)
-        }
-        if(name === 'valueWith:') {
-            return this
-            // return new BytecodeMethod(this.lit, this.bytecode, this.parent as Obj)
-        }
+        if(name === 'self') return this.parent.lookup_slot(name)
+        if(name === 'value') return this;
+        if(name === 'valueWith:') return this;
         return super.lookup_slot(name);
     }
 }
@@ -152,8 +137,6 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         return NilObj()
     }
     if (name === 'send-message') {
-        d.p("sending message")
-        d.p("stack before ", ctx.stack.print_small())
         let arg_count = op[1] as number
         let args = []
         for(let i=0; i<arg_count; i++) {
@@ -167,18 +150,12 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
             method:method,
             args:args,
         });
-        d.p("pushed activation")
         ctx.stack.push_with(act,`for ${method.print()} ${act.uuid}`);
-        d.p('stack after',ctx.stack.print_small());
-        // console.log("method is",act.get_slot('method'));
         (act.get_slot('method') as unknown as Method).dispatch(ctx,act);
         return NilObj()
     }
     if (name === 'return-message') {
-        d.p("doing return message")
-        let act = ctx.stack.pop()
-        d.p('activation is',act.print())
-        d.p('method is', act.get_slot('method').print());
+        let act = ctx.stack.pop();
         (act.get_slot('method') as unknown as Method).cleanup(ctx,act);
         return NilObj()
     }
@@ -191,35 +168,19 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
     if (name === 'jump-if-true') {
         let distance = op[1] as number
         let value = ctx.stack.pop() as Obj
-        d.p("current value is",value.print())
-        if(value._get_js_boolean() === true) {
-            d.p("jumping by ", distance)
+        if(value._get_js_boolean()) {
             ctx.pc = distance;
-        } else {
-            d.p("not jumping")
         }
         return NilObj()
-        // return ret
     }
     if (name === 'return-from-bytecode-call') {
-        d.p('return from a bytecode call')
-        //keep the return value
         let ret = ctx.stack.pop() as Obj
-        d.p("the return value is", ret.print())
-        d.p("now the stack is")
-        d.p(ctx.stack.print_small())
         let act = ctx.scope
-        d.p('activation is',act.print())
-        d.p('method is', act.get_slot('method').print());
-        d.p('doing BytecodeMethod cleanup')
         let bytecode = act.get_slot('bytecode')
-        d.p("old bytecode is", bytecode)
         let scope = act.get_slot('scope')
-        d.p("old scope is",scope.print())
         let pc = act.get_slot('pc')
         let stack = act.get_slot('stack') as unknown as STStack
         act._make_method_slot('return',ret)
-        d.p("old pc is",pc)
         ctx.bytecode = bytecode
         ctx.scope = scope
         ctx.pc = pc
@@ -227,7 +188,6 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         return NilObj()
     }
     if( name === 'pop') {
-        d.p("removing from the stack")
         ctx.stack.pop()
         return NilObj()
     }
@@ -235,7 +195,6 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
 }
 
 export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
-    d.p("start executing", code)
     let ctx:Context = {
         scope: scope,
         bytecode: code,
@@ -244,11 +203,7 @@ export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
         running:true
     }
 
-    d.indent()
     while(ctx.running) {
-        d.green(`==========  ${ctx.pc}`)
-        d.green(`Stack: ${ctx.stack.print_small()}`)
-        d.green(`scope is ${ctx.scope.print()}`)
         if(ctx.pc >= ctx.bytecode.length) {
             d.p("we are done")
             ctx.running = false
@@ -256,22 +211,14 @@ export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
         }
 
         let op = ctx.bytecode[ctx.pc]
-        d.red(`Op: ${op[0]} ${op[1]}`)
         let ret = execute_op(op, ctx)
-        d.green(`Stack: ${ctx.stack.print_small()}`)
         if (ret.is_kind_of("Exception")) {
             d.error("returning exception")
-            d.outdent()
             return ret
         }
     }
-    d.outdent()
-    d.p("done executing")
-    d.p("stack left " + ctx.stack.size())
-
     if (ctx.stack.size() > 0) {
         let last = ctx.stack.pop() as Obj
-        d.p("returning",last.print())
         if (last && last._is_return) last = last.get_slot('value') as Obj;
         return last
     } else {
@@ -280,7 +227,6 @@ export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
 }
 
 export function compile_bytecode(ast: Ast): ByteCode {
-    d.p("compiling", AstToString(ast), ast.type)
     if (Array.isArray(ast)) {
         return ast.map(a => compile_bytecode(a)).flat()
     }
@@ -306,7 +252,6 @@ export function compile_bytecode(ast: Ast): ByteCode {
     }
     if (ast.type === 'keyword-call') {
         let message_name = ast.args.map(arg => arg.name.name).join("")
-        d.p("keyword message is " + message_name)
         let args = ast.args.map(arg => compile_bytecode(arg.value))
         return [
             [['lookup-message', message_name]],
@@ -352,7 +297,6 @@ export function compile_bytecode(ast: Ast): ByteCode {
             let bt = compile_bytecode(value)
             codes.push(['load-plain-id',temp_var])
             codes.push(['lookup-message','add:'])
-            // d.p("making byte code",bt)
             bt.forEach(code => codes.push(code))
             codes.push(['send-message',1])
             codes.push(['return-message',0])
@@ -393,7 +337,6 @@ export function compile_bytecode(ast: Ast): ByteCode {
     if (ast.type === 'return') {
         return [
             compile_bytecode(ast.value),
-            // [['return', null]]
         ].flat() as ByteCode
     }
     throw new Error(`unknown ast type ${ast.type}`)
@@ -401,7 +344,5 @@ export function compile_bytecode(ast: Ast): ByteCode {
 
 export function bval(source: string, scope: Obj) {
     let bytecode = compile_bytecode(parse(source,'BlockBody'))
-    // console.log("bytecode is",bytecode)
     let ret_bcode  =  execute_bytecode(bytecode,scope)
-    // console.log("returned",ret_bcode.print())
 }

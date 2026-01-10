@@ -38,9 +38,6 @@ function handle_args():Options {
             }
         }
     })
-    // console.log('values', values)
-    // console.log("foo is", values)
-    // console.log('positionals', positionals)
     return values as Options
 }
 

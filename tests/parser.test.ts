@@ -30,7 +30,6 @@ export function precedence(source:string, target:Ast) {
     assert.deepStrictEqual(ast,target)
 }
 export function parse_statement(source:string, target:Ast) {
-    // console.log("====== " + source)
     let ast = parse(source,'Statement');
     assert.deepStrictEqual(ast,target)
 }

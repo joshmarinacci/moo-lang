@@ -7,7 +7,7 @@ import {JoshLogger} from "../src/util.ts";
 import {objsEqual} from "../src/debug.ts";
 
 export const d = new JoshLogger()
-
+d.disable()
 function evalTreeWalk(body: Ast, scope: Obj): Obj {
     let last = NilObj()
     if (Array.isArray(body)) {

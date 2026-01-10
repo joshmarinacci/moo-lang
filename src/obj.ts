@@ -106,7 +106,6 @@ export class Obj {
         },`${name} setter`))
     }
     _get_data_slot(name:string):Obj {
-        // console.log(`getting data slot ${name}`)
         if (!this._data_slots.has(name)) {
             if(this.parent) {
                 return this.parent._get_data_slot(name)
@@ -168,7 +167,6 @@ export class Obj {
                 txt = 'undefined'
             }
 
-            // console.log("js value is", this.get_slot('jsval'))
             return `JSValue(${txt})`
         }
         if (this.name === 'StringLiteral') {

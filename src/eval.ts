@@ -42,18 +42,17 @@ export function eval_block_obj(method: Obj, args:Array<Obj>) {
         d.p('stack after',ctx.stack.print_small());
 
         (act.get_slot('method') as unknown as Method).dispatch(ctx,act);
-        console.log('bytecode is now', ctx.bytecode)
+        d.p('bytecode is now', ctx.bytecode)
         while(ctx.running) {
-            console.log("=======")
-            console.log("stack",ctx.stack.print_small())
-            console.log(ctx.bytecode)
+            d.p("=======")
+            d.p("stack",ctx.stack.print_small())
+            d.p(ctx.bytecode)
             if(ctx.pc >= ctx.bytecode.length) break;
             let op = ctx.bytecode[ctx.pc]
-            console.log('op ' + op)
+            d.p('op ' + op)
             let ret = execute_op(op, ctx)
         }
-        // console.log('after dispatching bytecode method stack is')
-        // console.log(ctx.stack.print_small())
+
         let act2 = ctx.stack.pop()
         return act2.get_slot('return')
     }

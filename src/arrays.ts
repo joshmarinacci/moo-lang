@@ -1,6 +1,6 @@
 import {JS_VALUE, make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
 import {NumObj} from "./number.ts";
-import {eval_block_obj, sval} from "./eval.ts";
+import {eval_block_obj} from "./eval.ts";
 import {StrObj} from "./string.ts";
 import {bval} from "./bytecode.ts";
 
@@ -36,7 +36,6 @@ class JSSet {
     }
 
     addAll(jsSlot: unknown) {
-        // console.log("adding from jsslot",jsSlot)
         if(jsSlot instanceof JSSet) {
             for (let [key,value] of jsSlot.data.entries()) {
                 this.add(value)
@@ -161,14 +160,10 @@ export const ListProto = make_native_obj("ListProto",ObjectProto, {
         arr = arr.slice();
         let block = args[0]
         arr.sort((a,b)=>{
-            // console.log("comparing",a.print(),b.print())
             let num = eval_block_obj(block,[a,b]) as Obj
-            // console.log("got",num.print())
             return num._get_js_number()
         })
-        let list = ListObj(...arr)
-        // console.log("final list is", list.print());
-        return list
+        return ListObj(...arr)
     },
 })
 ListProto._make_js_slot(JS_VALUE,[])
