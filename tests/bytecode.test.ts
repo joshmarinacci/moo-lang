@@ -40,16 +40,16 @@ function compare_execute_clean(code:ByteCode, expected: Obj) {
         running:true
     }
     while(ctx.running) {
-        console.log("=======")
-        console.log("stack",ctx.stack.print_small())
-        console.log(ctx.bytecode)
+        d.p("=======")
+        d.p("stack",ctx.stack.print_small())
+        d.p(ctx.bytecode)
         if(ctx.pc >= ctx.bytecode.length) break;
         let op = ctx.bytecode[ctx.pc]
-        console.log('op ' + op)
+        d.p('op ' + op)
         let ret = execute_op(op, ctx)
     }
-    console.log("done")
-    console.log("stack is",ctx.stack.print_small())
+    d.p("done")
+    d.p("stack is",ctx.stack.print_small())
 
     if(ctx.stack.size() > 1) {
         throw new Error("stack too big. should just have the return value")
@@ -210,16 +210,15 @@ function ctx_execute(source: string):Context {
         running:true
     }
     while(ctx.running) {
-        console.log("=======")
-        console.log("stack",ctx.stack.print_small())
-        console.log(ctx.bytecode)
+        d.p("=======")
+        d.p("stack",ctx.stack.print_small())
+        d.p(ctx.bytecode)
         if(ctx.pc >= ctx.bytecode.length) break;
         let op = ctx.bytecode[ctx.pc]
-        // console.log('op ' + op)
         let ret = execute_op(op, ctx)
     }
-    console.log("done")
-    console.log("stack is",ctx.stack.print_small())
+    d.p("done")
+    d.p("stack is",ctx.stack.print_small())
     return ctx
 }
 
@@ -301,7 +300,7 @@ describe('scope stability', () => {
         // scope.parent.parent = activation context of the 'do:' method
         assert.equal(ctx.scope.parent.parent.name,BLOCK_ACTIVATION);
         let outer = ctx.scope.parent.parent as Obj
-        console.log("scope is", outer)
+        // console.log("scope is", outer)
         // act should have v in it's args
         let v = outer.lookup_slot('v')
         // v should be 6
