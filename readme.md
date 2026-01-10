@@ -2,7 +2,7 @@
 
 This is a minimal implementation of a Smalltalk / Self like language.  
 
-## Features
+c## Features
 * Moo uses prototypes (like Self), with single inheritance and has no
 classes or metaclasses. To create a new object clone an existing one.
 * Like Self, there are data slots and method slots.
@@ -38,7 +38,6 @@ Moo uses mostly standard Smalltalk syntax. Notable changes:
 * to create an embedded version implemented in Rust for microcontrollers.
 * to create a web version with a Notion like notebook system that can seamlessly mixes prose and computation.
 * experiment with math like APIs and using Greek symbols for variables and operations.
- 
 
 ## Roadmap
 
@@ -57,12 +56,9 @@ Moo uses mostly standard Smalltalk syntax. Notable changes:
 * [The evolution of Smalltalk: from Smalltalk-72 through Squeak](https://dl.acm.org/doi/10.1145/3386335) by Dan Ingalls.
 * [Self Language Homepage/](https://selflanguage.org/).
 
-
-
 ## Tasks
 
 * [ ] implement Boolean `ifTrue:` and `ifFalse:` in pure ST that calls `ifTrue:ifFalse`.
-* [ ] figure out how to pause and restart execution in the tree-walk interpreter.
 * [ ] make image api work in browser with HTML canvas.
 * [ ] add example code to the browser repl.
 * [ ] add missing collections apis with tests
