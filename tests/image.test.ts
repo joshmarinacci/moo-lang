@@ -3,6 +3,12 @@ import {make_standard_scope} from "../src/standard.ts";
 import {NumObj} from "../src/number.ts";
 import {cval} from "./common.ts";
 
+test('color from rgb values', () => {
+    const scope = make_standard_scope();
+    cval(`
+        blue := Color from: { 0 0 255 }.
+    `,scope,{bytecodeOnly:true})
+})
 test('set pixels color',() => {
     const scope = make_standard_scope();
     cval(`
@@ -26,7 +32,7 @@ test('set pixels color',() => {
         image setPixelAt: 7 y:0 color: Color magenta.
         image save: "output/foo.png".
         88.
-    `,scope,NumObj(88));
+    `,scope,{expected:NumObj(88),bytecodeOnly:true});
 })
 // test('fill image',() => {
 //     const scope = make_standard_scope()

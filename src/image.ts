@@ -1,6 +1,7 @@
 import {eval_block_obj, eval_statement} from "./eval.ts";
 import {make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
 import {NumObj} from "./number.ts";
+import {bval} from "./bytecode.ts";
 
 export function setup_image(scope:Obj) {
     const ImageProto = make_native_obj("ImageProto",ObjectProto,{
@@ -37,7 +38,7 @@ export function setup_image(scope:Obj) {
         },
     })
     scope._make_method_slot("Color",ColorProto)
-    eval_statement(`[
+    bval(`[
         Color make_data_slot: "red"   with: 16rFF0000FF.
         Color make_data_slot: "green" with: 16r00FF00FF.
         Color make_data_slot: "blue"  with: 16r0000FFFF.

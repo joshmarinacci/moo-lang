@@ -356,6 +356,7 @@ export function compile_bytecode(ast: Ast): ByteCode {
             bt.forEach(code => codes.push(code))
             codes.push(['send-message',1])
             codes.push(['return-message',0])
+            codes.push(['pop',0])// get rid of the nil result from 'add:'.
         })
         codes.push(['load-plain-id',temp_var])
         return codes
