@@ -1,7 +1,6 @@
 import test from "node:test";
 import {make_standard_scope} from "../src/standard.ts";
 import {NumObj} from "../src/number.ts";
-import {NilObj} from "../src/obj.ts";
 import {cval} from "./common.ts";
 
 test('array literals',() => {
@@ -139,76 +138,73 @@ test("list sorting",() => {
 
 test('dict api',() => {
     let scope = make_standard_scope()
-    // cval(`[
-    //     dict := Dict clone.
-    //     dict at: "six" set: 6.
-    //     dict at: "seven" set: 7.
-    //     Debug equals: (dict at: "six") with: 6.
-    //     Debug equals: (dict get: "seven") with: 7.
-    //     dict size.
-    //
-    //     keys := dict keys.
-    //     Debug equals: (keys size) with: 2.
-    //     Debug equals: (keys at: 0) with: "six".
-    //     Debug equals: (keys at: 1) with: "seven".
-    //
-    //     values := dict values.
-    //     Debug equals: values size with: 2.
-    //     Debug equals: (values at: 0) with: 6.
-    //     Debug equals: (values at: 1) with: 7.
-    //
-    //
-    //     values2 := (dict values collect: [n | n + 2.]).
-    //     Debug equals: (values2 at: 0) with: 8.
-    //     Debug equals: (values2 at: 1) with: 9.
-    //
-    // ] value.`,scope)
+    cval(`[
+        dict := Dict clone.
+        dict at: "six" set: 6.
+        dict at: "seven" set: 7.
+        Debug equals: (dict at: "six") with: 6.
+        Debug equals: (dict get: "seven") with: 7.
+        dict size.
+
+        keys := dict keys.
+        Debug equals: (keys size) with: 2.
+        Debug equals: (keys at: 0) with: "six".
+        Debug equals: (keys at: 1) with: "seven".
+
+        values := dict values.
+        Debug equals: values size with: 2.
+        Debug equals: (values at: 0) with: 6.
+        Debug equals: (values at: 1) with: 7.
+
+
+        values2 := (dict values collect: [n | n + 2.]).
+        Debug equals: (values2 at: 0) with: 8.
+        Debug equals: (values2 at: 1) with: 9.
+
+    ] value.`,scope)
 })
 
-// test('set api',() => {
-//     let scope = make_standard_scope()
-//     cval(`
-//         set := Set clone.
-//
-//         // size
-//         set add: 1.
-//         Debug equals: set size with: 1.
-//
-//         set add: 88.
-//         Debug equals: set size with: 2.
-//
-//         // duplicates don't increase the size
-//         set add: 88.
-//         Debug equals: set size with: 2.
-//
-//         A := Set withAll: ({ 1 2 3 }).
-//         B := Set withAll: ({ 3 4 5 }).
-//         Debug equals: A size with: 3.
-//         Debug equals: B size with: 3.
-//         C := A - B.
-//         Debug equals: C size with: 2.
-//
-//         D := A + B.
-//         Debug equals: D size with: 5.
-//
-//         E := A intersect: B.
-//         Debug equals: E size with: 1.
-//
-//         67.
-//
-//     `,scope, NumObj(67))
-// })
+test('set api',() => {
+    let scope = make_standard_scope()
+    cval(`
+        set := Set clone.
+
+        // size
+        set add: 1.
+        Debug equals: set size with: 1.
+
+        set add: 88.
+        Debug equals: set size with: 2.
+
+        // duplicates don't increase the size
+        set add: 88.
+        Debug equals: set size with: 2.
+
+        A := Set withAll: ({ 1 2 3 }).
+        B := Set withAll: ({ 3 4 5 }).
+        Debug equals: A size with: 3.
+        Debug equals: B size with: 3.
+        C := A - B.
+        Debug equals: C size with: 2.
+
+        D := A + B.
+        Debug equals: D size with: 5.
+
+        E := A intersect: B.
+        Debug equals: E size with: 1.
+
+        67.
+
+    `,scope, NumObj(67))
+})
 
 test('array common protocol',() => {
     let scope = make_standard_scope()
-    // cval(`[
-    //     l ::= List clone.
-    //     l add: 5.
-    //     // Debug print: (l print).
-    // ] value .`,scope)
-    // cval(`({ 4 5 }) print.`,scope,StrObj('6'))
-    // cval(`6 == 7.`,scope,BoolObj(false))
-    // cval(`8 == 8.`,scope,BoolObj(true))
-    // cval(`8 == '8'.`,scope,BoolObj(false))
+    cval(`[
+        l := List clone.
+        l add: 5.
+        //     Debug print: (l print).
+    ] value .`,scope)
+    // cval(`({ 4 5 }) print.`,scope,{expected:StrObj('4 5'), bytecodeOnly:true})
 })
 

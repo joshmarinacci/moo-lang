@@ -282,14 +282,14 @@ export function setup_arrays(scope:Obj) {
          self sortedBy: [a b | a - b ]
     ].`,scope);
 
-    // cval(`[
-    //     List makeSlot 'print' [
-    //         str ::= (self collect: [n |
-    //             "bar"
-    //         ]).
-    //         str.
-    //     ].
-    // ] value.`,scope)
+    bval(`[
+        List makeSlot: 'print' with: [
+            str := (self collect: [n |
+                n print.
+            ]).
+            str.
+        ].
+    ] value.`,scope)
 }
 
 
