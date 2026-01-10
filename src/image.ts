@@ -26,7 +26,7 @@ export function setup_image(scope:Obj) {
         }
     });
     scope._make_method_slot("Image",ImageProto)
-    const ColorProto = new Obj("ColorProto",ObjectProto,{
+    const ColorProto = make_native_obj("ColorProto",ObjectProto,{
         'from:':(rec:Obj, args:Array<Obj>):Obj => {
             let data = args[0]._get_js_array()
             let red = data[0]._get_js_number()

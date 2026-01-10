@@ -365,6 +365,7 @@ export function compile_bytecode(ast: Ast): ByteCode {
             ['load-plain-id','Dict'],
             ['lookup-message','clone'],
             ['send-message',0],
+            ['return-message',0],
             ['assign',null],
         ]
         ast.body.map(pair => {
@@ -376,6 +377,7 @@ export function compile_bytecode(ast: Ast): ByteCode {
                 codes.push(code)
             })
             codes.push(['send-message',2])
+            codes.push(['return-message',0])
         })
         return codes
     }
