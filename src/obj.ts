@@ -24,6 +24,7 @@ export type Context = {
     pc:number,
     stack:STStack,
     running: boolean
+    label: string
 }
 
 export class STStack {

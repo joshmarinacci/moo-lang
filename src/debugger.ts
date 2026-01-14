@@ -117,7 +117,7 @@ function draw(output:ViewOutput) {
 
 
 function redraw() {
-    // clear_screen()
+    clear_screen()
     draw(ContextViewRender(state))
     draw(StackViewRender(state))
     draw(BytecodeViewRender(state))
