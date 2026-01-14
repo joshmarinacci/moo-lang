@@ -78,7 +78,8 @@ let ctx:Context = {
     bytecode: bytecode,
     pc: 0,
     stack: new STStack(),
-    running:false
+    running:false,
+    label:'Debugger'
 }
 
 if(options.run){

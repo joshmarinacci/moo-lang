@@ -41,6 +41,7 @@ export function BytecodeViewRender(state:AppState):ViewOutput {
         width: state.width,
         active:state.mode==='bytecode'
     })
+    output.addLine('label: ' + state.ctx.label)
     let len = state.ctx.bytecode.length
     state.ctx.bytecode.forEach((op,n)=>{
         if(len > 10) {

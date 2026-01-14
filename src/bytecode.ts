@@ -23,8 +23,10 @@ export class BytecodeMethod extends Obj implements Method {
     private bytecode: ByteCode;
     private names: Array<string>;
     private ast: BlockLiteral | undefined;
-    constructor(parameterNames:Array<string>, bytecode:ByteCode, parent:Obj, ast?:BlockLiteral) {
+    label:string
+    constructor(label:string, parameterNames:Array<string>, bytecode:ByteCode, parent:Obj, ast?:BlockLiteral) {
         super('BytecodeMethod',parent,{});
+        this.label = label
         this.names = parameterNames
         this.bytecode = bytecode
         this.bytecode.push(['return-from-bytecode-call',null])
@@ -33,6 +35,7 @@ export class BytecodeMethod extends Obj implements Method {
     dispatch(ctx: Context, act:Obj): void {
         d.p("BytecodeMethod.dispatch: executing", this.print())
         d.p("bytecode is", this.bytecode)
+        ctx.label = this.label;
         d.p('stack is',ctx.stack.print_small())
         let args = act.get_slot('args') as unknown as Array<Obj>
         d.p('args are',args.map(a => a.print()))
@@ -106,7 +109,7 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
         let blk = op[1] as BlockLiteral
         let desc = AstToString(blk)
         let bytecode = blk.body.map(a => compile_bytecode(a)).flat()
-        let blk2 = new BytecodeMethod(blk.parameters.map(id => id.name), bytecode, BlockProto, blk)
+        let blk2 = new BytecodeMethod('anonymous', blk.parameters.map(id => id.name), bytecode, BlockProto, blk)
         if(BlockProto.lookup_slot('whileTrue:')) {
             blk2._make_method_slot('whileTrue:', BlockProto.lookup_slot('whileTrue:'))
         }

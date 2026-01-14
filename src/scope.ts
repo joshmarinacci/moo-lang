@@ -100,7 +100,7 @@ function root_fixup(scope:Obj) {
     }))
     ROOT._make_method_slot('jsLookupGlobal:',NatMeth((rec:Obj, args:Array<Obj>)=> JSWrapper(global[args[0]._get_js_string()])))
 
-    BlockProto._make_method_slot('whileTrue:', new BytecodeMethod(
+    BlockProto._make_method_slot('whileTrue:', new BytecodeMethod('whileTrue:',
         ['block'], //block is the parameter
         [
         ['load-plain-id','block'],

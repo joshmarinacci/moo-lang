@@ -517,6 +517,9 @@ ROOT._make_method_slot('makeSlot:with:',NatMeth((rec:Obj, args:Array<Obj>):Obj =
     let slot_name = args[0]._get_js_string()
     let slot_value = args[1]
     rec._make_method_slot(slot_name,slot_value)
+    if (slot_value.name === 'BytecodeMethod') {
+        slot_value.label = slot_name
+    }
     if (slot_value.name === 'Block') {
         slot_value.parent = rec
     }
