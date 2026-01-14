@@ -1,4 +1,4 @@
-import {JS_VALUE, make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
+import {JS_VALUE, make_native_obj, NilObj, Obj, ObjectProto, VMState} from "./obj.ts";
 import {eval_block_obj} from "./eval.ts";
 import {bval} from "./bytecode.ts";
 
@@ -8,11 +8,11 @@ export function setup_dom(scope: Obj, document: Document) {
     const $ = (sel:string):Element => document.querySelector(sel)
     const on = (el:Element,type:string,cb:unknown) => el.addEventListener(type,cb)
     const DomElementProto = make_native_obj("DomElement",ObjectProto,{
-        'onClick:':(rec:Obj,args:Array<Obj>):Obj=>{
+        'onClick:':(rec:Obj,args:Array<Obj>, vm:VMState):Obj=>{
             let element = rec._get_js_unknown() as Element
             let block = args[0]
             element.addEventListener('click',() => {
-                let ret = eval_block_obj(block,[]) as Obj
+                let ret = eval_block_obj(vm,block,[]) as Obj
             })
             return NilObj()
         },

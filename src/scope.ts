@@ -6,7 +6,7 @@ import {
     Obj,
     ObjectProto,
     ROOT,
-    setup_object
+    setup_object, VMState
 } from "./obj.ts";
 import {setup_number} from "./number.ts";
 import {BoolObj, setup_boolean} from "./boolean.ts";
@@ -30,23 +30,23 @@ function root_fixup(scope:Obj) {
         return DictObj(slots)
     }))
     ROOT._make_method_slot('print',NatMeth((rec:Obj):Obj => StrObj(rec.print())))
-    ROOT._make_method_slot('perform:',NatMeth((rec:Obj, args:Array<Obj>):Obj => {
+    ROOT._make_method_slot('perform:',NatMeth((rec:Obj, args:Array<Obj>, vm:VMState):Obj => {
         let method_name = args[0]._get_js_string()
         let args2:Array<Obj> = []
         let method = rec.lookup_slot(method_name)
-        return eval_really_perform_call(method_name,rec,method,args2)
+        return eval_really_perform_call(method_name,rec,method,args2,vm)
     }))
-    ROOT._make_method_slot('perform:with:',NatMeth((rec:Obj, args:Array<Obj>):Obj => {
+    ROOT._make_method_slot('perform:with:',NatMeth((rec:Obj, args:Array<Obj>, vm:VMState):Obj => {
         let method_name = args[0]._get_js_string()
         let args2:Array<Obj> = [args[1]]
         let method = rec.lookup_slot(method_name)
-        return eval_really_perform_call(method_name,rec,method,args2)
+        return eval_really_perform_call(method_name,rec,method,args2,vm)
     }))
-    ROOT._make_method_slot('perform:withArgs:',NatMeth((rec:Obj, args:Array<Obj>):Obj => {
+    ROOT._make_method_slot('perform:withArgs:',NatMeth((rec:Obj, args:Array<Obj>, vm:VMState):Obj => {
         let method_name = args[0]._get_js_string()
         let args2:Array<Obj> = args[1]._get_js_array()
         let method = rec.lookup_slot(method_name)
-        return eval_really_perform_call(method_name,rec,method,args2)
+        return eval_really_perform_call(method_name,rec,method,args2,vm)
     }))
 
     NativeMethodProto._make_method_slot('print', NatMeth((rec: Obj, args: Array<Obj>) => {

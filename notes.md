@@ -159,3 +159,14 @@ something in between drops something on the stack.
   then diff between the world and it's parent world. should be lazy copy on write.
 * more stuff
 
+
+
+# Plan
+
+[x] make execute_op get the op internally, not have it passed in
+[x] use VMState which wraps ctx as the parameter
+[x] make method dispatch use the vmstate
+[x] disable eval tree. only bytecode now.
+[ ] make VMState allocate the context internally
+
+

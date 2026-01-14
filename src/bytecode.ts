@@ -6,7 +6,7 @@ import {
     NilObj,
     Obj,
     ObjectProto,
-    STStack
+    STStack, VMState
 } from "./obj.ts";
 import {type Ast, AstToString, type BlockLiteral} from "./ast.ts";
 import {JoshLogger} from "./util.ts";
@@ -31,11 +31,11 @@ export class BytecodeMethod extends Obj implements Method {
         this.bytecode.push(['return-from-bytecode-call',null])
         this.ast = ast
     }
-    dispatch(ctx: Context, act:Obj): void {
+    dispatch(vm:VMState, act:Obj): void {
         d.p("BytecodeMethod.dispatch: executing", this.print())
         d.p("bytecode is", this.bytecode)
-        ctx.label = this.label;
-        d.p('stack is',ctx.stack.print_small())
+        vm.currentContext.label = this.label;
+        d.p('stack is',vm.stack_print_small())
         let args = act.get_slot('args') as unknown as Array<Obj>
         d.p('args are',args.map(a => a.print()))
         d.p("this names is",this.names)
@@ -49,6 +49,7 @@ export class BytecodeMethod extends Obj implements Method {
         d.p("the receiver is " + rec.print())
         d.p("the method is " + method.print())
         d.p("we've got a bytecode method")
+        let ctx = vm.currentContext
         act._make_method_slot('bytecode',ctx.bytecode)
         act._make_method_slot('scope',ctx.scope)
         act._make_method_slot('pc',ctx.pc)
@@ -64,11 +65,11 @@ export class BytecodeMethod extends Obj implements Method {
         }
         ctx.pc = 0
     }
-    cleanup(ctx: Context, act: Obj) {
+    cleanup(vm:VMState, act: Obj) {
         let ret = act.get_slot('return')
         if(!ret) ret = NilObj()
         d.p('ret is', ret.print())
-        ctx.stack.push_with(ret,'return value from ' + this.name)
+        vm.currentContext.stack.push_with(ret,'return value from ' + this.name)
     }
 
     lookup_slot(name: string): Obj {
@@ -89,11 +90,14 @@ export const BLOCK_ACTIVATION = "block-activation"
 //         execute_bytecode(bytecode, scope)
 //     }
 // }
-export function execute_op(op: ByteOp, ctx:Context): Obj {
-    let name = op[0]
+export function execute_op(vm:VMState): Obj {
+    let ctx = vm.currentContext
+    let op = ctx.bytecode[ctx.pc]
     ctx.pc++
+    let name = op[0]
     if(name === 'halt') {
         ctx.running = false
+        vm.running = false
         return NilObj()
     }
     if (name === 'load-literal-number') {
@@ -153,12 +157,16 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
             args:args,
         });
         ctx.stack.push_with(act,`for ${method.print()} ${act.uuid}`);
-        (act.get_slot('method') as unknown as Method).dispatch(ctx,act);
+        let meth = act.get_slot('method');
+        if(meth.name === 'MissingMethod') {
+            throw new Error(`${method.print()} is missing method`)
+        }
+        (meth as unknown as Method).dispatch(vm,act);
         return NilObj()
     }
     if (name === 'return-message') {
         let act = ctx.stack.pop();
-        (act.get_slot('method') as unknown as Method).cleanup(ctx,act);
+        (act.get_slot('method') as unknown as Method).cleanup(vm,act);
         return NilObj()
     }
     if (name === 'assign') {
@@ -197,30 +205,31 @@ export function execute_op(op: ByteOp, ctx:Context): Obj {
 }
 
 export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
-    let ctx:Context = {
-        scope: scope,
-        bytecode: code,
-        pc: 0,
-        stack: new STStack(),
-        running:true
-    }
+    let vm = new VMState({
+        scope:scope,
+        bytecode:code,
+        pc:0,
+        stack:new STStack(),
+        running:true,
+        label:'execute_bytecode',
+    })
+    vm.running = true
 
-    while(ctx.running) {
-        if(ctx.pc >= ctx.bytecode.length) {
+    while(vm.running) {
+        if(vm.currentContext.pc >= vm.currentContext.bytecode.length) {
             d.p("we are done")
-            ctx.running = false
+            vm.running = false
             break;
         }
 
-        let op = ctx.bytecode[ctx.pc]
-        let ret = execute_op(op, ctx)
+        let ret = execute_op(vm)
         if (ret.is_kind_of("Exception")) {
             d.error("returning exception")
             return ret
         }
     }
-    if (ctx.stack.size() > 0) {
-        let last = ctx.stack.pop() as Obj
+    if (vm.currentContext.stack.size() > 0) {
+        let last = vm.currentContext.stack.pop() as Obj
         if (last && last._is_return) last = last.get_slot('value') as Obj;
         return last
     } else {

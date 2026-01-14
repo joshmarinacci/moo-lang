@@ -1,5 +1,5 @@
 import test, {describe} from "node:test";
-import {type ByteCode, type Context, NilObj, Obj, STStack} from "../src/obj.ts";
+import {type ByteCode, type Context, NilObj, Obj, STStack, VMState} from "../src/obj.ts";
 import {NumObj} from "../src/number.ts";
 import {objsEqual} from "../src/debug.ts";
 import {make_standard_scope} from "../src/standard.ts";
@@ -32,29 +32,29 @@ function compare_execute(code:ByteCode, expected: Obj) {
 function compare_execute_clean(code:ByteCode, expected: Obj) {
     d.p("executing",code)
     let scope:Obj = make_standard_scope();
-    let ctx:Context = {
+    let vm = new VMState({
         scope: scope,
         bytecode: code,
         pc: 0,
         stack: new STStack(),
-        running:true
-    }
-    while(ctx.running) {
+        running:true,
+        label:'compare-execute-clean',
+    })
+    vm.running = true
+    while(vm.running) {
         d.p("=======")
-        d.p("stack",ctx.stack.print_small())
-        d.p(ctx.bytecode)
-        if(ctx.pc >= ctx.bytecode.length) break;
-        let op = ctx.bytecode[ctx.pc]
-        d.p('op ' + op)
-        let ret = execute_op(op, ctx)
+        d.p("stack",vm.currentContext.stack.print_small())
+        d.p(vm.currentContext.bytecode)
+        if(vm.currentContext.pc >= vm.currentContext.bytecode.length) break;
+        let ret = execute_op(vm)
     }
     d.p("done")
-    d.p("stack is",ctx.stack.print_small())
+    d.p("stack is",vm.currentContext.stack.print_small())
 
-    if(ctx.stack.size() > 1) {
+    if(vm.currentContext.stack.size() > 1) {
         throw new Error("stack too big. should just have the return value")
     }
-    let ret = ctx.stack.pop()
+    let ret = vm.currentContext.stack.pop()
     if(!objsEqual(ret, expected)) {
         d.p("not equal")
         d.p(ret.print())
@@ -202,28 +202,30 @@ describe("function calls", () => {
 })
 
 function ctx_execute(source: string):Context {
-    let ctx:Context = {
+    let vm = new VMState({
         scope: new Obj("Temp Context",make_standard_scope(),{}),
         bytecode: compile_bytecode(parse(source,'BlockBody')),
         pc: 0,
         stack: new STStack(),
-        running:true
-    }
-    while(ctx.running) {
+        running:true,
+        label:'ctx-execute'
+    })
+    vm.running = true
+    while(vm.running) {
         d.p("=======")
-        d.p("stack",ctx.stack.print_small())
-        d.p(ctx.bytecode)
-        if(ctx.pc >= ctx.bytecode.length) break;
-        let op = ctx.bytecode[ctx.pc]
-        let ret = execute_op(op, ctx)
+        d.p("stack",vm.currentContext.stack.print_small())
+        d.p(vm.currentContext.bytecode)
+        if(vm.currentContext.pc >= vm.currentContext.bytecode.length) break;
+        let ret = execute_op(vm)
     }
     d.p("done")
-    d.p("stack is",ctx.stack.print_small())
-    return ctx
+    d.p("stack is",vm.currentContext.stack.print_small())
+    return vm.currentContext
 }
 
 describe('scope stability', () => {
     test('just halt',() =>{
+        //TODO: change this to check the context from the VM state
         let ctx = ctx_execute('self halt') as Context
         assert.equal(ctx.pc,2)
         assert.equal(ctx.stack.size(),1)

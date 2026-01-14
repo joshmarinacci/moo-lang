@@ -69,12 +69,12 @@ export function cval(source: string, scope: Obj, options?: Obj | Options) {
             opts.expected = options;
         } else {
             options = options as Options
-            if (options.hasOwnProperty('evalOnly')) {
-                opts.evalOnly = options.evalOnly
-            }
-            if (options.hasOwnProperty('bytecodeOnly')) {
-                opts.bytecodeOnly = options.bytecodeOnly
-            }
+            // if (options.hasOwnProperty('evalOnly')) {
+            //     opts.evalOnly = options.evalOnly
+            // }
+            // if (options.hasOwnProperty('bytecodeOnly')) {
+            //     opts.bytecodeOnly = options.bytecodeOnly
+            // }
             if (options.hasOwnProperty('expected')) {
                 opts.expected = options.expected
             }
@@ -86,17 +86,17 @@ export function cval(source: string, scope: Obj, options?: Obj | Options) {
     if (opts.debug) d.enable()
     d.p('=========')
     d.p(`code is '${source}'`)
-    if (opts.evalOnly) {
-        return do_treewalk(source, scope, opts)
-    }
-    if (opts.bytecodeOnly) {
+    // if (opts.evalOnly) {
+    //     return do_treewalk(source, scope, opts)
+    // }
+    // if (opts.bytecodeOnly) {
         return do_bytecode(source, scope, opts)
-    }
-    {
-        d.p("doing both types")
-        let ret_twalk = do_treewalk(source, scope, opts)
-        let ret_bcode = do_bytecode(source, scope, opts)
-        compare(ret_twalk, ret_bcode)
-        return ret_bcode
-    }
+    // }
+    // {
+    //     d.p("doing both types")
+    //     let ret_twalk = do_treewalk(source, scope, opts)
+    //     let ret_bcode = do_bytecode(source, scope, opts)
+    //     compare(ret_twalk, ret_bcode)
+    //     return ret_bcode
+    // }
 }

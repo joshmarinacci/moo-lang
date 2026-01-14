@@ -1,6 +1,15 @@
 import {JoshLogger} from "./util.ts";
 
-import {type Context, JS_VALUE, type Method, NilObj, Obj, ObjectProto, STStack} from "./obj.ts";
+import {
+    type Context,
+    JS_VALUE,
+    type Method,
+    type NativeMethodSignature,
+    Obj,
+    ObjectProto,
+    STStack,
+    VMState
+} from "./obj.ts";
 import {NumObj} from "./number.ts";
 import {StrObj} from "./string.ts";
 import {objsEqual} from "./debug.ts";
@@ -15,24 +24,27 @@ import type {
     StringLiteral,
     UnaryCall
 } from "./ast.ts";
-import {AstToString} from "./ast.ts"
-import assert from "node:assert";
 import {DictObj, ListObj} from "./arrays.ts";
 import {ActivationObj, BlockProto} from "./block.ts";
-import {type BytecodeMethod, execute_op} from "./bytecode.ts";
+import {execute_op} from "./bytecode.ts";
 
 const d = new JoshLogger()
 d.disable()
 
-export function eval_block_obj(method: Obj, args:Array<Obj>) {
+export function eval_block_obj(vm:VMState, method: Obj, args:Array<Obj>) {
+    if(!(vm instanceof VMState)) {
+        throw new Error("vm not vmstate")
+    }
     if (method.name === 'BytecodeMethod') {
         let ctx:Context = {
             scope: method,
             bytecode: [],
             pc: 0,
             stack: new STStack(),
-            running:true
+            running:true,
+            label:'bytecode-method'
         };
+        vm.pushContext(ctx)
         let act = new ActivationObj(`block-activation`, method, {
             receiver:method,
             method:method,
@@ -41,19 +53,18 @@ export function eval_block_obj(method: Obj, args:Array<Obj>) {
         ctx.stack.push(act);
         d.p('stack after',ctx.stack.print_small());
 
-        (act.get_slot('method') as unknown as Method).dispatch(ctx,act);
+        (act.get_slot('method') as unknown as Method).dispatch(vm,act);
         d.p('bytecode is now', ctx.bytecode)
         while(ctx.running) {
             d.p("=======")
             d.p("stack",ctx.stack.print_small())
             d.p(ctx.bytecode)
             if(ctx.pc >= ctx.bytecode.length) break;
-            let op = ctx.bytecode[ctx.pc]
-            d.p('op ' + op)
-            let ret = execute_op(op, ctx)
+            let ret = execute_op(vm)
         }
 
         let act2 = ctx.stack.pop()
+        vm.popContext()
         return act2.get_slot('return')
     }
     if (method.name !== 'Block') {
@@ -62,7 +73,7 @@ export function eval_block_obj(method: Obj, args:Array<Obj>) {
     }
     let meth = method.get_js_slot('value') as unknown
     if (meth instanceof Obj && meth.is_kind_of("NativeMethod")) {
-        return (meth.get_js_slot(JS_VALUE) as Function)(method,args)
+        return (meth.get_js_slot(JS_VALUE) as NativeMethodSignature)(method,args,vm)
     }
     if (typeof meth === 'function') {
         return meth(method, args)
@@ -70,14 +81,14 @@ export function eval_block_obj(method: Obj, args:Array<Obj>) {
     throw new Error("bad failure on evaluating block object")
 }
 
-export function eval_really_perform_call(name:string, rec:Obj, method:unknown, args:Array<Obj>):Obj {
+export function eval_really_perform_call(name:string, rec:Obj, method:unknown, args:Array<Obj>, vm:VMState):Obj {
     if (method instanceof Obj && method.isNil()) {
         let handler = rec.lookup_slot('doesNotUnderstand:')
         if(handler) {
             let msg = new Obj("Message",ObjectProto,{})
             msg._make_data_slot('selector',StrObj(name))
             msg._make_data_slot('arguments',ListObj(...args))
-            let ret = eval_really_perform_call('doesNotUnderstand:',rec,handler,[msg])
+            let ret = eval_really_perform_call('doesNotUnderstand:',rec,handler,[msg],vm)
             return ret
         }
         throw new Error(`method is nil! could not find method '${name}' on ${rec.print()}`)
@@ -86,11 +97,11 @@ export function eval_really_perform_call(name:string, rec:Obj, method:unknown, a
         return method(rec,args)
     }
     if (method instanceof Obj && method.is_kind_of("NativeMethod")) {
-        return (method.get_js_slot(JS_VALUE) as Function)(rec,args)
+        return (method.get_js_slot(JS_VALUE) as NativeMethodSignature)(rec,args,vm)
     }
     if (method instanceof Obj && method.name === 'Block') {
         method.parent = rec
-        return eval_block_obj(method,args)
+        return eval_block_obj(vm,method,args)
     }
     throw new Error("method call not performed properly.")
 }

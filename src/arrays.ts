@@ -1,4 +1,4 @@
-import {JS_VALUE, make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
+import {JS_VALUE, make_native_obj, NilObj, Obj, ObjectProto, VMState} from "./obj.ts";
 import {NumObj} from "./number.ts";
 import {eval_block_obj} from "./eval.ts";
 import {StrObj} from "./string.ts";
@@ -129,38 +129,38 @@ export const ListProto = make_native_obj("ListProto",ObjectProto, {
         let arr = rec._get_js_array()
         return NumObj(arr.length)
     },
-    'do:':(rec:Obj, args:Array<Obj>):Obj=>{
+    'do:':(rec:Obj, args:Array<Obj>,vm:VMState):Obj=>{
         let arr = rec._get_js_array()
         let block = args[0]
         arr.forEach((v,i) => {
-            let ret = eval_block_obj(block,[v]) as Obj
+            let ret = eval_block_obj(vm,block,[v]) as Obj
         })
         return NilObj()
     },
-    'select:':(rec:Obj, args:Array<Obj>):Obj=>{
+    'select:':(rec:Obj, args:Array<Obj>, vm:VMState):Obj=>{
         let arr = rec._get_js_array()
         let block = args[0]
         let res = arr.filter((v,i) => {
-            let vv = eval_block_obj(block,[v]) as Obj
+            let vv = eval_block_obj(vm,block,[v]) as Obj
             return vv._get_js_boolean()
         })
         return ListObj(...res)
     },
-    'reduce:with:':(rec:Obj, args:Array<Obj>):Obj=> rec._get_js_array().reduce((a, b) => eval_block_obj(args[0], [a, b]) as Obj, args[1]),
-    'reduce:':(rec:Obj, args:Array<Obj>):Obj=> rec._get_js_array().reduce((a, b) => eval_block_obj(args[0], [a, b]) as Obj),
-    'reject:':(rec:Obj, args:Array<Obj>):Obj=>{
+    'reduce:with:':(rec:Obj, args:Array<Obj>, vm:VMState):Obj=> rec._get_js_array().reduce((a, b) => eval_block_obj(vm,args[0], [a, b]) as Obj, args[1]),
+    'reduce:':(rec:Obj, args:Array<Obj>, vm:VMState):Obj=> rec._get_js_array().reduce((a, b) => eval_block_obj(vm,args[0], [a, b]) as Obj),
+    'reject:':(rec:Obj, args:Array<Obj>, vm:VMState):Obj=>{
         let res = rec._get_js_array()
-            .map((v,i) => eval_block_obj(args[0], [v]) as Obj)
+            .map((v,i) => eval_block_obj(vm,args[0], [v]) as Obj)
             .filter(b => !b._get_js_boolean())
         return ListObj(...res)
     },
-    'collect:':(rec:Obj, args:Array<Obj>):Obj=> ListObj(...rec._get_js_array().map((v, i) => eval_block_obj(args[0], [v]) as Obj)),
-    'sortedBy:':(rec:Obj, args:Array<Obj>):Obj=>{
+    'collect:':(rec:Obj, args:Array<Obj>, vm:VMState):Obj=> ListObj(...rec._get_js_array().map((v, i) => eval_block_obj(vm,args[0], [v]) as Obj)),
+    'sortedBy:':(rec:Obj, args:Array<Obj>, vm:VMState):Obj=>{
         let arr = rec._get_js_array()
         arr = arr.slice();
         let block = args[0]
         arr.sort((a,b)=>{
-            let num = eval_block_obj(block,[a,b]) as Obj
+            let num = eval_block_obj(vm,block,[a,b]) as Obj
             return num._get_js_number()
         })
         return ListObj(...arr)
@@ -203,13 +203,13 @@ export const DictProto = make_native_obj('DictProto',ObjectProto, {
         let record = rec._get_js_record()
         return ListObj(... Object.values(record))
     },
-    'do:':(rec:Obj, args:Array<Obj>):Obj=>{
+    'do:':(rec:Obj, args:Array<Obj>, vm:VMState):Obj=>{
         let arr = rec._get_js_record()
         let block = args[0]
         Object.keys(arr).forEach(key => {
             let value = arr[key]
             let key_o = StrObj(key)
-            let ret = eval_block_obj(block,[key_o,value]) as Obj
+            let ret = eval_block_obj(vm,block,[key_o,value]) as Obj
         })
         return NilObj()
     },

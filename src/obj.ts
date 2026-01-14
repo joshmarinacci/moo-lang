@@ -66,6 +66,33 @@ export class STStack {
     }
 }
 
+export type Stack<T> = Array<T>
+
+export class VMState {
+    currentContext:Context
+    contexts:Stack<Context>
+    running:boolean
+    constructor(ctx:Context) {
+        this.running=false;
+        this.contexts=[ctx]
+        this.currentContext=ctx;
+    }
+
+    stack_print_small() {
+        return this.currentContext.stack.print_small()
+    }
+
+    pushContext(ctx: Context) {
+        this.contexts.push(ctx)
+        this.currentContext = this.contexts[this.contexts.length - 1]
+    }
+
+    popContext() {
+        this.contexts.pop()
+        this.currentContext = this.contexts[this.contexts.length - 1]
+    }
+}
+
 const d = new JoshLogger()
 d.disable()
 
@@ -367,8 +394,8 @@ export class Obj {
 }
 
 export interface Method {
-    dispatch(ctx: Context, act:Obj):void;
-    cleanup(ctx:Context, act:Obj):void;
+    dispatch(vm: VMState, act:Obj):void;
+    cleanup(vm:VMState, act:Obj):void;
 }
 
 class FakeNativeMethod extends Obj implements Method {
@@ -378,11 +405,11 @@ class FakeNativeMethod extends Obj implements Method {
         this.label = name
     }
 
-    dispatch(ctx: Context, act:Obj): void {
+    dispatch(vm:VMState, act:Obj): void {
         d.p("inside NativeMethod")
         d.p(`executing: '${this.label}'`, this.print())
         d.p("real method is", this._get_js_unknown())
-        d.p('stack is',ctx.stack.print_small())
+        d.p('stack is',vm.stack_print_small())
 
         let args = act.get_slot('args') as unknown as Array<Obj>
         d.p('args are',args.map(a => a.print()))
@@ -396,11 +423,11 @@ class FakeNativeMethod extends Obj implements Method {
             act._make_method_slot('return',ret)
         }
     }
-    cleanup(ctx: Context, act: Obj) {
+    cleanup(vm: VMState, act: Obj) {
         let ret = act.get_slot('return')
         if(!ret) ret = NilObj()
         d.p('ret is', ret.print())
-        ctx.stack.push_with(ret,'return value from ' + this.label)
+        vm.currentContext.stack.push_with(ret,'return value from ' + this.label)
     }
 
 }
@@ -458,21 +485,13 @@ export const ROOT = new Obj("ROOT", null,{
         let name = msg._get_data_slot('selector')
         return new Obj("Exception", ObjectProto, {"message": `Message not found: '${name._get_js_string()}'`})
     }),
-    '_let:with:':(rec:Obj, args:Array<Obj>):Obj => {
-        rec._let_field(args[0]._get_js_string(), args[1])
-        return args[1]
-    },
-    '_set:with:':(rec:Obj, args:Array<Obj>):Obj => {
-        rec._set_field(args[0]._get_js_string(), args[1])
-        return args[1]
-    },
 });
 export const ObjectProto = new Obj("ObjectProto", ROOT, {})
  const NilProto = new Obj("NilProto",ObjectProto,{});
 export const NilObj = () => new Obj("NilLiteral", NilProto, {})
 
 export const NativeMethodProto = new Obj("NativeMethodProto", ObjectProto, {})
-export type NativeMethodSignature = (rec:Obj, args:Array<Obj>) => Obj;
+export type NativeMethodSignature = (rec:Obj, args:Array<Obj>, vm:VMState) => Obj;
 class NativeMethod extends Obj implements Method {
     private label: string;
     constructor(name:string, label:string, parent:Obj, props:Record<string,unknown>) {
@@ -480,11 +499,11 @@ class NativeMethod extends Obj implements Method {
         this.label = label
     }
 
-    dispatch(ctx: Context, act:Obj): void {
+    dispatch(vm: VMState, act:Obj): void {
         d.p("inside NativeMethod")
         d.p(`executing: '${this.label}'`, this.print())
         d.p("real method is", this._get_js_unknown())
-        d.p('stack is',ctx.stack.print_small())
+        d.p('stack is',vm.stack_print_small())
 
         let args = act.get_slot('args') as unknown as Array<Obj>
         d.p('args are',args.map(a => a.print()))
@@ -492,17 +511,17 @@ class NativeMethod extends Obj implements Method {
         d.p('method is', meth.print())
         let rec = act.get_slot('receiver')
         d.p('rec is',rec.print())
-        let ret = (this.get_js_slot(JS_VALUE) as Function)(rec, args)
+        let ret = (this.get_js_slot(JS_VALUE) as NativeMethodSignature)(rec, args,vm)
         d.p("got the return",ret.print())
         if(ret instanceof Obj && !ret.isNil()) {
             act._make_method_slot('return',ret)
         }
     }
-    cleanup(ctx: Context, act: Obj) {
+    cleanup(vm:VMState, act: Obj) {
         let ret = act.get_slot('return')
         if(!ret) ret = NilObj()
         d.p('ret is', ret.print())
-        ctx.stack.push_with(ret,'return value from ' + this.label)
+        vm.currentContext.stack.push_with(ret,'return value from ' + this.label)
     }
 }
 export const NatMeth = (fun:NativeMethodSignature,label?:string):Obj => {
@@ -523,6 +542,14 @@ ROOT._make_method_slot('makeSlot:with:',NatMeth((rec:Obj, args:Array<Obj>):Obj =
     }
     return NilObj();
 },'makeSlot:with:'))
+ROOT._make_method_slot('_let:with:',NatMeth((rec:Obj, args:Array<Obj>,vm:VMState) => {
+    rec._let_field(args[0]._get_js_string(), args[1])
+    return args[1]
+},'_let:with:'))
+ROOT._make_method_slot('_set:with:',NatMeth((rec:Obj, args:Array<Obj>,vm:VMState) => {
+    rec._set_field(args[0]._get_js_string(), args[1])
+    return args[1]
+},'_let:with:'))
 
 export const BytecodeMethodProto = new Obj("BytecodeMethodProto", ObjectProto, {})
 export const BCMeth = (bytecode:ByteCode):Obj => {

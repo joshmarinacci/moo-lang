@@ -1,5 +1,5 @@
 import {eval_block_obj} from "./eval.ts";
-import {make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
+import {make_native_obj, NilObj, Obj, ObjectProto, VMState} from "./obj.ts";
 import {NumObj} from "./number.ts";
 import {bval} from "./bytecode.ts";
 
@@ -13,13 +13,13 @@ export function setup_image(scope:Obj) {
             bitmap.setPixelRGBA(x,y,c)
             return NilObj()
         },
-        'fill:':(rec:Obj, args:Array<Obj>):Obj => {
+        'fill:':(rec:Obj, args:Array<Obj>, vm:VMState):Obj => {
             let bitmap = rec._get_js_unknown()// as Bitmap
             for(let j = 0; j<bitmap.height; j++) {
                 for (let i = 0; i < bitmap.width; i++) {
                     let ii = NumObj(i)
                     let jj = NumObj(j)
-                    let ret = eval_block_obj(args[0],[ii,jj]) as Obj
+                    let ret = eval_block_obj(vm,args[0],[ii,jj]) as Obj
                     bitmap.setPixelRGBA(i,j,ret._get_js_number())
                 }
             }
