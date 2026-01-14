@@ -4,7 +4,6 @@ import {NumObj} from "../src/number.ts";
 import {Obj} from "../src/obj.ts";
 import {StrObj} from "../src/string.ts";
 import {BoolObj} from "../src/boolean.ts";
-import {sval} from "../src/eval.ts";
 import {cval} from "./common.ts";
 
 test('arithmetic',() => {
@@ -26,7 +25,7 @@ test('arithmetic',() => {
 
 test('floating point math',() => {
     let scope = make_standard_scope()
-    sval(`4.0 + 5.0 .`,scope,NumObj(9.0))
+    cval(`4.0 + 5.0 .`,scope,NumObj(9.0))
 })
 
 test('common protocol',() => {

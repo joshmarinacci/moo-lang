@@ -1,5 +1,6 @@
 import {JS_VALUE, make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
-import {eval_block_obj, eval_statements} from "./eval.ts";
+import {eval_block_obj} from "./eval.ts";
+import {bval} from "./bytecode.ts";
 
 
 export function setup_dom(scope: Obj, document: Document) {
@@ -80,7 +81,7 @@ export function setup_dom(scope: Obj, document: Document) {
     }
     scope._make_method_slot("DomProxy",DomProxyProto)
     scope._make_method_slot("DomElement",DomElementProto)
-    eval_statements(`
+    bval(`
         DomElement understands: "append:" with: [ child |
             self jsCall: "append" on: (self getJsSlot: "_jsvalue") with: (child getJsSlot: "_jsvalue").
         ].

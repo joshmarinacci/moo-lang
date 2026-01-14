@@ -1,6 +1,5 @@
-import {make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
+import {make_native_obj, Obj, ObjectProto} from "./obj.ts";
 import {BoolObj} from "./boolean.ts";
-import {eval_block_obj, eval_statements} from "./eval.ts";
 import {NumObj} from "./number.ts";
 import {bval} from "./bytecode.ts";
 

@@ -1,4 +1,4 @@
-import {eval_block_obj, eval_statement} from "./eval.ts";
+import {eval_block_obj} from "./eval.ts";
 import {make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
 import {NumObj} from "./number.ts";
 import {bval} from "./bytecode.ts";

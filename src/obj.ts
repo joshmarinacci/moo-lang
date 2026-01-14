@@ -49,7 +49,7 @@ export class STStack {
         this.data.push([obj,'unnamed'])
     }
 
-    push_with(obj:Obj, label:string) {
+    push_with(obj: Obj, label: string) {
         this.data.push([obj,label])
     }
 
@@ -65,8 +65,6 @@ export class STStack {
         return this.data.slice()
     }
 }
-
-
 
 const d = new JoshLogger()
 d.disable()
@@ -527,7 +525,6 @@ ROOT._make_method_slot('makeSlot:with:',NatMeth((rec:Obj, args:Array<Obj>):Obj =
 },'makeSlot:with:'))
 
 export const BytecodeMethodProto = new Obj("BytecodeMethodProto", ObjectProto, {})
-export type BytecodeMethodSigature = (rec:Obj, args:Array<Obj>) => Obj;
 export const BCMeth = (bytecode:ByteCode):Obj => {
     return new Obj("BytecodeMethod", BytecodeMethodProto, {
         'bytecode': bytecode,

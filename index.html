@@ -192,7 +192,6 @@ self drawGift: 4 symbol: "*".
 
 <script type="module">
     import {JoshLogger} from "./src/util.ts";
-    import {eval_statements} from "./src/eval.ts";
     import {make_browser_scope} from "./src/browser.ts";
     import {
         crosshairCursor,
@@ -215,6 +214,7 @@ self drawGift: 4 symbol: "*".
     } from "@codemirror/language";
     import {autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap} from "@codemirror/autocomplete"
     import {defaultKeymap, history, indentWithTab} from "@codemirror/commands"
+    import {bval} from "./src/bytecode.ts";
 
     let scope = make_browser_scope(document);
 
@@ -248,7 +248,7 @@ self drawGift: 4 symbol: "*".
         d.p('=========')
         d.p(`code is '${code}'`)
         try {
-            let ret = eval_statements(code,scope)
+            let ret = bval(code,scope)
             d.p("returned", ret)
             output(ret)
         } catch (e) {
@@ -257,7 +257,7 @@ self drawGift: 4 symbol: "*".
         }
     }
 
-    eval_statements(`
+    bval(`
         dom := DomProxy clone.
         dom init.
         Global makeSlot: "dom" with: dom.

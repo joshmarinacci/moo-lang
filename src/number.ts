@@ -1,6 +1,6 @@
 import type {NativeMethodSignature} from "./obj.ts"
 import {make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
-import {eval_block_obj, sval} from "./eval.ts";
+import {eval_block_obj} from "./eval.ts";
 import {BoolObj} from "./boolean.ts";
 import {StrObj} from "./string.ts";
 import {bval} from "./bytecode.ts";
