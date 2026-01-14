@@ -167,6 +167,7 @@ something in between drops something on the stack.
 [x] use VMState which wraps ctx as the parameter
 [x] make method dispatch use the vmstate
 [x] disable eval tree. only bytecode now.
-[ ] make VMState allocate the context internally
+[x] make VMState allocate the context internally
+[ ] use context push and pop to set the PC, clear the stack, and return normally 
 
 

@@ -32,15 +32,7 @@ function compare_execute(code:ByteCode, expected: Obj) {
 function compare_execute_clean(code:ByteCode, expected: Obj) {
     d.p("executing",code)
     let scope:Obj = make_standard_scope();
-    let vm = new VMState({
-        scope: scope,
-        bytecode: code,
-        pc: 0,
-        stack: new STStack(),
-        running:true,
-        label:'compare-execute-clean',
-    })
-    vm.running = true
+    let vm = new VMState(scope,code);
     while(vm.running) {
         d.p("=======")
         d.p("stack",vm.currentContext.stack.print_small())
@@ -202,15 +194,9 @@ describe("function calls", () => {
 })
 
 function ctx_execute(source: string):Context {
-    let vm = new VMState({
-        scope: new Obj("Temp Context",make_standard_scope(),{}),
-        bytecode: compile_bytecode(parse(source,'BlockBody')),
-        pc: 0,
-        stack: new STStack(),
-        running:true,
-        label:'ctx-execute'
-    })
-    vm.running = true
+    let vm = new VMState(
+        new Obj("Temp Context",make_standard_scope(),{}),
+        compile_bytecode(parse(source,'BlockBody')));
     while(vm.running) {
         d.p("=======")
         d.p("stack",vm.currentContext.stack.print_small())

@@ -54,6 +54,16 @@ export class BytecodeMethod extends Obj implements Method {
         act._make_method_slot('scope',ctx.scope)
         act._make_method_slot('pc',ctx.pc)
         act._make_method_slot('stack',ctx.stack)
+        //
+        // let ctx2:Context = {
+        //     scope:act,
+        //     bytecode: this.bytecode,
+        //     pc:0,
+        //     stack: new STStack(),
+        //     running:true,
+        //     label: this.label,
+        // }
+
         ctx.bytecode = this.bytecode
         ctx.scope = act
         ctx.scope.parent = rec
@@ -63,12 +73,15 @@ export class BytecodeMethod extends Obj implements Method {
             d.p(`param '${param}'`, args[i].print())
             ctx.scope._make_method_slot(param, args[i])
         }
+        // vm.pushContext(ctx2)
         ctx.pc = 0
+
     }
     cleanup(vm:VMState, act: Obj) {
         let ret = act.get_slot('return')
         if(!ret) ret = NilObj()
         d.p('ret is', ret.print())
+        // vm.popContext()
         vm.currentContext.stack.push_with(ret,'return value from ' + this.name)
     }
 
@@ -81,15 +94,7 @@ export class BytecodeMethod extends Obj implements Method {
 }
 
 export const BLOCK_ACTIVATION = "block-activation"
-// export function eval_block_obj(method:Obj, args:Array<Obj>) {
-//     d.p(`bytecode eval block obj: ${method.print()}`)
-//     d.p("bytecode is: " + method.get_js_slot("bytecode"))
-//     if (method.name === 'Block' && method.get_js_slot("bytecode") !== undefined) {
-//         let bytecode = method.get_js_slot('bytecode') as ByteCode;
-//         let scope = new ActivationObj(BLOCK_ACTIVATION, method, {})
-//         execute_bytecode(bytecode, scope)
-//     }
-// }
+
 export function execute_op(vm:VMState): Obj {
     let ctx = vm.currentContext
     let op = ctx.bytecode[ctx.pc]
@@ -166,6 +171,10 @@ export function execute_op(vm:VMState): Obj {
     }
     if (name === 'return-message') {
         let act = ctx.stack.pop();
+        if(act.name !== 'block-activation') {
+            console.log('act is',act);
+            throw new Error("not block activation")
+        }
         (act.get_slot('method') as unknown as Method).cleanup(vm,act);
         return NilObj()
     }
@@ -205,16 +214,7 @@ export function execute_op(vm:VMState): Obj {
 }
 
 export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
-    let vm = new VMState({
-        scope:scope,
-        bytecode:code,
-        pc:0,
-        stack:new STStack(),
-        running:true,
-        label:'execute_bytecode',
-    })
-    vm.running = true
-
+    let vm = new VMState(scope,code);
     while(vm.running) {
         if(vm.currentContext.pc >= vm.currentContext.bytecode.length) {
             d.p("we are done")

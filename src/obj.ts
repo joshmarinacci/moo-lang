@@ -72,8 +72,16 @@ export class VMState {
     currentContext:Context
     contexts:Stack<Context>
     running:boolean
-    constructor(ctx:Context) {
-        this.running=false;
+    constructor(scope:Obj, code:ByteCode) {
+        let ctx:Context = {
+            scope:scope,
+            bytecode:code,
+            pc:0,
+            label:'vm-start-context',
+            stack: new STStack(),
+            running:true,
+        }
+        this.running=true;
         this.contexts=[ctx]
         this.currentContext=ctx;
     }
