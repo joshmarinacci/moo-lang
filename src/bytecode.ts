@@ -336,7 +336,9 @@ export function compile_bytecode(ast: Ast): ByteCode {
             })
             codes.push(['send-message',2])
             codes.push(['return-message',0])
+            codes.push(['pop',0])// get rid of the nil result from 'at:set:'.
         })
+        codes.push(['load-plain-id',temp_var])
         return codes
     }
     if (ast.type === 'string-literal') {
