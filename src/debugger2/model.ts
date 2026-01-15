@@ -1,4 +1,4 @@
-import type {Context} from "../obj.ts";
+import {VMState} from "../obj.ts";
 import {StackState} from "./stack_view.ts";
 import {BytecodeState} from "./bytecode_view.ts";
 import {ContextState} from "./context_view.ts";
@@ -10,7 +10,7 @@ export type ViewOutput = Array<string>
 export type AppState = {
     messages: Array<string>;
     mode: Mode,
-    ctx: Context,
+    vm: VMState,
     stack: StackState,
     bytecode: BytecodeState,
     scope: ContextState,

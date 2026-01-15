@@ -1,21 +1,21 @@
-import {type Context, Obj, STStack} from "../obj.ts";
-import {type AppState, type KeyHandler, type Mode, type ViewOutput} from "./model.ts";
+import {Obj, VMState} from "../obj.ts";
+import {type AppState, type KeyHandler, type ViewOutput} from "./model.ts";
 import {BoxFrame, Glyphs} from "./util.ts";
 
 export class StackState  {
     selected_index: number;
     selected_item : Obj|null
-    private ctx: Context;
-    constructor(ctx:Context) {
-        this.ctx = ctx
+    private vm: VMState;
+    constructor(vm:VMState) {
+        this.vm = vm
         this.selected_index = 0
         this.selected_item = null
     }
 
     nav_next_item() {
         this.selected_index += 1
-        if(this.selected_index >= this.ctx.stack.size() -1) {
-            this.selected_index = this.ctx.stack.size()-1
+        if(this.selected_index >= this.vm.currentContext.stack.size() -1) {
+            this.selected_index = this.vm.currentContext.stack.size()-1
         }
     }
 
@@ -25,7 +25,7 @@ export class StackState  {
     }
 
     select_item() {
-        let item = this.ctx.stack.items()[this.selected_index][0];
+        let item = this.vm.currentContext.stack.items()[this.selected_index][0];
         if(this.selected_item === item) {
             this.selected_item = null
         } else {
@@ -65,7 +65,7 @@ export function StackViewRender(state:AppState):ViewOutput {
         width:state.width,
         active:state.mode === 'stack'
     })
-    state.ctx.stack.items().forEach(([item,label], n) => {
+    state.vm.currentContext.stack.items().forEach(([item,label], n) => {
         let dot = (n === state.stack.selected_index)?Glyphs.right_triangle:" "
         let max_len = state.width - 6
         let name = item.print().padEnd(20)

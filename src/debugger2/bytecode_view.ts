@@ -1,18 +1,18 @@
-import {type ByteCode, type ByteOp, type Context} from "../obj.ts";
+import {type ByteCode, type ByteOp, type Context, VMState} from "../obj.ts";
 import {type AppState, type KeyHandler, type Mode, type ViewOutput} from "./model.ts";
 import {BoxFrame, Glyphs, Header} from "./util.ts";
 import {type Ast, AstToString} from "../ast.ts";
 
 export class BytecodeState {
     selected_index: number;
-    private ctx: Context;
-    constructor(ctx:Context) {
-        this.ctx = ctx
+    private vm: VMState;
+    constructor(vm:VMState) {
+        this.vm = vm
         this.selected_index = 0
     }
 
     nav_next_item() {
-        this.selected_index = Math.min(this.selected_index+1,this.ctx.bytecode.length-1)
+        this.selected_index = Math.min(this.selected_index+1,this.vm.currentContext.bytecode.length-1)
     }
 
     nav_prev_item() {
@@ -41,14 +41,14 @@ export function BytecodeViewRender(state:AppState):ViewOutput {
         width: state.width,
         active:state.mode==='bytecode'
     })
-    output.addLine('label: ' + state.ctx.label)
-    let len = state.ctx.bytecode.length
-    state.ctx.bytecode.forEach((op,n)=>{
+    output.addLine('label: ' + state.vm.currentContext.label)
+    let len = state.vm.currentContext.bytecode.length
+    state.vm.currentContext.bytecode.forEach((op,n)=>{
         if(len > 10) {
-            if (n < state.ctx.pc - 5) {
+            if (n < state.vm.currentContext.pc - 5) {
                 return
             }
-            if(n > state.ctx.pc+5 && n > 10) {
+            if(n > state.vm.currentContext.pc+5 && n > 10) {
                 return
             }
         }
@@ -57,11 +57,12 @@ export function BytecodeViewRender(state:AppState):ViewOutput {
             sel = Glyphs.right_triangle
         }
         let active = ' '
-        if(n === state.ctx.pc) {
+        if(n === state.vm.currentContext.pc) {
             active = Glyphs.black_circle
         }
         let name = op[0]
         let value = op[1]
+        // @ts-ignore
         if(value && value.type == 'block-literal') {
             value = AstToString(value as Ast)
         }

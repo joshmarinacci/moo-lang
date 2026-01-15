@@ -1,7 +1,7 @@
 import process from "node:process"
 import fs from "node:fs/promises"
 import {make_standard_scope} from "./standard.ts";
-import {type Context, Obj, STStack} from "./obj.ts";
+import {Obj, VMState} from "./obj.ts";
 import {compile_bytecode} from "./bytecode.ts";
 import {parse} from "./parser.ts";
 import {BytecodeState, BytecodeViewInput, BytecodeViewRender} from "./debugger2/bytecode_view.ts";
@@ -73,25 +73,19 @@ if(options.input) {
 let bytecode =  compile_bytecode(parse(example_code,'BlockBody'))
 
 let scope = new Obj("Temp Context",make_standard_scope(),{})
-let ctx:Context = {
-    scope: scope,
-    bytecode: bytecode,
-    pc: 0,
-    stack: new STStack(),
-    running:false,
-    label:'Debugger'
-}
-
+let vm = new VMState(scope,bytecode);
 if(options.run){
-    ctx.running = true
+    vm.running = true
+} else {
+    vm.running = false
 }
 
 const state:AppState = {
     mode:"execution",
-    ctx:ctx,
-    scope:new ContextState(ctx),
-    stack:new StackState(ctx),
-    bytecode:new BytecodeState(ctx),
+    vm:vm,
+    scope:new ContextState(vm),
+    stack:new StackState(vm),
+    bytecode:new BytecodeState(vm),
     messages:[],
     width: 70,
     code:example_code
@@ -167,10 +161,10 @@ process.on("SIGINT", () => {
     cleanup();
     process.exit();
 });
-if(state.ctx.running) {
+if(state.vm.running) {
     run(state)
     if(options.exit) {
-        console.log(state.ctx.stack.pop().print())
+        console.log(state.vm.currentContext.stack.pop().print())
         process.exit(0)
     }
 }

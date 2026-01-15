@@ -1,13 +1,13 @@
-import {type Context, Obj} from "../obj.ts";
+import {Obj, VMState} from "../obj.ts";
 import type {AppState, KeyHandler, ViewOutput} from "./model.ts";
 import {BoxFrame, Glyphs} from "./util.ts";
 
 export class ContextState {
-    private ctx: Context;
+    private vm: VMState;
     selected_index: number;
     selected_item : Obj|null
-    constructor(ctx:Context) {
-        this.ctx = ctx
+    constructor(vm:VMState) {
+        this.vm = vm
         this.selected_index = 0
         this.selected_item = null
     }
@@ -33,7 +33,7 @@ export class ContextState {
 
     scope_chain() {
         let chain:Array<Obj> = []
-        let scope:Obj|null = this.ctx.scope;
+        let scope:Obj|null = this.vm.currentContext.scope;
         while(scope != null) {
             chain.push(scope)
             scope = scope.parent
@@ -75,7 +75,7 @@ export function ContextViewRender(state:AppState):ViewOutput {
 
         if(scope == state.scope.selected_item) {
             scope._list_slot_names().forEach((name,n) => {
-                let val = state.ctx.scope.lookup_slot(name) as object;
+                let val = state.vm.currentContext.scope.lookup_slot(name) as object;
                 if(val instanceof Obj) {
                     output.addLine(`      ${name} : ${val.print()}`);
                 } else {
