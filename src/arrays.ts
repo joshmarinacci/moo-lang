@@ -1,8 +1,7 @@
 import {JS_VALUE, make_native_obj, NilObj, Obj, ObjectProto, VMState} from "./obj.ts";
 import {NumObj} from "./number.ts";
-import {eval_block_obj} from "./eval.ts";
 import {StrObj} from "./string.ts";
-import {bval} from "./bytecode.ts";
+import {bval, eval_block_obj} from "./bytecode.ts";
 
 class JSSet {
     data: Map<unknown,Obj>

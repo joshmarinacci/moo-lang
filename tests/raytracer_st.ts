@@ -1,7 +1,7 @@
 import test from "node:test";
-import {cval } from "../src/eval.ts";
 import {make_standard_scope} from "../src/standard.ts";
 import {NumObj} from "../src/number.ts";
+import {cval} from "./common.ts";
 
 test('eval vector class',() => {
     let scope = make_standard_scope()

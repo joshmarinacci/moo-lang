@@ -1,17 +1,21 @@
 import {
     type ByteCode,
     type ByteOp,
+    type Context,
+    JS_VALUE,
     type Method,
+    type NativeMethodSignature,
     NilObj,
     Obj,
     ObjectProto,
-    STStack, VMState
+    STStack,
+    VMState
 } from "./obj.ts";
 import {type Ast, AstToString, type BlockLiteral} from "./ast.ts";
 import {JoshLogger} from "./util.ts";
 import {NumObj} from "./number.ts";
 import {StrObj} from "./string.ts";
-import {ActivationObj, BlockProto} from "./block.ts";
+import {BlockProto} from "./block.ts";
 import {parse} from "./parser.ts";
 
 let d = new JoshLogger()
@@ -68,6 +72,19 @@ export class BytecodeMethod extends Obj implements Method {
 }
 
 export const BLOCK_ACTIVATION = "block-activation"
+
+export class ActivationObj extends Obj {
+    constructor(name: string, parent: Obj, props: Record<string, unknown>) {
+        super(name, parent, props)
+    }
+
+    lookup_slot(name: string): Obj {
+        if (name === 'self') {
+            return this.parent.lookup_slot(name)
+        }
+        return super.lookup_slot(name);
+    }
+}
 
 export function execute_op(vm:VMState): Obj {
     let ctx = vm.currentContext
@@ -332,4 +349,50 @@ export function compile_bytecode(ast: Ast): ByteCode {
 export function bval(source: string, scope: Obj) {
     let bytecode = compile_bytecode(parse(source,'BlockBody'))
     let ret_bcode  =  execute_bytecode(bytecode,scope)
+}
+
+export function eval_block_obj(vm: VMState, method: Obj, args: Array<Obj>) {
+    if (!(vm instanceof VMState)) {
+        throw new Error("vm not vmstate")
+    }
+    if (method.name === 'BytecodeMethod') {
+        let ctx: Context = {
+            scope: method,
+            bytecode: [],
+            pc: 0,
+            stack: new STStack(),
+            running: true,
+            label: 'bytecode-method'
+        };
+        vm.pushContext(ctx)
+        let act = new ActivationObj(`block-activation`, method, {
+            receiver: method,
+            method: method,
+            args: args,
+        });
+        ctx.stack.push(act);
+        d.p('stack after', ctx.stack.print_small());
+
+        (act.get_slot('method') as unknown as Method).dispatch(vm, act);
+        d.p('bytecode is now', ctx.bytecode)
+        while (ctx.running) {
+            d.p("=======")
+            d.p("stack", ctx.stack.print_small())
+            d.p(ctx.bytecode)
+            if (ctx.pc >= ctx.bytecode.length) break;
+            let ret = execute_op(vm)
+        }
+
+        let act2 = ctx.stack.pop()
+        vm.popContext()
+        return act2.get_slot('return')
+    }
+    if (method.name !== 'Block') {
+        throw new Error(`trying to eval a method that isn't a block '${method.name}'`)
+    }
+    let meth = method.get_js_slot('value') as unknown
+    if (meth instanceof Obj && meth.is_kind_of("NativeMethod")) {
+        return (meth.get_js_slot(JS_VALUE) as NativeMethodSignature)(method, args, vm)
+    }
+    throw new Error("bad failure on evaluating block object")
 }

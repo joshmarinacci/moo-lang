@@ -1,6 +1,6 @@
 import {make_native_obj, NilObj, Obj, ObjectProto, VMState} from "./obj.ts";
-import {eval_block_obj} from "./eval.ts";
 import {StrObj} from "./string.ts";
+import {eval_block_obj} from "./bytecode.ts";
 
 const BooleanProto = make_native_obj("BooleanProto",ObjectProto,{
     'value':(rec:Obj) => rec,

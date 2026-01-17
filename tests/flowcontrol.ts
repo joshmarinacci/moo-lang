@@ -1,7 +1,5 @@
 import test from "node:test";
 import {make_standard_scope} from "../src/standard.ts";
-import {cval} from "../src/eval.ts";
-import {NumObj} from "../src/number.ts";
 import {Obj} from "../src/obj.ts";
 
 test('basic flow control',() => {

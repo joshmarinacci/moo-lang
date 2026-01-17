@@ -1,9 +1,8 @@
 import {type NativeMethodSignature, VMState} from "./obj.ts"
 import {make_native_obj, NilObj, Obj, ObjectProto} from "./obj.ts";
-import {eval_block_obj} from "./eval.ts";
 import {BoolObj} from "./boolean.ts";
 import {StrObj} from "./string.ts";
-import {bval} from "./bytecode.ts";
+import {bval, eval_block_obj} from "./bytecode.ts";
 
 const js_num_op = (cb:(a:number,b:number)=>number):NativeMethodSignature => {
     return function (rec:Obj, args:Array<Obj>){
