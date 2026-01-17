@@ -17,6 +17,7 @@ type Options = {
     input:string,
     run:boolean,
     exit:boolean,
+    showDebugOutput:boolean,
 }
 
 function handle_args():Options {
@@ -40,6 +41,10 @@ function handle_args():Options {
             input: {
                 type: 'string',
                 default: '',
+            },
+            showDebugOutput: {
+                type:'boolean',
+                default:false,
             }
         }
     })
@@ -56,6 +61,7 @@ function validateOptions(options: Options) {
 }
 
 validateOptions(options)
+// console.log("options are",options)
 
 process.stdin.setRawMode(true);
 process.stdin.resume();
@@ -112,7 +118,9 @@ function draw(output:ViewOutput) {
 
 
 function redraw() {
-    clear_screen()
+    if(!options.showDebugOutput) {
+        clear_screen()
+    }
     draw(ContextViewRender(state))
     draw(StackViewRender(state))
     draw(BytecodeViewRender(state))

@@ -387,6 +387,9 @@ class NativeMethod extends Obj implements Method {
         if(!ret) ret = NilObj()
         vm.currentContext.stack.push_with(ret,'return value from ' + this.label)
     }
+    print() {
+        return `NativeMethod(${this.label})`
+    }
 }
 const FNM = (name:string, fun:NativeMethodSignature):Obj => {
     return new NativeMethod("NativeMethod",name,null, {
