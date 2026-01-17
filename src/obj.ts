@@ -67,6 +67,7 @@ export class STStack {
 }
 
 export type Stack<T> = Array<T>
+export type NativeMethodSignature = (rec:Obj, args:Array<Obj>, vm:VMState) => Obj;
 
 export class VMState {
     currentContext:Context
@@ -366,36 +367,31 @@ export interface Method {
     cleanup(vm:VMState, act:Obj):void;
 }
 
-class FakeNativeMethod extends Obj implements Method {
+class NativeMethod extends Obj implements Method {
     private label: string;
-    constructor(name:string, props:Record<string,unknown>) {
-        super("NativeMethod",null,props);
-        this.label = name
+    constructor(name:string, label:string, parent:Obj, props:Record<string,unknown>) {
+        super(name,parent,props);
+        this.label = label
     }
-
-    dispatch(vm:VMState, act:Obj): void {
+    dispatch(vm: VMState, act:Obj): void {
         let args = act.get_slot('args') as unknown as Array<Obj>
         let meth = act.get_slot('method')
         let rec = act.get_slot('receiver')
-        let ret = (this.get_js_slot(JS_VALUE) as Function)(rec, args)
+        let ret = (this.get_js_slot(JS_VALUE) as NativeMethodSignature)(rec, args,vm)
         if(ret instanceof Obj && !ret.isNil()) {
             act._make_method_slot('return',ret)
         }
     }
-    cleanup(vm: VMState, act: Obj) {
+    cleanup(vm:VMState, act: Obj) {
         let ret = act.get_slot('return')
         if(!ret) ret = NilObj()
         vm.currentContext.stack.push_with(ret,'return value from ' + this.label)
     }
-
-}
-export const FakeNatMeth = (fun:NativeMethodSignature):Obj => {
-    return new Obj("NativeMethod", null, {
-        '_jsvalue': fun,
-    })
 }
 const FNM = (name:string, fun:NativeMethodSignature):Obj => {
-    return new FakeNativeMethod(name,{'_jsvalue':fun})
+    return new NativeMethod("NativeMethod",name,null, {
+        '_jsvalue':fun
+    })
 }
 export const JSWrapper = (value:unknown):Obj => {
     return new Obj('jsvalue',ROOT,{jsval:value})
@@ -418,7 +414,7 @@ export const ROOT = new Obj("ROOT", null,{
         }
         return NilObj();
     }),
-    'getSlot:':FakeNatMeth((rec:Obj, args:Array<Obj>):Obj => {
+    'getSlot:':FNM('getSlot:',(rec:Obj, args:Array<Obj>):Obj => {
         let slot_name = args[0]._get_js_string()
         return rec.get_slot(slot_name)
     }),
@@ -449,29 +445,6 @@ export const ObjectProto = new Obj("ObjectProto", ROOT, {})
 export const NilObj = () => new Obj("NilLiteral", NilProto, {})
 
 export const NativeMethodProto = new Obj("NativeMethodProto", ObjectProto, {})
-export type NativeMethodSignature = (rec:Obj, args:Array<Obj>, vm:VMState) => Obj;
-class NativeMethod extends Obj implements Method {
-    private label: string;
-    constructor(name:string, label:string, parent:Obj, props:Record<string,unknown>) {
-        super(name,parent,props);
-        this.label = label
-    }
-
-    dispatch(vm: VMState, act:Obj): void {
-        let args = act.get_slot('args') as unknown as Array<Obj>
-        let meth = act.get_slot('method')
-        let rec = act.get_slot('receiver')
-        let ret = (this.get_js_slot(JS_VALUE) as NativeMethodSignature)(rec, args,vm)
-        if(ret instanceof Obj && !ret.isNil()) {
-            act._make_method_slot('return',ret)
-        }
-    }
-    cleanup(vm:VMState, act: Obj) {
-        let ret = act.get_slot('return')
-        if(!ret) ret = NilObj()
-        vm.currentContext.stack.push_with(ret,'return value from ' + this.label)
-    }
-}
 export const NatMeth = (fun:NativeMethodSignature,label?:string):Obj => {
     return new NativeMethod("NativeMethod", label?label:'unnamed', NativeMethodProto, {
         '_jsvalue': fun,
@@ -499,12 +472,6 @@ ROOT._make_method_slot('_set:with:',NatMeth((rec:Obj, args:Array<Obj>,vm:VMState
     return args[1]
 },'_let:with:'))
 
-export const BytecodeMethodProto = new Obj("BytecodeMethodProto", ObjectProto, {})
-export const BCMeth = (bytecode:ByteCode):Obj => {
-    return new Obj("BytecodeMethod", BytecodeMethodProto, {
-        'bytecode': bytecode,
-    })
-}
 export function setup_object(scope: Obj) {
     scope._make_method_slot("Object", ObjectProto)
     scope._make_method_slot("Nil", NilProto)

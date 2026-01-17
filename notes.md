@@ -149,12 +149,14 @@ something in between drops something on the stack.
 [x] disable eval tree. only bytecode now.
 [x] make VMState allocate the context internally
 
-[ ] consolidate native method and fake native method
-[ ] make sure everything is using native method now. 
+[x] consolidate native method and fake native method
+[x] make sure everything is using native method now. 
 [x] get read of old treewalking eval 
 
 [ ] use context push and pop to set the PC, clear the stack, and return normally
 [ ] restore programmatic calling with perform
 [ ] restore non-local return 
+
+
 
 
