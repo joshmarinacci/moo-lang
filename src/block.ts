@@ -41,7 +41,6 @@ export const BlockProto = new Obj("BlockProto", ObjectProto, {
         return StrObj(body.map(st => AstToSource(st)).join('\n'))
     },'BlockProto.print'),
     'value': NatMeth((rec: Obj, args: Array<Obj>) => {
-        d.p("inside of the block")
         let params: Array<PlainId> = rec.get_slot('args') as unknown as Array<PlainId>
         let bytecode = rec.get_js_slot('bytecode') as ByteCode
         let body = rec.get_js_slot('body') as Array<Statement>
@@ -52,18 +51,12 @@ export const BlockProto = new Obj("BlockProto", ObjectProto, {
             console.log(rec.print())
             throw new Error(`block requires ${params.length} arguments. sending ${args.length}\n ${rec.print()}`)
         }
-        d.p("params", params)
         for (let i = 0; i < params.length; i++) {
-            d.p("param", params[i], args[i])
             scope._make_method_slot(params[i].name, args[i])
         }
         let last = NilObj()
         if(bytecode) {
             throw new Error("doing old block proto")
-            last = execute_bytecode(bytecode,scope)
-            if (last._is_return) {
-                return process_return(last,scope)
-            }
         }
 
         for (let ast of body) {

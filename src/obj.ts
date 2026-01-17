@@ -244,9 +244,9 @@ export class Obj {
         parent = ''
         return `${this.name} {${slots.join(' ')}} ${parent} `
     }
-    has_slot(name: string) {
-        return this._method_slots.has(name)
-    }
+    // has_slot(name: string) {
+    //     return this._method_slots.has(name)
+    // }
     get_slot(name: string):Obj {
         return this._method_slots.get(name)
     }
@@ -254,25 +254,20 @@ export class Obj {
         return Array.from(this._method_slots.keys())
     }
     lookup_slot(name: string):Obj {
-        d.p(`looking up name '${name}' on`, this.name)//,this.print(2))
         if (name === 'self') {
             return this
         }
         return this._safe_lookup_slot(name, 20);
     }
     _safe_lookup_slot(name: string, depth: number): Obj {
-        d.p("safe lookup slot",depth ,name,'on',this.name)
         if(depth < 1) {
             throw new Error("recursed too deep!")
         }
         if(this._method_slots.has(name)) {
-            d.p(`has slot '${name}' on ${this.name}`);
             return this._method_slots.get(name)
         }
         if(this.parent) {
-            // d.p("calling the get parent lookup on", this.parent.name);
             if (this.parent.isNil()) {
-                // d.p("parent is nil")
             } else {
                 return this.parent._safe_lookup_slot(name, depth - 1)
             }
@@ -282,8 +277,6 @@ export class Obj {
         return NilObj()
     }
     get_js_slot(name: string):unknown {
-        // d.p("getting js slot",name)
-        // d.p("this is",this)
         return this._method_slots.get(name)
     }
     _get_js_number():number {
@@ -339,39 +332,6 @@ export class Obj {
         return slots
     }
 
-    dump() {
-        if (this.name === 'NumberLiteral') {
-            d.p("numberLiteral: " + this._get_js_number())
-            return;
-        }
-        d.p(this.name)
-        d.indent()
-        for(let key of this._method_slots.keys()) {
-            let value = this._method_slots.get(key)
-            if (value instanceof Obj) {
-                if (value.has_slot(JS_VALUE)) {
-                    d.p("slot " + key, value.name, value.get_js_slot(JS_VALUE) + "")
-                } else {
-                    d.p("slot " + key, value.name + "")
-                }
-            }
-            if (value instanceof Function) {
-                d.p("slot " + key + " native function")
-            }
-        }
-        if (this.name === 'ObjectProto') {
-            d.p("ending")
-        } else {
-            if(this.parent) {
-                d.p("parent")
-                d.indent()
-                this.parent.dump()
-                d.outdent()
-            }
-        }
-        d.outdent()
-    }
-
     to_string():string {
         if (this._get_js_string()) {
             return this._get_js_string()
@@ -414,19 +374,10 @@ class FakeNativeMethod extends Obj implements Method {
     }
 
     dispatch(vm:VMState, act:Obj): void {
-        d.p("inside NativeMethod")
-        d.p(`executing: '${this.label}'`, this.print())
-        d.p("real method is", this._get_js_unknown())
-        d.p('stack is',vm.stack_print_small())
-
         let args = act.get_slot('args') as unknown as Array<Obj>
-        d.p('args are',args.map(a => a.print()))
         let meth = act.get_slot('method')
-        d.p('method is', meth.print())
         let rec = act.get_slot('receiver')
-        d.p('rec is',rec.print())
         let ret = (this.get_js_slot(JS_VALUE) as Function)(rec, args)
-        d.p("got the return",ret.print())
         if(ret instanceof Obj && !ret.isNil()) {
             act._make_method_slot('return',ret)
         }
@@ -434,7 +385,6 @@ class FakeNativeMethod extends Obj implements Method {
     cleanup(vm: VMState, act: Obj) {
         let ret = act.get_slot('return')
         if(!ret) ret = NilObj()
-        d.p('ret is', ret.print())
         vm.currentContext.stack.push_with(ret,'return value from ' + this.label)
     }
 
@@ -508,19 +458,10 @@ class NativeMethod extends Obj implements Method {
     }
 
     dispatch(vm: VMState, act:Obj): void {
-        d.p("inside NativeMethod")
-        d.p(`executing: '${this.label}'`, this.print())
-        d.p("real method is", this._get_js_unknown())
-        d.p('stack is',vm.stack_print_small())
-
         let args = act.get_slot('args') as unknown as Array<Obj>
-        d.p('args are',args.map(a => a.print()))
         let meth = act.get_slot('method')
-        d.p('method is', meth.print())
         let rec = act.get_slot('receiver')
-        d.p('rec is',rec.print())
         let ret = (this.get_js_slot(JS_VALUE) as NativeMethodSignature)(rec, args,vm)
-        d.p("got the return",ret.print())
         if(ret instanceof Obj && !ret.isNil()) {
             act._make_method_slot('return',ret)
         }
@@ -528,7 +469,6 @@ class NativeMethod extends Obj implements Method {
     cleanup(vm:VMState, act: Obj) {
         let ret = act.get_slot('return')
         if(!ret) ret = NilObj()
-        d.p('ret is', ret.print())
         vm.currentContext.stack.push_with(ret,'return value from ' + this.label)
     }
 }

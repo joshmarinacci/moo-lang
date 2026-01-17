@@ -1,30 +1,10 @@
 
-## Small Things
-  
-* [ ] List print. impl in ST by mapping to str then joining with add.
-* [ ] Dict print
-* [ ] Set print
-
 ## Delegation
 
 * capture does not understand to resend a message to another target.
 * number.append doesn't exist. is caught. resends to number.print.
 * `5 append: 5` returns the *string* `55`.
 * Number.doesNotUnderstand [mess args | (self print) sendMessage mess args.
-
-## Blocks
- 
-* [x] delete dead cod
-* [x] make sure all native methods are extending a common Block class
-* [ ] Remove the direct call to method function. Instead call something on the Block which calls the method function. Maybe a new JS base class of Block? 
-* [x] ActivationObj overrides the lookup_method() to customize self.
-* [x] Use a constant for the name _jsvalue and make sure all native wrapper methods are using it.
-* [x] Implement 55 square in pure ST code. `self value star self value`.
-
-* [x] Create a generic JS invoker so the DOM can do  
-* [x] `self doNativeCall: ‘append’ target: self _jsvalue with: child _jsvalue`.
-* [x] Implement pow in pure ST code. `self doNativeCall: pow target: Math with: self _jsvalue with: arg0 _jsvalue`.
-* [x] change makeSlot to understands: ?
 
 ## Sorting
 
@@ -168,6 +148,10 @@ something in between drops something on the stack.
 [x] make method dispatch use the vmstate
 [x] disable eval tree. only bytecode now.
 [x] make VMState allocate the context internally
+
+[ ] consolidate native method and fake native method
+[ ] make sure everything is using native method now. 
+
 [ ] use context push and pop to set the PC, clear the stack, and return normally 
 
 

@@ -1,7 +1,6 @@
 import {
     type ByteCode,
     type ByteOp,
-    type Context,
     type Method,
     NilObj,
     Obj,
@@ -32,56 +31,31 @@ export class BytecodeMethod extends Obj implements Method {
         this.ast = ast
     }
     dispatch(vm:VMState, act:Obj): void {
-        d.p("BytecodeMethod.dispatch: executing", this.print())
-        d.p("bytecode is", this.bytecode)
         vm.currentContext.label = this.label;
-        d.p('stack is',vm.stack_print_small())
         let args = act.get_slot('args') as unknown as Array<Obj>
-        d.p('args are',args.map(a => a.print()))
-        d.p("this names is",this.names)
         if(args.length !== this.names.length){
             throw new Error(`arg count not equal to parameter length ${this.names.length}`)
         }
         let method = act.get_slot('method')
-        d.p('method is', method.print())
         let rec = act.get_slot('receiver')
-        d.p('rec is',rec.print())
-        d.p("the receiver is " + rec.print())
-        d.p("the method is " + method.print())
-        d.p("we've got a bytecode method")
         let ctx = vm.currentContext
         act._make_method_slot('bytecode',ctx.bytecode)
         act._make_method_slot('scope',ctx.scope)
         act._make_method_slot('pc',ctx.pc)
         act._make_method_slot('stack',ctx.stack)
-        //
-        // let ctx2:Context = {
-        //     scope:act,
-        //     bytecode: this.bytecode,
-        //     pc:0,
-        //     stack: new STStack(),
-        //     running:true,
-        //     label: this.label,
-        // }
-
         ctx.bytecode = this.bytecode
         ctx.scope = act
         ctx.scope.parent = rec
         ctx.stack = new STStack()
         for (let i = 0; i < this.names.length; i++) {
             let param = this.names[i]
-            d.p(`param '${param}'`, args[i].print())
             ctx.scope._make_method_slot(param, args[i])
         }
-        // vm.pushContext(ctx2)
         ctx.pc = 0
-
     }
     cleanup(vm:VMState, act: Obj) {
         let ret = act.get_slot('return')
         if(!ret) ret = NilObj()
-        d.p('ret is', ret.print())
-        // vm.popContext()
         vm.currentContext.stack.push_with(ret,'return value from ' + this.name)
     }
 

@@ -12,15 +12,12 @@ import {
 } from "./obj.ts";
 import {NumObj} from "./number.ts";
 import {StrObj} from "./string.ts";
-import {objsEqual} from "./debug.ts";
-import {parse} from "./parser.ts";
 import type {
     Ast,
     BinaryCall,
     BlockLiteral,
     KeywordCall,
     NumberLiteral,
-    Statement,
     StringLiteral,
     UnaryCall
 } from "./ast.ts";
