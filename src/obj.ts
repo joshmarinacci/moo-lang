@@ -378,18 +378,8 @@ class NativeMethod extends Obj implements Method {
         this.label = label
     }
     dispatch(vm: VMState, act:Obj): void {
-        let args = act.get_slot('args') as unknown as Array<Obj>
-        let meth = act.get_slot('method')
-        let rec = act.get_slot('receiver')
-        let ret = (this.get_js_slot(JS_VALUE) as NativeMethodSignature)(rec, args,vm)
-        if(ret instanceof Obj && !ret.isNil()) {
-            act._make_method_slot('return',ret)
-        }
     }
     cleanup(vm:VMState, act: Obj) {
-        let ret = act.get_slot('return')
-        if(!ret) ret = NilObj()
-        vm.currentContext.stack.push_with(ret,'return value from ' + this.label)
     }
     print() {
         return `NativeMethod(${this.label})`

@@ -21,7 +21,7 @@ import {parse} from "./parser.ts";
 let d = new JoshLogger()
 d.disable()
 
-function handle_send_message(vm: VMState, rec: Obj, method: Obj, args: any[], scope: Obj, nativeContext: boolean) {
+function handle_send_message(vm: VMState, rec: Obj, method: Obj, args: any[], scope: Obj) {
     d.p("handle_send_message " + method.print())
     d.p("    args are " + args.map(a => a.print()))
     d.indent()
@@ -89,7 +89,6 @@ function handle_return_from_bytecode_call(vm: VMState) {
     d.p("after handle return from bytecode stack is")
     d.p(vm.stack_print_small())
 }
-
 function handle_return_message(vm: VMState) {
     d.p("handle_return_message")
     let ctx = vm.currentContext
@@ -229,7 +228,7 @@ export function execute_op(vm:VMState): Obj {
         args.reverse()
         let method = ctx.stack.pop()
         let rec = ctx.stack.pop()
-        handle_send_message(vm, rec, method, args, ctx.scope, false);
+        handle_send_message(vm, rec, method, args, ctx.scope);
         return NilObj()
     }
     if (name === 'return-message') {
@@ -413,7 +412,7 @@ export function eval_block_obj(vm: VMState, method: Obj, args: Array<Obj>) {
         throw new Error("vm not vmstate")
     }
     if (method.name === 'BytecodeMethod') {
-        let act = handle_send_message(vm, method, method, args, method,true);
+        let act = handle_send_message(vm, method, method, args, method);
         while (vm.currentContext.running) {
             if (vm.currentContext.pc >= vm.currentContext.bytecode.length) break;
             execute_op(vm)

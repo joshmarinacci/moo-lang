@@ -230,3 +230,15 @@ cleanup_after_dispatch()
 * pop the act off of the stack
 * put return value onto the stack
 
+
+
+### more
+
+[ ] get rid of the method abstraction since the custom work is done inside of the bytecode 
+dispatcher
+[ ] method is still an object with some data, but that's it. it doesn't need the method interface.
+[ ] consolidate activation record and context
+[ ] mov dispatching code to dispatcher
+
+vm has a stack of activation records
+activation record has a stack of objects
