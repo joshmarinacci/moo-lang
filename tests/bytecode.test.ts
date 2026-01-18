@@ -4,10 +4,11 @@ import {NumObj} from "../src/number.ts";
 import {objsEqual} from "../src/debug.ts";
 import {make_standard_scope} from "../src/standard.ts";
 import {parse} from "../src/parser.ts";
-import {BLOCK_ACTIVATION, compile_bytecode, execute_bytecode, execute_op} from "../src/bytecode.ts";
+import {BLOCK_ACTIVATION, execute_bytecode, execute_op} from "../src/bytecode.ts";
 import {JoshLogger} from "../src/util.ts";
 import {Binary, BlkArgs, Method, Num, PlnId, Stmt, SymId} from "../src/ast.ts";
 import assert from "node:assert";
+import {compile_bytecode} from "../src/compiler.ts";
 
 let d = new JoshLogger()
 d.disable()

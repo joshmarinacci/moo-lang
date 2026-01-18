@@ -2,7 +2,6 @@ import process from "node:process"
 import fs from "node:fs/promises"
 import {make_standard_scope} from "./standard.ts";
 import {Obj, VMState} from "./obj.ts";
-import {compile_bytecode} from "./bytecode.ts";
 import {parse} from "./parser.ts";
 import {BytecodeState, BytecodeViewInput, BytecodeViewRender} from "./debugger2/bytecode_view.ts";
 import {type AppState, type KeyHandler, type ViewOutput} from "./debugger2/model.ts";
@@ -11,6 +10,7 @@ import {clear_screen} from "./debugger2/util.ts";
 import {ExecutionViewInput, ExecutionViewRender, run} from "./debugger2/execution_view.ts";
 import util from "node:util";
 import {ContextState, ContextViewInput, ContextViewRender} from "./debugger2/context_view.ts";
+import {compile_bytecode} from "./compiler.ts";
 
 type Options = {
     code:string,

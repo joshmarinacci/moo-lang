@@ -1,8 +1,9 @@
 import {Obj} from "../src/obj.ts";
-import {compile_bytecode, execute_bytecode} from "../src/bytecode.ts";
+import {execute_bytecode} from "../src/bytecode.ts";
 import {parse} from "../src/parser.ts";
 import {JoshLogger} from "../src/util.ts";
 import {objsEqual} from "../src/debug.ts";
+import {compile_bytecode} from "../src/compiler.ts";
 
 export const d = new JoshLogger()
 d.disable()
