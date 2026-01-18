@@ -233,8 +233,8 @@ cleanup_after_dispatch()
 
 
 ### more
-
-[ ] get rid of the method abstraction since the custom work is done inside of the bytecode 
+[x] move compiler to separate file.
+[x] get rid of the method abstraction since the custom work is done inside of the bytecode 
 dispatcher
 [ ] method is still an object with some data, but that's it. it doesn't need the method interface.
 [ ] consolidate activation record and context

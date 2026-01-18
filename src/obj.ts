@@ -366,20 +366,11 @@ export class Obj {
     }
 }
 
-export interface Method {
-    dispatch(vm: VMState, act:Obj):void;
-    cleanup(vm:VMState, act:Obj):void;
-}
-
-class NativeMethod extends Obj implements Method {
+class NativeMethod extends Obj {
     private label: string;
     constructor(name:string, label:string, parent:Obj, props:Record<string,unknown>) {
         super(name,parent,props);
         this.label = label
-    }
-    dispatch(vm: VMState, act:Obj): void {
-    }
-    cleanup(vm:VMState, act: Obj) {
     }
     print() {
         return `NativeMethod(${this.label})`

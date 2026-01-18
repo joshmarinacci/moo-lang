@@ -1,7 +1,6 @@
 import {
     type ByteCode,
     JS_VALUE,
-    type Method,
     type NativeMethodSignature,
     NilObj,
     Obj,
@@ -116,7 +115,7 @@ function ending_dispatch(vm: VMState) {
     d.outdent()
 }
 
-export class BytecodeMethod extends Obj implements Method {
+export class BytecodeMethod extends Obj {
     bytecode: ByteCode;
     private names: Array<string>;
     private ast: BlockLiteral | undefined;
@@ -128,10 +127,6 @@ export class BytecodeMethod extends Obj implements Method {
         this.bytecode = bytecode
         this.bytecode.push(['return-from-bytecode-call',null])
         this.ast = ast
-    }
-    dispatch(vm:VMState, act:Obj): void {
-    }
-    cleanup(vm:VMState, act: Obj) {
     }
     lookup_slot(name: string): Obj {
         if(name === 'self') return this.parent.lookup_slot(name)
