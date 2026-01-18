@@ -1,7 +1,8 @@
 
 import {make_native_obj, NilObj, Obj, ObjectProto, VMState} from "./obj.ts";
 import {NumObj} from "./number.ts";
-import {bval, eval_block_obj} from "./bytecode.ts";
+import {bval} from "./bytecode.ts";
+import {eval_block_obj} from "./dispatch.ts";
 
 export function setup_image(scope:Obj) {
     const ImageProto = make_native_obj("ImageProto",ObjectProto,{

@@ -1,5 +1,6 @@
 import {JS_VALUE, make_native_obj, NilObj, Obj, ObjectProto, VMState} from "./obj.ts";
-import {bval, eval_block_obj} from "./bytecode.ts";
+import {bval} from "./bytecode.ts";
+import {eval_block_obj} from "./dispatch.ts";
 
 
 export function setup_dom(scope: Obj, document: Document) {

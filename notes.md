@@ -153,92 +153,31 @@ something in between drops something on the stack.
 [x] make sure everything is using native method now. 
 [x] get read of old treewalking eval 
 
-[ ] use context push and pop to set the PC, clear the stack, and return normally
 [ ] restore programmatic calling with perform
 [ ] restore non-local return 
 
 
-
-
 ## dispatch documentation
 
-### Eval block obj
-* create an activation object. 
-* push act onto current context stack
-* push new context with new stack and bytecode. use act as the scope
-* 
-* dispatch the actual method
-* keep running the vm by executing operations
-* 
-* pop the context
-* pop the value on the current context stack
-* return the act return slot
+We have four cases:
+1. bytecode calling bytecode
+2. bytecode calling js code
+3. js code calling bytecode
+4. js code calling js code
 
-### regular bytecode on bytecode method
-* assemble the args
-* create an activation object
-* push act onto current context stack
-* 
-* dispatch the actual method
-* set the parent of the act to be the receiver
-* push new context with new stack and bytecode. use act as the scope
-* 
-* pop the return value off of the stack
-* get the act from the scope
-* pop the vm context
-* pop the value of the current context stack
-* set the act.return value
-* pop the act off of the stack
-* call method cleanup
-* put the act.return value on the stack
-
-### regular bytecode on native method
-* assemble the args
-* create an activation object
-* push act onto current context stack
-* 
-* dispatch the actual method
-* invoke the native JS method
-* 
-* set the return value on the act
-* pop the act off of the stack
-* call the cleanup
-* put the act.return value on the stack
-
-
-### new version
-
-prepare_for_dispatch()
-
-* assemble the args and rec and method
-* create an activation object
-* put the activation object on the stack
-* if native:
-  * push new context with new stack and bytecode. use act as the scope
-* if bytecode:
-  * push new context with new stack and bytecode.
-
-real_dispatch()
-* dispatch the actual method, either by jumping or calling native function
-* keep vm running by executing ops if inside native context
-
-cleanup_after_dispatch()
-* pop the return value off of the stack
-* pop the vm context
-* pop the value of the current context stack?
-* set act.return
-* pop the act off of the stack
-* put return value onto the stack
-
+The 3rd and 4th case happen inside of `eval_block_obj`. The first and second
+cases happen from the main bytecode op loop. In all cases we need to create an
+activation record, put it on the stack, and hand it to the method being dispatched.
 
 
 ### more
 [x] move compiler to separate file.
 [x] get rid of the method abstraction since the custom work is done inside of the bytecode 
 dispatcher
-[ ] method is still an object with some data, but that's it. it doesn't need the method interface.
+[x] method is still an object with some data, but that's it. it doesn't need the method interface.
+
 [ ] consolidate activation record and context
-[ ] mov dispatching code to dispatcher
+[x] move dispatching code to dispatcher
 
 vm has a stack of activation records
 activation record has a stack of objects

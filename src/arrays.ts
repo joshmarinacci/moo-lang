@@ -1,7 +1,8 @@
 import {JS_VALUE, make_native_obj, NilObj, Obj, ObjectProto, VMState} from "./obj.ts";
 import {NumObj} from "./number.ts";
 import {StrObj} from "./string.ts";
-import {bval, eval_block_obj} from "./bytecode.ts";
+import {bval} from "./bytecode.ts";
+import {eval_block_obj} from "./dispatch.ts";
 
 class JSSet {
     data: Map<unknown,Obj>
@@ -131,9 +132,7 @@ export const ListProto = make_native_obj("ListProto",ObjectProto, {
     'do:':(rec:Obj, args:Array<Obj>,vm:VMState):Obj=>{
         let arr = rec._get_js_array()
         let block = args[0]
-        arr.forEach((v,i) => {
-            let ret = eval_block_obj(vm,block,[v]) as Obj
-        })
+        arr.forEach((v,i) => eval_block_obj(vm, block, [v]))
         return NilObj()
     },
     'select:':(rec:Obj, args:Array<Obj>, vm:VMState):Obj=>{
