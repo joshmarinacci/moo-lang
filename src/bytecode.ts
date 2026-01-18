@@ -39,6 +39,10 @@ export class BytecodeMethod extends Obj {
     }
 }
 
+function handle_nonlocal_return(vm: VMState) {
+    console.log("handling a non local return");
+}
+
 export function execute_op(vm:VMState): Obj {
     let ctx = vm.currentContext
     let op = ctx.bytecode[ctx.pc]
@@ -65,7 +69,7 @@ export function execute_op(vm:VMState): Obj {
         let blk = op[1] as BlockLiteral
         let desc = AstToString(blk)
         let bytecode = blk.body.map(a => compile_bytecode(a)).flat()
-        let blk2 = new BytecodeMethod('anonymous', blk.parameters.map(id => id.name), bytecode, BlockProto, blk)
+        let blk2 = new BytecodeMethod(`anonymous: ${desc}`, blk.parameters.map(id => id.name), bytecode, BlockProto, blk)
         if(BlockProto.lookup_slot('whileTrue:')) {
             blk2._make_method_slot('whileTrue:', BlockProto.lookup_slot('whileTrue:'))
         }
@@ -132,6 +136,9 @@ export function execute_op(vm:VMState): Obj {
     if( name === 'pop') {
         ctx.stack.pop()
         return NilObj()
+    }
+    if (name === 'return-nonlocal') {
+        handle_nonlocal_return(vm);
     }
     throw new Error(`unknown bytecode operation '${name}'`)
 }

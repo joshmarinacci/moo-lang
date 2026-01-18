@@ -6,7 +6,7 @@ import {make_standard_scope} from "../src/standard.ts";
 import {parse} from "../src/parser.ts";
 import {execute_bytecode, execute_op} from "../src/bytecode.ts";
 import {JoshLogger} from "../src/util.ts";
-import {Binary, BlkArgs, Method, Num, PlnId, Stmt, SymId} from "../src/ast.ts";
+import {Binary, BlkArgs, Method, Num, PlnId, Ret, Stmt, SymId} from "../src/ast.ts";
 import assert from "node:assert";
 import {compile_bytecode} from "../src/compiler.ts";
 import {BLOCK_ACTIVATION} from "../src/dispatch.ts";
@@ -171,15 +171,6 @@ describe("function calls", () => {
             ['return-message',2],
         ], NumObj(88))
     })
-    test('block value returning a value',() => {
-        // ccem('[ 5 . ] value .',NumObj(5))
-        compare_execute_clean([
-            ['create-literal-block',BlkArgs([],[Stmt(Num(5))])],
-            ['lookup-message','value'],
-            ['send-message',0],
-            ['return-message',0],
-        ],NumObj(5))
-    })
     test('block value accepting a parameter',() => {
         // ccem('[b| 7 + b. ] valueWith: 6 .',NumObj(13))
         compare_execute_clean([
@@ -192,6 +183,27 @@ describe("function calls", () => {
             ['send-message',1],
             ['return-message',0],
         ],NumObj(13))
+    })
+})
+
+describe('return values', () => {
+    test("simple block returning a value")
+    test('block value returning a value',() => {
+        compare_execute_clean([
+            ['create-literal-block',BlkArgs([],[Stmt(Num(5))])],
+            ['lookup-message','value'],
+            ['send-message',0],
+            ['return-message',0],
+        ],NumObj(5))
+    })
+    test('block value returning a non-local-return value',() => {
+        compare_execute_clean([
+            // [ ^ 5 ]
+            ['create-literal-block',BlkArgs([],[Stmt(Ret(Num(5)))])],
+            ['lookup-message','value'],
+            ['send-message',0],
+            ['return-message',0],
+        ],NumObj(5))
     })
 })
 

@@ -125,9 +125,6 @@ function ending_dispatch(vm: VMState) {
 }
 
 export function eval_block_obj(vm: VMState, method: Obj, args: Array<Obj>) {
-    if (!(vm instanceof VMState)) {
-        throw new Error("vm not vmstate")
-    }
     if (method.name === 'BytecodeMethod') {
         let act = handle_send_message(vm, method, method, args, method);
         while (vm.currentContext.running) {

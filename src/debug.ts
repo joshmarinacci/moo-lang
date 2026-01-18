@@ -31,7 +31,7 @@ const DebugProto = make_native_obj("DebugProto",ObjectProto,{
         return NilObj()
     },
     'print:':(rec:Obj, args:Array<Obj>) => {
-        d.p("debug printing".toUpperCase())
+        // d.p("debug printing".toUpperCase())
         args.forEach(arg => {
             if(arg instanceof Obj) {
                 d.p("DEBUG", arg.to_string())

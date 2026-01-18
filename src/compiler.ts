@@ -114,6 +114,7 @@ export function compile_bytecode(ast: Ast): ByteCode {
     if (ast.type === 'return') {
         return [
             compile_bytecode(ast.value),
+            [['return-nonlocal',0]]
         ].flat() as ByteCode
     }
     throw new Error(`unknown ast type ${ast.type}`)
