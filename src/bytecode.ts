@@ -21,8 +21,105 @@ import {parse} from "./parser.ts";
 let d = new JoshLogger()
 d.disable()
 
+function handle_send_message(vm: VMState, rec: Obj, method: Obj, args: any[], scope: Obj, nativeContext: boolean) {
+    d.p("handle_send_message " + method.print())
+    d.p("    args are " + args.map(a => a.print()))
+    d.indent()
+    let act = new ActivationObj(scope, {
+        receiver:rec,
+        method:method,
+        args:args,
+    });
+    vm.currentContext.stack.push_with(act,`for ${method.print()} ${act.uuid}`);
+    if(method instanceof BytecodeMethod) {
+        d.p("it is a bytecode method")
+        vm.pushContext({
+            label:method.label,
+            bytecode:method.bytecode,
+            scope:act,
+            running: vm.currentContext.running,
+            pc: 0,
+            stack: new STStack()
+        })
+        act.parent = rec
+        // set up the input parameters
+        for (let i = 0; i < method.names.length; i++) {
+            let param = method.names[i]
+            act._make_method_slot(param, args[i])
+        }
+    } else {
+        d.p("its a native method")
+        vm.pushContext({
+            label: 'bytecode-method',
+            bytecode: [],
+            scope: act,
+            running: vm.currentContext.running,
+            pc: 0,
+            stack: new STStack()
+        })
+    }
+
+    let meth = act.get_slot('method');
+    if(meth.name === 'MissingMethod') {
+        throw new Error(`${meth.print()} is missing method`)
+    }
+    if(meth.name == 'NativeMethod') {
+        d.p("really invoking native method")
+        let args = act.get_slot('args') as unknown as Array<Obj>
+        // let meth = act.get_slot('method')
+        let rec = act.get_slot('receiver')
+        let ret = (meth.get_js_slot(JS_VALUE) as NativeMethodSignature)(rec, args,vm)
+        if(ret instanceof Obj) {
+            act._make_method_slot('return',ret)
+        }
+        d.p("the return value was " + act.get_slot("return").print())
+        vm.popContext()
+        d.outdent()
+    }
+    return act
+}
+function handle_return_from_bytecode_call(vm: VMState) {
+    d.p("handle_return_from_bytecode_call")
+    let ret = vm.currentContext.stack.pop();
+    let act = vm.currentContext.scope
+    act._make_method_slot('return', ret)
+    vm.popContext()
+    vm.currentContext.stack.pop()
+    vm.currentContext.stack.push_with(act,'act')
+    d.p("after handle return from bytecode stack is")
+    d.p(vm.stack_print_small())
+}
+
+function handle_return_message(vm: VMState) {
+    d.p("handle_return_message")
+    let ctx = vm.currentContext
+    let act = ctx.stack.pop();
+    if(act.name !== 'block-activation') {
+        console.log('act is',act);
+        throw new Error("not block activation")
+    }
+    let meth = act.get_slot('method')
+    if(meth.name === 'NativeMethod') {
+        d.p("handling return from a native method")
+        let ret = act.get_slot('return')
+        if(!ret) ret = NilObj()
+        vm.currentContext.stack.push_with(ret,'return value from ')
+    } else {
+        let ret = act.get_slot('return')
+        if(!ret) ret = NilObj()
+        d.p("putting the return value on the stack")
+        vm.currentContext.stack.push_with(ret,'return value from ')
+    }
+    d.outdent()
+}
+function ending_dispatch(vm: VMState) {
+    d.p('now vm context is: ' + vm.top().label)
+    vm.currentContext.stack.pop()
+    d.outdent()
+}
+
 export class BytecodeMethod extends Obj implements Method {
-    private bytecode: ByteCode;
+    bytecode: ByteCode;
     private names: Array<string>;
     private ast: BlockLiteral | undefined;
     label:string
@@ -35,47 +132,28 @@ export class BytecodeMethod extends Obj implements Method {
         this.ast = ast
     }
     dispatch(vm:VMState, act:Obj): void {
-        vm.currentContext.label = this.label;
-        let args = act.get_slot('args') as unknown as Array<Obj>
-        if(args.length !== this.names.length){
-            throw new Error(`arg count not equal to parameter length ${this.names.length}`)
-        }
-        let method = act.get_slot('method')
-        let rec = act.get_slot('receiver')
-        let ctx = vm.currentContext
-        act._make_method_slot('bytecode',ctx.bytecode)
-        act._make_method_slot('scope',ctx.scope)
-        act._make_method_slot('pc',ctx.pc)
-        act._make_method_slot('stack',ctx.stack)
-        ctx.bytecode = this.bytecode
-        ctx.scope = act
-        ctx.scope.parent = rec
-        ctx.stack = new STStack()
-        for (let i = 0; i < this.names.length; i++) {
-            let param = this.names[i]
-            ctx.scope._make_method_slot(param, args[i])
-        }
-        ctx.pc = 0
     }
     cleanup(vm:VMState, act: Obj) {
-        let ret = act.get_slot('return')
-        if(!ret) ret = NilObj()
-        vm.currentContext.stack.push_with(ret,'return value from ' + this.name)
     }
-
     lookup_slot(name: string): Obj {
         if(name === 'self') return this.parent.lookup_slot(name)
         if(name === 'value') return this;
         if(name === 'valueWith:') return this;
         return super.lookup_slot(name);
     }
+    print() {
+        return `BytecodeMethod(${this.label})`
+    }
 }
 
 export const BLOCK_ACTIVATION = "block-activation"
 
 export class ActivationObj extends Obj {
-    constructor(name: string, parent: Obj, props: Record<string, unknown>) {
-        super(name, parent, props)
+    constructor(parent: Obj, props: Record<string, unknown>) {
+        super(BLOCK_ACTIVATION, parent, props)
+    }
+    print():string {
+        return "Activation(" + this.lookup_slot("method").print() + ")"
     }
 
     lookup_slot(name: string): Obj {
@@ -89,6 +167,10 @@ export class ActivationObj extends Obj {
 export function execute_op(vm:VMState): Obj {
     let ctx = vm.currentContext
     let op = ctx.bytecode[ctx.pc]
+    d.p("---")
+    d.p(`op: ${op}`)
+    d.p(`stack ${vm.stack_print_small()}`)
+    d.p(`scope is ${vm.currentContext.scope.print()}`)
     ctx.pc++
     let name = op[0]
     if(name === 'halt') {
@@ -147,26 +229,11 @@ export function execute_op(vm:VMState): Obj {
         args.reverse()
         let method = ctx.stack.pop()
         let rec = ctx.stack.pop()
-        let act = new ActivationObj(BLOCK_ACTIVATION, ctx.scope, {
-            receiver:rec,
-            method:method,
-            args:args,
-        });
-        ctx.stack.push_with(act,`for ${method.print()} ${act.uuid}`);
-        let meth = act.get_slot('method');
-        if(meth.name === 'MissingMethod') {
-            throw new Error(`${method.print()} is missing method`)
-        }
-        (meth as unknown as Method).dispatch(vm,act);
+        handle_send_message(vm, rec, method, args, ctx.scope, false);
         return NilObj()
     }
     if (name === 'return-message') {
-        let act = ctx.stack.pop();
-        if(act.name !== 'block-activation') {
-            console.log('act is',act);
-            throw new Error("not block activation")
-        }
-        (act.get_slot('method') as unknown as Method).cleanup(vm,act);
+        handle_return_message(vm);
         return NilObj()
     }
     if (name === 'assign') {
@@ -184,17 +251,7 @@ export function execute_op(vm:VMState): Obj {
         return NilObj()
     }
     if (name === 'return-from-bytecode-call') {
-        let ret = ctx.stack.pop() as Obj
-        let act = ctx.scope
-        let bytecode = act.get_slot('bytecode')
-        let scope = act.get_slot('scope')
-        let pc = act.get_slot('pc')
-        let stack = act.get_slot('stack') as unknown as STStack
-        act._make_method_slot('return',ret)
-        ctx.bytecode = bytecode
-        ctx.scope = scope
-        ctx.pc = pc
-        ctx.stack = stack
+        handle_return_from_bytecode_call(vm)
         return NilObj()
     }
     if( name === 'pop') {
@@ -356,36 +413,13 @@ export function eval_block_obj(vm: VMState, method: Obj, args: Array<Obj>) {
         throw new Error("vm not vmstate")
     }
     if (method.name === 'BytecodeMethod') {
-        let ctx: Context = {
-            scope: method,
-            bytecode: [],
-            pc: 0,
-            stack: new STStack(),
-            running: true,
-            label: 'bytecode-method'
-        };
-        vm.pushContext(ctx)
-        let act = new ActivationObj(`block-activation`, method, {
-            receiver: method,
-            method: method,
-            args: args,
-        });
-        ctx.stack.push(act);
-        d.p('stack after', ctx.stack.print_small());
-
-        (act.get_slot('method') as unknown as Method).dispatch(vm, act);
-        d.p('bytecode is now', ctx.bytecode)
-        while (ctx.running) {
-            d.p("=======")
-            d.p("stack", ctx.stack.print_small())
-            d.p(ctx.bytecode)
-            if (ctx.pc >= ctx.bytecode.length) break;
-            let ret = execute_op(vm)
+        let act = handle_send_message(vm, method, method, args, method,true);
+        while (vm.currentContext.running) {
+            if (vm.currentContext.pc >= vm.currentContext.bytecode.length) break;
+            execute_op(vm)
         }
-
-        let act2 = ctx.stack.pop()
-        vm.popContext()
-        return act2.get_slot('return')
+        ending_dispatch(vm)
+        return act.get_slot('return')
     }
     if (method.name !== 'Block') {
         throw new Error(`trying to eval a method that isn't a block '${method.name}'`)

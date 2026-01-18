@@ -160,3 +160,73 @@ something in between drops something on the stack.
 
 
 
+## dispatch documentation
+
+### Eval block obj
+* create an activation object. 
+* push act onto current context stack
+* push new context with new stack and bytecode. use act as the scope
+* 
+* dispatch the actual method
+* keep running the vm by executing operations
+* 
+* pop the context
+* pop the value on the current context stack
+* return the act return slot
+
+### regular bytecode on bytecode method
+* assemble the args
+* create an activation object
+* push act onto current context stack
+* 
+* dispatch the actual method
+* set the parent of the act to be the receiver
+* push new context with new stack and bytecode. use act as the scope
+* 
+* pop the return value off of the stack
+* get the act from the scope
+* pop the vm context
+* pop the value of the current context stack
+* set the act.return value
+* pop the act off of the stack
+* call method cleanup
+* put the act.return value on the stack
+
+### regular bytecode on native method
+* assemble the args
+* create an activation object
+* push act onto current context stack
+* 
+* dispatch the actual method
+* invoke the native JS method
+* 
+* set the return value on the act
+* pop the act off of the stack
+* call the cleanup
+* put the act.return value on the stack
+
+
+### new version
+
+prepare_for_dispatch()
+
+* assemble the args and rec and method
+* create an activation object
+* put the activation object on the stack
+* if native:
+  * push new context with new stack and bytecode. use act as the scope
+* if bytecode:
+  * push new context with new stack and bytecode.
+
+real_dispatch()
+* dispatch the actual method, either by jumping or calling native function
+* keep vm running by executing ops if inside native context
+
+cleanup_after_dispatch()
+* pop the return value off of the stack
+* pop the vm context
+* pop the value of the current context stack?
+* set act.return
+* pop the act off of the stack
+* put return value onto the stack
+

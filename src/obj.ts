@@ -96,7 +96,11 @@ export class VMState {
         this.currentContext = this.contexts[this.contexts.length - 1]
     }
 
+    top():Context {
+        return this.contexts[this.contexts.length-1];
+    }
     popContext() {
+        if(this.contexts.length < 2) throw new Error("cannot pop last context off")
         this.contexts.pop()
         this.currentContext = this.contexts[this.contexts.length - 1]
     }
