@@ -76,21 +76,6 @@ export function handle_send_message(vm: VMState, rec: Obj, method: Obj, args: an
         if (ret instanceof Obj) {
             act._make_method_slot('return', ret)
         }
-        // d.p("the return value was: " + act.get_slot("return").print())
-        // if (ret  && ret.name === 'non-local-return') {
-        //     d.p("-----== this is a nonlocal return")
-        //     d.p("the target scope is " + ret.get_slot('target').print())
-        //     d.p("current scope is " + vm.currentContext.scope.print())
-        //     if(ret.get_slot('target') === vm.currentContext.scope) {
-        //         d.p("we are at the right exit")
-        //     } else {
-        //         d.p("we need to skip up a level");
-        //         vm.popContext()
-        //         d.p("now current scope is " + vm.currentContext.scope.print());
-        //
-        //     }
-        // }
-        //
         vm.popContext()
         d.outdent()
     }
