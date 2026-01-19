@@ -222,6 +222,13 @@ describe('return values', () => {
             ['return-message',0],
         ],NumObj(1))
     })
+    test('block value returning a non-local-return value 2', () => {
+        let ctx = ctx_execute(   `
+            Global makeSlot: "foo" with: [  4 < 5 ifTrue: [^1]. ^ 2. ]. Global foo.
+        `)
+        // console.log('context is',ctx)
+        // console.log('stack is', ctx.stack.print_small())
+    })
 })
 
 function ctx_execute(source: string):Context {

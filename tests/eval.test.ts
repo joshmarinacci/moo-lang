@@ -214,7 +214,7 @@ test('non local return', () => {
            4 < 5 cond: [ ^ 1. ] with: [ ^ 2. ].
         ].
         T nl.
-    ] value.`,scope,NumObj(2))
+    ] value.`,scope,NumObj(1))
 })
 test('non local return 2', () => {
     let scope = make_standard_scope();
