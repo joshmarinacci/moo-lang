@@ -57,7 +57,7 @@ export function ContextViewInput(key:string, state:ContextState) {
 
 export function ContextViewRender(state:AppState):ViewOutput {
     let output = new BoxFrame({
-        name:'Context',
+        name:'Context / Scope',
         width:state.width,
         active:state.mode === 'scope'
     })

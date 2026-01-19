@@ -39,8 +39,25 @@ export class BytecodeMethod extends Obj {
     }
 }
 
+export type RawBytecodeMethod = {
+    type:'raw-bytecode-method',
+    parameters:Array<string>,
+    bytecode:ByteCode,
+}
+
 function handle_nonlocal_return(vm: VMState) {
     console.log("handling a non local return");
+    console.log("current stack is " + vm.stack_print_small());
+    let value = vm.currentContext.stack.pop();
+    console.log('value is', value.print())
+    let scope = vm.currentContext.scope
+    let ret = new Obj('non-local-return',scope.parent,{})
+    ret._is_return = true
+    ret._make_method_slot('value',value)
+    ret._make_method_slot('target',scope.parent.parent as Obj)
+    console.log("target return scope is " + ret.get_slot('target').print());
+    vm.currentContext.stack.push_with(ret,`non-local-return wrapper for ${value.print()}`)
+    return ret
 }
 
 export function execute_op(vm:VMState): Obj {
@@ -66,17 +83,44 @@ export function execute_op(vm:VMState): Obj {
         return NilObj()
     }
     if (name === 'create-literal-block') {
-        let blk = op[1] as BlockLiteral
-        let desc = AstToString(blk)
-        let bytecode = blk.body.map(a => compile_bytecode(a)).flat()
-        let blk2 = new BytecodeMethod(`anonymous: ${desc}`, blk.parameters.map(id => id.name), bytecode, BlockProto, blk)
-        if(BlockProto.lookup_slot('whileTrue:')) {
-            blk2._make_method_slot('whileTrue:', BlockProto.lookup_slot('whileTrue:'))
+        let arg = op[1] as object
+        if(arg.type === 'block-literal') {
+            let blk = arg as BlockLiteral
+            let desc = AstToString(blk)
+            let bytecode = blk.body.map(a => compile_bytecode(a)).flat()
+            let blk2 = new BytecodeMethod(
+                `anonymous: ${desc}`,
+                blk.parameters.map(id => id.name),
+                bytecode,
+                BlockProto,
+                blk)
+            if(BlockProto.lookup_slot('whileTrue:')) {
+                blk2._make_method_slot('whileTrue:', BlockProto.lookup_slot('whileTrue:'))
+            }
+            // set the parent to the enclosing scope
+            blk2._make_method_slot("description",StrObj(desc))
+            blk2.parent = ctx.scope
+            ctx.stack.push_with(blk2,desc)
+        } else if(arg.type === 'raw-bytecode-method') {
+            let blk = arg as RawBytecodeMethod
+            console.log("its a bytecode method")
+            let desc = "raw-bytecode"
+            let blk2 = new BytecodeMethod(
+                `anonymous: ${desc}`,
+                blk.parameters,
+                blk.bytecode,
+                BlockProto,
+                )
+            if(BlockProto.lookup_slot('whileTrue:')) {
+                blk2._make_method_slot('whileTrue:', BlockProto.lookup_slot('whileTrue:'))
+            }
+            // set the parent to the enclosing scope
+            blk2._make_method_slot("description",StrObj(desc))
+            blk2.parent = ctx.scope
+            ctx.stack.push_with(blk2,desc)
+        } else {
+            throw new Error(`unknown block literal type ${arg}`)
         }
-        // set the parent to the enclosing scope
-        blk2._make_method_slot("description",StrObj(desc))
-        blk2.parent = ctx.scope
-        ctx.stack.push_with(blk2,desc)
         return NilObj()
     }
     if (name === 'load-plain-id') {
@@ -139,6 +183,7 @@ export function execute_op(vm:VMState): Obj {
     }
     if (name === 'return-nonlocal') {
         handle_nonlocal_return(vm);
+        return NilObj()
     }
     throw new Error(`unknown bytecode operation '${name}'`)
 }

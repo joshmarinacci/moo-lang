@@ -181,3 +181,46 @@ dispatcher
 
 vm has a stack of activation records
 activation record has a stack of objects
+
+
+
+
+## nonlocal return
+
+when returning from a block, the block needs to know where to return to. Normally this is just
+the scope that called the block, but sometimes it is higher up. The block should have a target 
+property indicating where it should return to. normally this is set when the block is allocated
+from the AST.  if the block is anonymous it should 
+
+
+```smalltalk
+
+[ // temp scope 1
+  (4 < 5) ifTrue: [ // temp scope 2
+   ^4 // this should return to temp scope 1.
+   ] ifFalse: [ // temp scope 3
+   ^ 5 // this should also return to temp scope 1.
+   ]. 
+] value.
+
+
+[ // outer scope
+T := Object clone.
+T makeSlot: "test" with: [ // inner scope
+   4 < 5 ifTrue: [ // true block
+      ^ 1. // should return to the caller of 'test', which is the outer scope
+      // so true block's return target is not inner scope but outer scope?
+      // it should short return to the innerscope, since it was declared inside of the inner scope
+      // so pop up until the current scope is the target scope, and then immediately return.
+    ] ifFalse: [ // false scope
+      ^ 2. 
+    ].
+    Debug print:"should not be here".
+].
+T test.
+
+
+
+
+```
+

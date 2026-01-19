@@ -4,7 +4,7 @@ import {NumObj} from "../src/number.ts";
 import {objsEqual} from "../src/debug.ts";
 import {make_standard_scope} from "../src/standard.ts";
 import {parse} from "../src/parser.ts";
-import {execute_bytecode, execute_op} from "../src/bytecode.ts";
+import {execute_bytecode, execute_op, type RawBytecodeMethod} from "../src/bytecode.ts";
 import {JoshLogger} from "../src/util.ts";
 import {Binary, BlkArgs, Method, Num, PlnId, Ret, Stmt, SymId} from "../src/ast.ts";
 import assert from "node:assert";
@@ -197,13 +197,30 @@ describe('return values', () => {
         ],NumObj(5))
     })
     test('block value returning a non-local-return value',() => {
+        let method:ByteCode = [
+            ['load-literal-number',4],
+            ['lookup-message','<'],
+            ['load-literal-number',5],
+            ['send-message',1],
+            ['return-message',0],
+            ['lookup-message',"ifTrue:"],
+            ['create-literal-block',BlkArgs([],[Stmt(Ret(Num(1)))])],
+            ['send-message',1],
+            ['return-message',0],
+            ['load-literal-number',2],
+            ['return-from-bytecode-call',0]
+        ]
         compare_execute_clean([
-            // [ ^ 5 ]
-            ['create-literal-block',BlkArgs([],[Stmt(Ret(Num(5)))])],
+            // [ [ 4 < 5 ifTrue: [^1]. ^ 2. ] value.
+            ['create-literal-block',{
+                type:'raw-bytecode-method',
+                parameters:[],
+                bytecode:method,
+            } as RawBytecodeMethod],
             ['lookup-message','value'],
             ['send-message',0],
             ['return-message',0],
-        ],NumObj(5))
+        ],NumObj(1))
     })
 })
 
