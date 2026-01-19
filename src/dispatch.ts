@@ -19,6 +19,7 @@ export class ActivationObj extends Obj {
 
     lookup_slot(name: string): Obj {
         if (name === 'self') {
+            // @ts-ignore
             return this.parent.lookup_slot(name)
         }
         return super.lookup_slot(name);

@@ -8,7 +8,8 @@
     "build": "vite build",
     "dev": "vite dev",
     "debugger": "node src/debugger.ts",
-    "test": "node --test"
+    "test": "node --test",
+    "tsc": "tsc"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",

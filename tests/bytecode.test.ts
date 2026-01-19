@@ -283,8 +283,8 @@ describe('scope stability', () => {
         let ctx = ctx_execute('[4<5] whileTrue: [ self halt. ]') as Context
         // grand parent should be the temp context
         assert.equal(ctx.scope.name,BLOCK_ACTIVATION);
-        assert.equal(ctx.scope.parent.name,'BytecodeMethod');
-        assert.equal(ctx.scope.parent.parent.name,'Temp Context');
+        assert.equal(ctx.scope?.parent?.name,'BytecodeMethod');
+        assert.equal(ctx.scope?.parent?.parent?.name,'Temp Context');
     })
     test('inside method', () => {
         let ctx = ctx_execute(`
@@ -296,6 +296,7 @@ describe('scope stability', () => {
         // stack should be the block activation and the number itself
         assert.equal(ctx.scope.name,BLOCK_ACTIVATION);
         // scope parent should be the Number
+        // @ts-ignore
         assert.equal(ctx.scope.parent.name,'NumberLiteral');
     })
     test('access to block parameters', () => {
@@ -324,7 +325,9 @@ describe('scope stability', () => {
         // scope = activation context of the inner block
         assert.equal(ctx.scope.name,BLOCK_ACTIVATION);
         // scope.parent.parent = activation context of the 'do:' method
+        // @ts-ignore
         assert.equal(ctx.scope.parent.parent.name,BLOCK_ACTIVATION);
+        // @ts-ignore
         let outer = ctx.scope.parent.parent as Obj
         // console.log("scope is", outer)
         // act should have v in it's args

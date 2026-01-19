@@ -17,7 +17,7 @@ d.disable()
 
 export class BytecodeMethod extends Obj {
     bytecode: ByteCode;
-    private names: Array<string>;
+    names: Array<string>;
     private ast: BlockLiteral | undefined;
     label:string
     constructor(label:string, parameterNames:Array<string>, bytecode:ByteCode, parent:Obj, ast?:BlockLiteral) {
@@ -29,6 +29,7 @@ export class BytecodeMethod extends Obj {
         this.ast = ast
     }
     lookup_slot(name: string): Obj {
+        //@ts-ignore
         if(name === 'self') return this.parent.lookup_slot(name)
         if(name === 'value') return this;
         if(name === 'valueWith:') return this;
@@ -54,6 +55,7 @@ function handle_nonlocal_return(vm: VMState) {
     let ret = new Obj('non-local-return',scope.parent,{})
     ret._is_return = true
     ret._make_method_slot('value',value)
+    // @ts-ignore
     ret._make_method_slot('target',scope.parent.parent as Obj)
     console.log("target return scope is " + ret.get_slot('target').print());
     vm.currentContext.stack.push_with(ret,`non-local-return wrapper for ${value.print()}`)
@@ -84,6 +86,7 @@ export function execute_op(vm:VMState): Obj {
     }
     if (name === 'create-literal-block') {
         let arg = op[1] as object
+        // @ts-ignore
         if(arg.type === 'block-literal') {
             let blk = arg as BlockLiteral
             let desc = AstToString(blk)
@@ -101,9 +104,9 @@ export function execute_op(vm:VMState): Obj {
             blk2._make_method_slot("description",StrObj(desc))
             blk2.parent = ctx.scope
             ctx.stack.push_with(blk2,desc)
+            // @ts-ignore
         } else if(arg.type === 'raw-bytecode-method') {
             let blk = arg as RawBytecodeMethod
-            console.log("its a bytecode method")
             let desc = "raw-bytecode"
             let blk2 = new BytecodeMethod(
                 `anonymous: ${desc}`,

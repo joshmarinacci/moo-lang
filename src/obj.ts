@@ -43,6 +43,7 @@ export class STStack {
     }
 
     pop():Obj {
+        // @ts-ignore
         return this.data.pop()[0]
     }
 
@@ -129,6 +130,7 @@ export class Obj {
         this._method_slots = new Map<string,Obj>
         this._is_return = false;
         for(let key in props) {
+            // @ts-ignore
             this._method_slots.set(key,props[key])
         }
     }
@@ -154,7 +156,7 @@ export class Obj {
                 return NilObj()
             }
         } else {
-            return this._data_slots.get(name)
+            return this._data_slots.get(name) as Obj
         }
     }
     _set_data_slot(name:string, value:Obj):Obj {
@@ -176,6 +178,7 @@ export class Obj {
         this._method_slots.set(name,obj)
     }
     _make_js_slot(name: string, value:unknown) {
+        // @ts-ignore
         this._method_slots.set(name,value)
     }
     print():string {
@@ -254,7 +257,7 @@ export class Obj {
     //     return this._method_slots.has(name)
     // }
     get_slot(name: string):Obj {
-        return this._method_slots.get(name)
+        return this._method_slots.get(name) as Obj
     }
     _list_slot_names():string[] {
         return Array.from(this._method_slots.keys())
@@ -270,7 +273,7 @@ export class Obj {
             throw new Error("recursed too deep!")
         }
         if(this._method_slots.has(name)) {
-            return this._method_slots.get(name)
+            return this._method_slots.get(name) as Obj
         }
         if(this.parent) {
             if (this.parent.isNil()) {
@@ -325,6 +328,7 @@ export class Obj {
         let obj = new Obj(this.name, this.parent, this.getSlots())
         obj._data_slots = new Map<string, Obj>()
         for(let key of this._data_slots.keys()) {
+            // @ts-ignore
             obj._data_slots.set(key,this._data_slots.get(key))
         }
         return obj
@@ -378,6 +382,7 @@ class NativeMethod extends Obj {
     }
 }
 const FNM = (name:string, fun:NativeMethodSignature):Obj => {
+    // @ts-ignore
     return new NativeMethod("NativeMethod",name,null, {
         '_jsvalue':fun
     })
@@ -445,6 +450,7 @@ ROOT._make_method_slot('makeSlot:with:',NatMeth((rec:Obj, args:Array<Obj>):Obj =
     let slot_value = args[1]
     rec._make_method_slot(slot_name,slot_value)
     if (slot_value.name === 'BytecodeMethod') {
+        // @ts-ignore
         slot_value.label = slot_name
     }
     if (slot_value.name === 'Block') {

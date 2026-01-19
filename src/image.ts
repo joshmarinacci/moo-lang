@@ -4,10 +4,15 @@ import {NumObj} from "./number.ts";
 import {bval} from "./bytecode.ts";
 import {eval_block_obj} from "./dispatch.ts";
 
+interface FakeCanvas {
+    width: number
+    height: number
+    setPixelRGBA(x:number,y:number,c:number):void;
+}
 export function setup_image(scope:Obj) {
     const ImageProto = make_native_obj("ImageProto",ObjectProto,{
         'setPixelAt:y:color:':(rec:Obj, args:Array<Obj>):Obj => {
-            let bitmap = rec._get_js_unknown()// as Bitmap
+            let bitmap = rec._get_js_unknown() as FakeCanvas
             let x = args[0]._get_js_number()
             let y = args[1]._get_js_number()
             let c = args[2]._get_js_number()
@@ -15,7 +20,7 @@ export function setup_image(scope:Obj) {
             return NilObj()
         },
         'fill:':(rec:Obj, args:Array<Obj>, vm:VMState):Obj => {
-            let bitmap = rec._get_js_unknown()// as Bitmap
+            let bitmap = rec._get_js_unknown() as FakeCanvas
             for(let j = 0; j<bitmap.height; j++) {
                 for (let i = 0; i < bitmap.width; i++) {
                     let ii = NumObj(i)

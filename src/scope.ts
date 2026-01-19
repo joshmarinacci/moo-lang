@@ -57,6 +57,7 @@ function root_fixup(scope:Obj) {
         let js_target = args[1]
         let value = args[2]
         try {
+            // @ts-ignore
             js_target[field_name] = value
         } catch (e) {
             console.log("error",e)
@@ -67,6 +68,7 @@ function root_fixup(scope:Obj) {
         let field_name = args[0]._get_js_string()
         let js_target = args[1]
         try {
+            // @ts-ignore
             let value = js_target[field_name]
             if(typeof value == 'string') {
                 return StrObj(value)
@@ -79,6 +81,7 @@ function root_fixup(scope:Obj) {
     ROOT._make_method_slot("jsCall:on:",NatMeth((rec:Obj,args:Array<Obj>):Obj => {
         let method_name = args[0]._get_js_string()
         let js_target = args[1].get_slot('jsval') as unknown
+        // @ts-ignore
         let retval = js_target[method_name]()
         return JSWrapper(retval)
     }))
@@ -86,6 +89,7 @@ function root_fixup(scope:Obj) {
         let method_name = args[0]._get_js_string()
         let js_target = args[1].get_slot('jsval') as unknown
         let arg = args[2].get_slot('jsval') as unknown
+        // @ts-ignore
         let retval = js_target[method_name](arg)
         return JSWrapper(retval)
     }))
@@ -94,9 +98,11 @@ function root_fixup(scope:Obj) {
         let js_target = args[1].get_slot('jsval') as unknown
         let arg1 = args[2].get_slot('jsval') as unknown
         let arg2 = args[3].get_slot('jsval') as unknown
+        // @ts-ignore
         let retval = js_target[method_name](arg1,arg2)
         return JSWrapper(retval)
     }))
+    // @ts-ignore
     ROOT._make_method_slot('jsLookupGlobal:',NatMeth((rec:Obj, args:Array<Obj>)=> JSWrapper(global[args[0]._get_js_string()])))
 
     BlockProto._make_method_slot('whileTrue:', new BytecodeMethod('whileTrue:',

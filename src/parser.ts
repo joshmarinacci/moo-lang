@@ -68,16 +68,22 @@ Moo {
 
     const semantics = mooGrammar.createSemantics()
     semantics.addOperation<Ast>("ast",{
+        // @ts-ignore
         _iter: (...children) => children.map(ch => ch.ast()),
+        // @ts-ignore
         _terminal:function(){ return this.sourceString },
+        // @ts-ignore
         EmptyListOf:() => [],
+        // @ts-ignore
         NonemptyListOf:(a,b,c) => [a.ast(), c.ast()],
+        // @ts-ignore
         BlockArgs:(args,_bar) => args.children.map(ch => ch.ast()),
         Block:(_a, args,body, exp,_b) => {
             let bod = body.children.map(ch => ch.ast())
             if(exp.ast().length > 0) bod.push(Stmt(exp.ast()[0]))
             return BlkArgs(args.ast().flat(), bod)
         },
+        // @ts-ignore
         BlockBody:(body,exp) => {
             let bod = body.children.map(ch => ch.ast())
             if(exp.ast().length > 0) bod.push(Stmt(exp.ast()[0]))
