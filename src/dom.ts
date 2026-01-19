@@ -5,7 +5,8 @@ import {eval_block_obj} from "./dispatch.ts";
 
 export function setup_dom(scope: Obj, document: Document) {
     console.warn("dom proxy setup with ",document)
-    const $ = (sel:string):Element => document.querySelector(sel)
+    const $ = (sel:string):Element => document.querySelector(sel) as Element
+    // @ts-ignore
     const on = (el:Element,type:string,cb:unknown) => el.addEventListener(type,cb)
     const DomElementProto = make_native_obj("DomElement",ObjectProto,{
         'onClick:':(rec:Obj,args:Array<Obj>, vm:VMState):Obj=>{
@@ -42,6 +43,7 @@ export function setup_dom(scope: Obj, document: Document) {
             return NilObj()
         },
         'document':(rec:Obj, args:Array<Obj>):Obj => {
+            // @ts-ignore
             return rec._get_js_record()
         },
         'makeButton:': (rec:Obj, args:Array<Obj>):Obj => {

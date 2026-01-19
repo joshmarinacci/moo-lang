@@ -225,7 +225,7 @@ function trace(ray:Ray, scene:Scene, depth: number):Vec {
         return WHITE;
     }
     let dist:number = distObject[0]
-    const object:Sphere = distObject[1];
+    const object:Sphere = distObject[1] as Sphere;
     let pointAtTime = Vector.add(ray.point, Vector.scale(ray.vector, dist));
     return surface(
         ray,

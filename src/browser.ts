@@ -10,7 +10,7 @@ export function make_browser_scope(document: Document):Obj {
 
     // modify Debug to use the browser console
     let Debug = scope.lookup_slot("Debug")
-    Debug._make_method_slot('print:',(rec:Obj, args:Array<Obj>) => {
+    Debug._make_method_slot('print:',NatMeth((rec:Obj, args:Array<Obj>) => {
         console.log("debug printing".toUpperCase())
         const cons = document.querySelector("#editor-console") as Element
         args.forEach(arg => {
@@ -25,7 +25,7 @@ export function make_browser_scope(document: Document):Obj {
         })
         cons.scrollTop = cons.scrollHeight
         return NilObj()
-    })
+    }))
 
     let ImageProto = scope.get_slot('Image')
     ImageProto._make_method_slot('width:height:',NatMeth((rec:Obj, args:Array<Obj>):Obj => {
