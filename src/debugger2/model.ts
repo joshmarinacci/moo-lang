@@ -5,6 +5,7 @@ import {ContextState} from "./context_view.ts";
 import {ExecutionState} from "./execution_view.ts";
 
 export type Mode = 'bytecode'|'execution'|'stack'|'scope'
+export const MODES:Array<Mode> = ['scope','stack','bytecode','execution']
 export type KeyHandler = () => void;
 
 export type ViewOutput = Array<string>

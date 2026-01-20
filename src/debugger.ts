@@ -4,13 +4,12 @@ import {make_standard_scope} from "./standard.ts";
 import {Obj, VMState} from "./obj.ts";
 import {parse} from "./parser.ts";
 import {BytecodeState, BytecodeViewInput, BytecodeViewRender} from "./debugger2/bytecode_view.ts";
-import {type AppState, type KeyHandler, type ViewOutput} from "./debugger2/model.ts";
+import {type AppState, type KeyHandler, MODES, type ViewOutput} from "./debugger2/model.ts";
 import {StackState, StackViewInput, StackViewRender} from "./debugger2/stack_view.ts";
 import {clear_screen} from "./debugger2/util.ts";
 import {
+    EXECUTION,
     ExecutionState,
-    ExecutionViewInput,
-    ExecutionViewRender,
     run
 } from "./debugger2/execution_view.ts";
 import util from "node:util";
@@ -116,6 +115,12 @@ const key_bindings:Record<string,KeyHandler> = {
     },
     'e': () => state.mode = 'execution',
     'c':() => state.mode = 'scope',
+    '\t':() => {
+        let n = MODES.indexOf(state.mode)
+        if(n < 0) n = 0
+        n = (n + 1) % MODES.length
+        state.mode = MODES[n]
+    }
 }
 
 function draw(output:ViewOutput) {
@@ -130,7 +135,7 @@ function redraw() {
     draw(ContextViewRender(state))
     draw(StackViewRender(state))
     draw(BytecodeViewRender(state))
-    draw(ExecutionViewRender(state))
+    draw(EXECUTION.render(state))
 }
 
 
@@ -139,6 +144,7 @@ process.stdin.on("data", (key:string) => {
     if (key === "\u0003") {
         process.exit();
     }
+    // console.log(key.charCodeAt(0))
     if(key in key_bindings) {
         key_bindings[key]();
         redraw()
@@ -160,7 +166,7 @@ process.stdin.on("data", (key:string) => {
         return
     }
     if(state.mode === 'execution') {
-        ExecutionViewInput(key,state)
+        EXECUTION.input(key,state)
         redraw()
         return;
     }

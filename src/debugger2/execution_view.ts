@@ -4,19 +4,15 @@ import type {AppState, ViewOutput} from "./model.ts";
 import {BoxFrame} from "./util.ts";
 import {type Ast, AstToString} from "../ast.ts";
 import {VMState} from "../obj.ts";
-
-export type View<S> = {
-    input:(key:string, state:S)=>void,
-    render:(state:S)=>ViewOutput,
-}
+import {type View} from "./view.ts";
 
 export class ExecutionState {
     private vm: VMState;
-    accept_input: boolean;
+    show_input: boolean;
     current_input: string;
     constructor(vm:VMState) {
         this.vm = vm;
-        this.accept_input = false
+        this.show_input = false
         this.current_input = ""
     }
 }
@@ -36,7 +32,7 @@ function step(state:AppState) {
     if(arg && 'block-literal' == arg.type) {
         val = AstToString(arg as Ast)
     }
-    state.messages.push(`${name} : ${val}`)
+    // state.messages.push(`${name} : ${val}`)
     let ret = execute_op(state.vm)
 }
 export function run(state:AppState) {
@@ -55,7 +51,7 @@ function runTo(state: AppState, num: number) {
 const INPUT:View<AppState> = {
     input:(key,state) => {
         if(key.charCodeAt(0) === 13) {
-            state.execution.accept_input = false
+            state.execution.show_input = false
             let num = parseInt(state.execution.current_input)
             state.execution.current_input = ""
             runTo(state,num);
@@ -71,24 +67,6 @@ const INPUT:View<AppState> = {
         return output
     }
 }
-
-export function ExecutionViewInput(key: string, state: AppState) {
-    if (key === ' ') {
-        step(state)
-    }
-    if (key === 'r') {
-        // run
-        state.vm.running = true
-        run(state)
-    }
-    if(state.execution.accept_input) {
-        INPUT.input(key,state)
-    }
-    if (key === 'g') {
-        state.execution.accept_input = true
-    }
-}
-
 function ConsoleViewRender(state:AppState):ViewOutput {
     let output:ViewOutput = []
     let log = state.messages
@@ -102,24 +80,42 @@ function ConsoleViewRender(state:AppState):ViewOutput {
         }
         output.push(' ' + msg)
     })
+    let extra = 10 - len
+    for(let i=0; i<extra; i++) {
+        output.push('  ')
+    }
     return output
 }
 
-export function ExecutionViewRender(state: AppState):ViewOutput {
-    let output = new BoxFrame({
-        name:"Execution",
-        width: state.width,
-        active: state.mode === 'execution'
-    })
-    output.addLine('space:step r:run')
-
-    output.addAll(ConsoleViewRender(state))
-
-    output.addLine(`menu: q:quit c:context s:stack b:bytecode e:execution `)
-    output.addLine(`${state.mode}`)
-    output.addLine(`${state.code.trim()}`)
-    if(state.execution.accept_input) {
-        output.addAll(INPUT.render(state))
-    }
-    return output.render()
+function show_input(state: AppState) {
+    state.execution.show_input = true
 }
+
+function runToEnd(state: AppState) {
+    state.vm.running = true
+    run(state)
+}
+
+export const EXECUTION:View<AppState> = {
+    input: (key, state) => {
+        if (key === ' ') return step(state)
+        if (key === 'r') return runToEnd(state)
+        if (state.execution.show_input) return INPUT.input(key, state)
+        if (key === 'g') return show_input(state);
+    },
+    render:(state) => {
+        let output = new BoxFrame({
+            name:"Execution",
+            width: state.width,
+            active: state.mode === 'execution'
+        })
+        output.addLine('space:step r:run g: go ')
+        output.addAll(ConsoleViewRender(state))
+        output.addLine(`menu: q:quit`)
+        if(state.execution.show_input) {
+            output.addAll(INPUT.render(state))
+        }
+        return output.render()
+    }
+}
+

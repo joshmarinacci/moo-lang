@@ -1,9 +1,9 @@
 Global makeSlot: "VectorProto" with: Object clone.
 
 VectorProto understands: "+" with: [v |
-    Vector x: self x + v x
-           y: self y + v y
-           z: self z + v z.
+    Vector x: (self x) + (v x)
+           y: (self y) + (v y)
+           z: (self z) + (v z).
 ].
 
 Global makeSlot: "Vector" with: VectorProto clone.
