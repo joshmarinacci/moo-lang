@@ -99,7 +99,7 @@ const state:AppState = {
     bytecode:new BytecodeState(vm),
     execution: new ExecutionState(vm),
     messages:[],
-    width: 70,
+    width: process.stdout.columns-1,
     code:example_code
 }
 
