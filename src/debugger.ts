@@ -107,14 +107,6 @@ const key_bindings:Record<string,KeyHandler> = {
     'q': () => {
         process.exit()
     },
-    's': () => {
-        state.mode = 'stack'
-    },
-    'b': () => {
-        state.mode = 'bytecode'
-    },
-    'e': () => state.mode = 'execution',
-    'c':() => state.mode = 'scope',
     '\t':() => {
         let n = MODES.indexOf(state.mode)
         if(n < 0) n = 0

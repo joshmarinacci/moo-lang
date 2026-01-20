@@ -7,7 +7,7 @@ import {VMState} from "../obj.ts";
 import {type View} from "./view.ts";
 
 export class ExecutionState {
-    private vm: VMState;
+    vm: VMState;
     show_input: boolean;
     current_input: string;
     constructor(vm:VMState) {
@@ -43,6 +43,14 @@ export function run(state:AppState) {
 
 function runTo(state: AppState, num: number) {
     while(state.vm.currentContext.pc < num) {
+        step(state)
+    }
+}
+
+function skipOver(state: AppState) {
+    let target_pc = state.vm.currentContext.pc +1
+    let target_label = state.vm.currentContext.label
+    while(state.vm.currentContext.pc !== target_pc || state.vm.currentContext.label != target_label) {
         step(state)
     }
 }
@@ -96,10 +104,12 @@ function runToEnd(state: AppState) {
     run(state)
 }
 
+
 export const EXECUTION:View<AppState> = {
     input: (key, state) => {
         if (key === ' ') return step(state)
         if (key === 'r') return runToEnd(state)
+        if (key === 's') return skipOver(state)
         if (state.execution.show_input) return INPUT.input(key, state)
         if (key === 'g') return show_input(state);
     },
@@ -109,7 +119,7 @@ export const EXECUTION:View<AppState> = {
             width: state.width,
             active: state.mode === 'execution'
         })
-        output.addLine('space:step r:run g: go ')
+        output.addLine('space:step r:run g: go s:skip over ')
         output.addAll(ConsoleViewRender(state))
         output.addLine(`menu: q:quit`)
         if(state.execution.show_input) {

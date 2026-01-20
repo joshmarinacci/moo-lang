@@ -76,7 +76,10 @@ const STYLE:Style = {
     border: stringToBorder('+-+| |+-+')
 }
 STYLE.border = stringToBorder('┌─╮│ │╰─┘')
-
+const BOLDED:Style = {
+    attribute: BOLD,
+    border: stringToBorder('╔═╗║ ║╚═╝')
+}
 function styleIt(style: Style, text: string) {
     return `${style.attribute}${text}${RESET}`
 }
@@ -106,10 +109,7 @@ export class BoxFrame {
         let output = []
         let style = STYLE
         if (this.active) {
-            style = {
-                ... STYLE,
-                attribute:BOLD,
-            }
+            style = BOLDED
         }
 
         let margin = Math.floor((this.width - this.name.length - 3) / 2)
