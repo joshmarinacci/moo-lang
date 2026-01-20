@@ -121,7 +121,7 @@ export function handle_return_message(vm: VMState) {
                 return;
             }
         }
-        vm.currentContext.stack.push_with(ret, `return value from ${meth.print()}`)
+        vm.currentContext.stack.push_with(ret, `ret from ${meth.print()}`)
     } else {
         let ret = act.get_slot('return')
         if (!ret) ret = NilObj()
@@ -131,7 +131,7 @@ export function handle_return_message(vm: VMState) {
             console.log("the target scope is " + ret.get_slot('target').print())
             console.log("current scope is " + vm.currentContext.scope.print())
         }
-        vm.currentContext.stack.push_with(ret, `return value from ${meth.print()}`)
+        vm.currentContext.stack.push_with(ret, `ret from ${meth.print()}`)
     }
     d.outdent()
 }

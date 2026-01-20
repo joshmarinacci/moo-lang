@@ -7,7 +7,12 @@ import {BytecodeState, BytecodeViewInput, BytecodeViewRender} from "./debugger2/
 import {type AppState, type KeyHandler, type ViewOutput} from "./debugger2/model.ts";
 import {StackState, StackViewInput, StackViewRender} from "./debugger2/stack_view.ts";
 import {clear_screen} from "./debugger2/util.ts";
-import {ExecutionViewInput, ExecutionViewRender, run} from "./debugger2/execution_view.ts";
+import {
+    ExecutionState,
+    ExecutionViewInput,
+    ExecutionViewRender,
+    run
+} from "./debugger2/execution_view.ts";
 import util from "node:util";
 import {ContextState, ContextViewInput, ContextViewRender} from "./debugger2/context_view.ts";
 import {compile_bytecode} from "./compiler.ts";
@@ -92,6 +97,7 @@ const state:AppState = {
     scope:new ContextState(vm),
     stack:new StackState(vm),
     bytecode:new BytecodeState(vm),
+    execution: new ExecutionState(vm),
     messages:[],
     width: 70,
     code:example_code

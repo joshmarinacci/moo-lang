@@ -20,26 +20,26 @@ test('eval vector class',() => {
         Vector makeSlot: "z:" with: [zz |
             self setSlot: "z" with: zz.
         ].
-        Vector makeSlot "make" [ xx yy zz |
-            self makeSlot "v" (Vector clone).
-            v setSlot "x" xx.
-            v setSlot "y" yy.
-            v setSlot "z" zz.
+        Vector makeSlot: "make" with: [ xx yy zz |
+            self makeSlot: "v" with: (Vector clone).
+            v setSlot: "x" with: xx.
+            v setSlot: "y" with: yy.
+            v setSlot: "z" with: zz.
             v.
         ].
-        Vector makeSlot "+" [a |
-          Vector make 
+        Vector makeSlot: "+" with: [a |
+          Vector make: 
                 ((a x) + (self x))
                 ((a y) + (self y))
                 ((a z) + (self z)).
         ].
-        Vector makeSlot "-" [b |
+        Vector makeSlot: "-" [b |
           Vector make 
                 ((self x) - (b x))
                 ((self y) - (b y))
                 ((self z) - (b z)).
         ].
-        Vector makeSlot "dot" [a |
+        Vector makeSlot: "dot" [a |
                 (((a x) * (self x)) +
                 ((a y) * (self y))) +
                 ((a z) * (self z)).

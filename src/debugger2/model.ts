@@ -2,6 +2,7 @@ import {VMState} from "../obj.ts";
 import {StackState} from "./stack_view.ts";
 import {BytecodeState} from "./bytecode_view.ts";
 import {ContextState} from "./context_view.ts";
+import {ExecutionState} from "./execution_view.ts";
 
 export type Mode = 'bytecode'|'execution'|'stack'|'scope'
 export type KeyHandler = () => void;
@@ -14,6 +15,7 @@ export type AppState = {
     stack: StackState,
     bytecode: BytecodeState,
     scope: ContextState,
+    execution:ExecutionState,
     width: number,
     code:string,
 }

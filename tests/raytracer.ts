@@ -310,9 +310,10 @@ function isLightVisible(pt:Vec, scene:Scene, light:Vec) {
 }
 
 
-// render(scene);
+render(scene);
 
-// encodePNGToStream(data,fs.createWriteStream('out.png')).then(() => console.log("done writing to 'out.png'"))
+encodePNGToStream(data,fs.createWriteStream('output/out.png')).then(() => console.log("wrote to" +
+    " 'out.png'"))
 
 
 test('vector tests',() => {

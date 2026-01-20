@@ -3,6 +3,23 @@ import {execute_op} from "../bytecode.ts";
 import type {AppState, ViewOutput} from "./model.ts";
 import {BoxFrame} from "./util.ts";
 import {type Ast, AstToString} from "../ast.ts";
+import {VMState} from "../obj.ts";
+
+export type View<S> = {
+    input:(key:string, state:S)=>void,
+    render:(state:S)=>ViewOutput,
+}
+
+export class ExecutionState {
+    private vm: VMState;
+    accept_input: boolean;
+    current_input: string;
+    constructor(vm:VMState) {
+        this.vm = vm;
+        this.accept_input = false
+        this.current_input = ""
+    }
+}
 
 function step(state:AppState) {
     let ctx = state.vm.currentContext;
@@ -28,6 +45,33 @@ export function run(state:AppState) {
     }
 }
 
+function runTo(state: AppState, num: number) {
+    while(state.vm.currentContext.pc < num) {
+        step(state)
+    }
+}
+
+
+const INPUT:View<AppState> = {
+    input:(key,state) => {
+        if(key.charCodeAt(0) === 13) {
+            state.execution.accept_input = false
+            let num = parseInt(state.execution.current_input)
+            state.execution.current_input = ""
+            runTo(state,num);
+        } else {
+            state.execution.current_input += key
+        }
+    },
+    render:(state) => {
+        let output = []
+        output.push('--------')
+        output.push("to line: " + state.execution.current_input)
+        output.push('--------')
+        return output
+    }
+}
+
 export function ExecutionViewInput(key: string, state: AppState) {
     if (key === ' ') {
         step(state)
@@ -36,6 +80,12 @@ export function ExecutionViewInput(key: string, state: AppState) {
         // run
         state.vm.running = true
         run(state)
+    }
+    if(state.execution.accept_input) {
+        INPUT.input(key,state)
+    }
+    if (key === 'g') {
+        state.execution.accept_input = true
     }
 }
 
@@ -68,5 +118,8 @@ export function ExecutionViewRender(state: AppState):ViewOutput {
     output.addLine(`menu: q:quit c:context s:stack b:bytecode e:execution `)
     output.addLine(`${state.mode}`)
     output.addLine(`${state.code.trim()}`)
+    if(state.execution.accept_input) {
+        output.addAll(INPUT.render(state))
+    }
     return output.render()
 }
