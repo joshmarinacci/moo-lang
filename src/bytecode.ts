@@ -47,17 +47,17 @@ export type RawBytecodeMethod = {
 }
 
 function handle_nonlocal_return(vm: VMState) {
-    console.log("handling a non local return");
-    console.log("current stack is " + vm.stack_print_small());
+    // console.log("handling a non local return");
+    // console.log("current stack is " + vm.stack_print_small());
     let value = vm.currentContext.stack.pop();
-    console.log('value is', value.print())
+    // console.log('value is', value.print())
     let scope = vm.currentContext.scope
     let ret = new Obj('non-local-return',scope.parent,{})
     ret._is_return = true
     ret._make_method_slot('value',value)
     // @ts-ignore
     ret._make_method_slot('target',scope.parent.parent as Obj)
-    console.log("target return scope is " + ret.get_slot('target').print());
+    // console.log("target return scope is " + ret.get_slot('target').print());
     vm.currentContext.stack.push_with(ret,`non-local-return wrapper for ${value.print()}`)
     return ret
 }

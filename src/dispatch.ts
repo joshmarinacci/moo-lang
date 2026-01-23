@@ -109,12 +109,12 @@ export function handle_return_message(vm: VMState) {
         let ret = act.get_slot('return')
         if (!ret) ret = NilObj()
         if(ret.name === 'non-local-return') {
-            console.log("this is a nonlocal return")
-            console.log("the target scope is " + ret.get_slot('target').print())
-            console.log("current scope is " + vm.currentContext.scope.print())
+            // console.log("this is a nonlocal return")
+            // console.log("the target scope is " + ret.get_slot('target').print())
+            // console.log("current scope is " + vm.currentContext.scope.print())
             if(vm.currentContext.scope === ret.get_slot('target')) {
                 act._make_method_slot('return',ret.get_slot('value'));
-                console.log('we are at the right exit point. early return.')
+                // console.log('we are at the right exit point. early return.')
                 vm.popContext();
                 vm.currentContext.stack.pop()
                 vm.currentContext.stack.push_with(act,'act')
@@ -127,9 +127,9 @@ export function handle_return_message(vm: VMState) {
         if (!ret) ret = NilObj()
         d.p("putting the return value on the stack")
         if(ret.name === 'non-local-return') {
-            console.log("this is a nonlocal return")
-            console.log("the target scope is " + ret.get_slot('target').print())
-            console.log("current scope is " + vm.currentContext.scope.print())
+            // console.log("this is a nonlocal return")
+            // console.log("the target scope is " + ret.get_slot('target').print())
+            // console.log("current scope is " + vm.currentContext.scope.print())
         }
         vm.currentContext.stack.push_with(ret, `ret from ${meth.print()}`)
     }

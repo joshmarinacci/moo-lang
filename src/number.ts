@@ -45,6 +45,7 @@ const NumberProto = make_native_obj("NumberProto", ObjectProto, {
     },
     'mod:':js_num_op((a,b)=>a%b),
     'sqrt':(rec:Obj):Obj => NumObj(Math.sqrt(rec._get_js_number())),
+    'tan':(rec:Obj):Obj => NumObj(Math.tan(rec._get_js_number())),
     'to:do:':(rec:Obj, args:Array<Obj>, vm:VMState):Obj => {
         let start = rec._get_js_number()
         let end = args[0]._get_js_number()
@@ -64,6 +65,9 @@ const NumberProto = make_native_obj("NumberProto", ObjectProto, {
         }
         return NumObj(compare(rec._get_js_number(),args[0]._get_js_number()))
     }),
+    'Inf':(()=>{
+        return NumObj(Number.POSITIVE_INFINITY)
+    })
 
 });
 export const NumObj = (value:number):Obj => new Obj("NumberLiteral", NumberProto, { '_jsvalue': value,})
