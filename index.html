@@ -19,6 +19,25 @@
                 &.error {
                     color: red;
                 }
+                & > div {
+                    display: inline-block;
+                }
+                .number {
+                    background-color: aquamarine;
+                    padding: 0.5rem;
+                    font-weight: bold;
+                }
+                .string {
+                    background-color: aliceblue;
+                    padding: 0.5rem;
+                    font-weight: bold;
+                }
+                .nil {
+                    background-color: orangered;
+                    color: ghostwhite;
+                    padding: 0.5rem;
+                    font-weight: bold;
+                }
             }
             overflow: auto;
             max-height: 20rem;
@@ -229,20 +248,21 @@ self drawGift: 4 symbol: "*".
             li.innerText = out.message
             li.classList.add('error')
         } else if(out.is_kind_of('NumberProto')) {
-            li.innerText = "Number: " + out._get_js_number()
-            li.classList.add('number')
+            li.innerHTML = `<div class='number'>${out._get_js_number()}</div>`
         } else if(out.is_kind_of('StringProto')) {
-            li.innerText = "String: " + out._get_js_string()
-            li.classList.add('string')
+            li.innerHTML = `<div class='string'>${out._get_js_string()}</div>`
         } else {
-            li.innerText = "Object: " + out.print()
-            li.classList.add('object')
+            if(out.isNil()) {
+                li.innerHTML = `<div class='nil'>nil</div>`
+            } else {
+                li.innerText = "Object: " + out.print()
+            }
         }
         const cons = $("#editor-console")
         cons.append(li)
         cons.scrollTop = cons.scrollHeight
-
     }
+
     function eval_it(code, scope) {
         d.disable()
         d.p('=========')
