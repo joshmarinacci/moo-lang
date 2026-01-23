@@ -217,5 +217,5 @@ export function execute_bytecode(code: ByteCode, scope: Obj): Obj {
 
 export function bval(source: string, scope: Obj) {
     let bytecode = compile_bytecode(parse(source,'BlockBody'))
-    let ret_bcode  =  execute_bytecode(bytecode,scope)
+    return execute_bytecode(bytecode, scope)
 }
